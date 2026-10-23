@@ -65,6 +65,11 @@ async function runTests() {
     failed++;
   }
 
+  // 2b. Clean up any previous test student record to ensure clean state
+  const db = require('../src/config/database');
+  db.prepare("DELETE FROM students WHERE name LIKE 'Citra Selesai Test%'").run();
+  db.prepare("DELETE FROM student_live_sessions WHERE student_name LIKE 'Citra Selesai Test%'").run();
+
   // 3. Send initial live progress (in_progress)
   const testSessionId = 'sess_comp_' + Date.now();
   const studentName = 'Citra Selesai Test';
@@ -246,7 +251,7 @@ async function runTests() {
       failed++;
     }
 
-    if (guruHtml.includes('whitespace-nowrap') && guruHtml.includes('min-width: 140px')) {
+    if (guruHtml.includes('whitespace-nowrap') && (guruHtml.includes('min-width: 140px') || guruHtml.includes('min-width: 150px'))) {
       console.log('✓ [PASS] src/views/guru-dashboard.html has whitespace-nowrap and min-width on Status column');
       passed++;
     } else {

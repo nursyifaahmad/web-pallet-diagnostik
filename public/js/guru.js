@@ -1271,6 +1271,7 @@ function renderLiveMonitorTable(sessions) {
 
   sessions.forEach(s => {
     const isCompleted = s.status === 'completed';
+    const isLastQuestion = !isCompleted && s.currentStep >= s.totalSteps;
     const tr = document.createElement('tr');
     tr.className = 'hover:bg-atelier-warm/40 transition';
 
@@ -1286,10 +1287,34 @@ function renderLiveMonitorTable(sessions) {
     const diffSec = lastDateObj ? Math.floor((new Date().getTime() - lastDateObj.getTime()) / 1000) : 999;
     const isRecent = !isCompleted && diffSec < 20;
 
+    let statusBadgeHtml = '';
+    if (isCompleted) {
+      statusBadgeHtml = `
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold whitespace-nowrap shadow-xs bg-blue-50 text-blue-700 border border-blue-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+          <span>Selesai ✓</span>
+        </span>
+      `;
+    } else if (isLastQuestion) {
+      statusBadgeHtml = `
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold whitespace-nowrap shadow-xs bg-amber-50 text-amber-800 border border-amber-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+          <span>Soal Terakhir</span>
+        </span>
+      `;
+    } else {
+      statusBadgeHtml = `
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold whitespace-nowrap shadow-xs bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Sedang Menjawab</span>
+        </span>
+      `;
+    }
+
     tr.innerHTML = `
       <td class="py-3 px-3 font-mono font-bold text-center text-atelier-terracotta">${s.attendanceNo || '-'}</td>
       <td class="py-3 px-3 font-semibold text-atelier-ink flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full ${isCompleted ? 'bg-blue-500' : 'bg-emerald-500 animate-pulse'}"></span>
+        <span class="w-2 h-2 rounded-full ${isCompleted ? 'bg-blue-500' : isLastQuestion ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}"></span>
         <span>${s.name}</span>
       </td>
       <td class="py-3 px-3 font-mono text-center">${genderBadge}</td>
@@ -1300,9 +1325,9 @@ function renderLiveMonitorTable(sessions) {
       <td class="py-3 px-3">
         <div class="flex items-center gap-2">
           <div class="flex-1 bg-atelier-border h-2 rounded-full overflow-hidden">
-            <div class="${isCompleted ? 'bg-blue-600' : 'bg-emerald-600'} h-full rounded-full transition-all duration-300" style="width: ${s.progressPercent}%;"></div>
+            <div class="${isCompleted ? 'bg-blue-600' : isLastQuestion ? 'bg-amber-500' : 'bg-emerald-600'} h-full rounded-full transition-all duration-300" style="width: ${s.progressPercent}%;"></div>
           </div>
-          <span class="font-mono text-[11px] font-bold ${isCompleted ? 'text-blue-600' : 'text-emerald-700'}">${s.progressPercent}%</span>
+          <span class="font-mono text-[11px] font-bold ${isCompleted ? 'text-blue-600' : isLastQuestion ? 'text-amber-700' : 'text-emerald-700'}">${s.progressPercent}%</span>
         </div>
       </td>
       <td class="py-3 px-3 font-mono text-[11px] text-atelier-ochre font-medium">
@@ -1320,14 +1345,7 @@ function renderLiveMonitorTable(sessions) {
         <span class="block text-[10px] font-mono text-atelier-inkMuted ml-3">${lastClock} WIB</span>
       </td>
       <td class="py-3 px-3 text-center whitespace-nowrap">
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold whitespace-nowrap shadow-xs ${
-          isCompleted 
-            ? 'bg-blue-50 text-blue-700 border border-blue-200' 
-            : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-        }">
-          <span class="w-1.5 h-1.5 rounded-full ${isCompleted ? 'bg-blue-500' : 'bg-emerald-500 animate-pulse'}"></span>
-          <span>${isCompleted ? 'Selesai ✓' : 'Sedang Menjawab'}</span>
-        </span>
+        ${statusBadgeHtml}
       </td>
     `;
     tbody.appendChild(tr);

@@ -31,7 +31,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Static Assets (Strictly assets only; no HTML inside public/guru)
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, '../public'), {
+  setHeaders: (res, filePath) => {
+    // Prevent stale caching of scripts, styles, and HTML in browser & CDN
+    if (filePath.endsWith('.js') || filePath.endsWith('.css') || filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
 // API Routes
 app.use('/api/auth', authRoutes);
