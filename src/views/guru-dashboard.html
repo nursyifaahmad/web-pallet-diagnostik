@@ -38,7 +38,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="/css/style.css?v=2.5">
+  <link rel="stylesheet" href="/css/style.css?v=2.6">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
 </head>
 <body class="bg-atelier-bg text-atelier-ink min-h-screen flex flex-col paper-texture">
@@ -925,82 +925,85 @@
       </div>
 
       <!-- ======================================================== -->
-      <!-- VIEW: TAHAP 5 - LEARNING RECOMMENDATION (DINAMIS DARI DATA) -->
+      <!-- VIEW: TAHAP 5 - LEARNING RECOMMENDATION (100% PERSIS GOOGLE SITES) -->
       <!-- ======================================================== -->
       <div id="section-m5-recommendation" class="tab-content-section hidden space-y-6">
-        <div class="atelier-card p-6 space-y-6">
-          <div class="border-b border-atelier-border pb-4">
-            <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-atelier-terracottaLight text-atelier-terracotta border border-atelier-terracotta/30">
-                100% Dinamis Berbasis Jawaban Siswa
+        
+        <!-- MAIN RECOMMENDATION MATRIX CARD (Exact match to Google Sites screenshot) -->
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-6 md:p-8 shadow-xs space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-2">
+              <span class="inline-flex items-center px-3 py-1 bg-[#EDE9FE] text-[#6D28D9] rounded-full text-xs font-mono font-semibold">
+                TAHAP 5: STRATEGI DIFERENSIASI
               </span>
+              <h2 class="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
+                Matriks Rekomendasi Pembelajaran Berdiferensiasi
+              </h2>
             </div>
-            <h3 class="font-serif font-bold text-2xl text-atelier-ink mt-1">Rekomendasi Pembelajaran Berdiferensiasi</h3>
-            <p class="text-xs text-atelier-inkMuted">Strategi ajar yang secara otomatis dikalkulasi dari agregasi jawaban murid kelas <span id="recom-class-title" class="font-mono font-bold text-atelier-terracotta">VII-A</span>.</p>
+            <div>
+              <button onclick="switchMainTab('tab-m6-rpp')" class="px-5 py-2.5 rounded-xl bg-[#6366F1] hover:bg-[#4F46E5] text-white text-xs font-bold flex items-center gap-2 shadow-xs transition cursor-pointer flex-shrink-0">
+                <span>Buat Modul Ajar RPP</span>
+                <span>→</span>
+              </button>
+            </div>
           </div>
 
-          <!-- Macro Class Recommendations (Konten, Proses, Produk, Ruang) -->
-          <div class="space-y-3">
-            <h4 class="font-serif font-bold text-base text-atelier-ink">A. Strategi Diferensiasi Kelas (Tingkat Rombel)</h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-              <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-2">
-                <span class="inline-block px-2.5 py-0.5 rounded font-mono text-[10px] text-atelier-terracotta bg-atelier-terracottaLight font-bold uppercase">
-                  1. Diferensiasi Konten
-                </span>
-                <p id="dyn-recom-konten" class="text-atelier-ink leading-relaxed">
-                  Memuat analisis data...
-                </p>
+          <!-- 3 Columns Differentiated Strategies Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <!-- 1. Diferensiasi Konten -->
+            <div class="p-6 rounded-2xl bg-white border border-indigo-100 shadow-xs space-y-3 hover:shadow-sm transition">
+              <div class="flex items-center gap-2.5">
+                <span class="text-lg">📚</span>
+                <h3 class="font-bold text-[#6366F1] text-sm sm:text-base">Diferensiasi Konten</h3>
               </div>
-
-              <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-2">
-                <span class="inline-block px-2.5 py-0.5 rounded font-mono text-[10px] text-atelier-ochre bg-atelier-ochreLight font-bold uppercase">
-                  2. Diferensiasi Proses (Scaffolding)
-                </span>
-                <p id="dyn-recom-proses" class="text-atelier-ink leading-relaxed">
-                  Memuat analisis data...
-                </p>
-              </div>
-
-              <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-2">
-                <span class="inline-block px-2.5 py-0.5 rounded font-mono text-[10px] text-atelier-sage bg-atelier-sageLight font-bold uppercase">
-                  3. Diferensiasi Produk
-                </span>
-                <p id="dyn-recom-produk" class="text-atelier-ink leading-relaxed">
-                  Memuat analisis data...
-                </p>
-              </div>
+              <p id="dyn-recom-konten" class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Sediakan pilihan media referensi: Video tutorial langkah demi langkah untuk 2D Digital &amp; contoh fisik karya 3D untuk peminat Kinestetik.
+              </p>
             </div>
 
-            <!-- Atelier Studio Environment Layout Recommendation -->
-            <div class="p-4 bg-atelier-warm/50 rounded-xl border border-atelier-border text-xs space-y-1">
-              <strong class="font-mono text-[11px] text-atelier-ink uppercase">Rekomendasi Penataan Ruang Studio Atelier:</strong>
-              <p id="dyn-recom-studio" class="text-atelier-inkMuted leading-relaxed">
-                Memuat rekomendasi penataan ruang...
+            <!-- 2. Diferensiasi Proses -->
+            <div class="p-6 rounded-2xl bg-white border border-pink-100 shadow-xs space-y-3 hover:shadow-sm transition">
+              <div class="flex items-center gap-2.5">
+                <span class="text-lg">⚙️</span>
+                <h3 class="font-bold text-[#EC4899] text-sm sm:text-base">Diferensiasi Proses</h3>
+              </div>
+              <p id="dyn-recom-proses" class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Bentuk kelompok heterogen (3–4 orang). Pasangkan siswa peminat 2D Drawing dengan siswa peminat 3D Patung/Kriya.
+              </p>
+            </div>
+
+            <!-- 3. Diferensiasi Produk -->
+            <div class="p-6 rounded-2xl bg-white border border-teal-100 shadow-xs space-y-3 hover:shadow-sm transition">
+              <div class="flex items-center gap-2.5">
+                <span class="text-lg">🎨</span>
+                <h3 class="font-bold text-[#0D9488] text-sm sm:text-base">Diferensiasi Produk</h3>
+              </div>
+              <p id="dyn-recom-produk" class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Beri kebebasan produk akhir: Siswa dapat memilih membuat karya 2D ATAU karya 3D sesuai dengan sub-minat diagnostik mereka.
               </p>
             </div>
           </div>
+        </div>
 
-          <div class="border-t border-atelier-border"></div>
-
-          <!-- Micro / Personal Student Pedagogical Recommendation -->
-          <div class="space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h4 class="font-serif font-bold text-base text-atelier-ink">B. Rekomendasi Pendampingan Individual Siswa</h4>
-                <p class="text-xs text-atelier-inkMuted">Pilih siswa untuk melihat rekomendasi bimbingan personal spesifik berdasarkan jawaban kuesioner & esainya.</p>
-              </div>
-              <div class="flex items-center gap-2">
-                <select id="personal-student-select" class="px-3 py-1.5 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white font-medium" onchange="renderPersonalRecommendation()">
-                  <option value="" disabled selected>Pilih siswa rombel...</option>
-                </select>
-              </div>
+        <!-- SECONDARY CARD: REKOMENDASI PENDAMPINGAN INDIVIDUAL SISWA -->
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-6 md:p-8 shadow-xs space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div>
+              <h3 class="font-serif font-bold text-lg text-slate-900">Rekomendasi Pendampingan Individual Siswa</h3>
+              <p class="text-xs text-slate-500">Pilih siswa untuk melihat rekomendasi bimbingan personal spesifik berdasarkan jawaban kuesioner &amp; esainya.</p>
             </div>
-
-            <div id="personal-recom-card" class="p-5 bg-white border border-atelier-border rounded-xl space-y-3">
-              <p class="text-xs text-atelier-inkMuted italic">Pilih siswa di atas untuk melihat rekomendasi pendampingan personal.</p>
+            <div class="flex items-center gap-2">
+              <select id="personal-student-select" class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:border-indigo-500 outline-none bg-slate-50 font-medium text-slate-700" onchange="renderPersonalRecommendation()">
+                <option value="" disabled selected>Pilih siswa rombel...</option>
+              </select>
             </div>
           </div>
+
+          <div id="personal-recom-card" class="p-5 bg-slate-50/60 border border-slate-200/80 rounded-2xl space-y-3">
+            <p class="text-xs text-slate-400 italic">Pilih siswa di atas untuk melihat rekomendasi pendampingan personal.</p>
+          </div>
         </div>
+
       </div>
 
       <!-- ======================================================== -->
@@ -1430,7 +1433,7 @@
     </div>
   </div>
 
-  <script src="/js/api.js?v=2.5"></script>
-  <script src="/js/guru.js?v=2.5"></script>
+  <script src="/js/api.js?v=2.6"></script>
+  <script src="/js/guru.js?v=2.6"></script>
 </body>
 </html>

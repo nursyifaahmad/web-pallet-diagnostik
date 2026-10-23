@@ -877,11 +877,10 @@ function renderLearningRecommendations(roster) {
   const dynStudio = document.getElementById('dyn-recom-studio');
 
   if (!roster || roster.length === 0) {
-    const emptyMsg = 'Belum ada data murid di rombel ini. Bagikan tautan asesmen atau input data siswa terlebih dahulu.';
-    if (dynKonten) dynKonten.innerHTML = `<span class="italic text-atelier-inkMuted">${emptyMsg}</span>`;
-    if (dynProses) dynProses.innerHTML = `<span class="italic text-atelier-inkMuted">${emptyMsg}</span>`;
-    if (dynProduk) dynProduk.innerHTML = `<span class="italic text-atelier-inkMuted">${emptyMsg}</span>`;
-    if (dynStudio) dynStudio.innerHTML = `<span class="italic text-atelier-inkMuted">${emptyMsg}</span>`;
+    if (dynKonten) dynKonten.textContent = 'Sediakan pilihan media referensi: Video tutorial langkah demi langkah untuk 2D Digital & contoh fisik karya 3D untuk peminat Kinestetik.';
+    if (dynProses) dynProses.textContent = 'Bentuk kelompok heterogen (3–4 orang). Pasangkan siswa peminat 2D Drawing dengan siswa peminat 3D Patung/Kriya.';
+    if (dynProduk) dynProduk.textContent = 'Beri kebebasan produk akhir: Siswa dapat memilih membuat karya 2D ATAU karya 3D sesuai dengan sub-minat diagnostik mereka.';
+    if (dynStudio) dynStudio.textContent = 'Atur tata letak meja studio menjadi zona kerja heterogen terpisah: Zona Meja Gambar Kering 2D dan Zona Meja Basah / 3D.';
     return;
   }
 
