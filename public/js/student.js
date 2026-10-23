@@ -332,11 +332,12 @@ function setupEventListeners() {
   });
 
   // Realtime autosave for reason textarea
-  document.getElementById('question-reason').addEventListener('input', () => {
+  document.getElementById('question-reason').addEventListener('input', (e) => {
     saveCurrentQuestionAnswer();
     saveDraft();
-    const reasonVal = document.getElementById('question-reason').value.trim();
+    const reasonVal = e.target.value.trim();
     if (reasonVal) {
+      e.target.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
       const q = questions[currentStepIndex];
       if (q) {
         const ans = answers[q.id];
@@ -388,10 +389,20 @@ function renderCurrentQuestion() {
   document.getElementById('question-category').textContent = q.category || `Aspek ${currentNum}`;
   document.getElementById('question-title').textContent = q.title;
   document.getElementById('question-subtitle').textContent = q.subtitle || '';
-  document.getElementById('reason-label').textContent = q.reason_label || 'Tuliskan alasan atau keterangan tambahan:';
+
+  const reasonText = q.reason_label || 'Tuliskan alasan atau keterangan tambahan:';
+  const reasonLabelEl = document.getElementById('reason-label');
+  if (reasonLabelEl) {
+    reasonLabelEl.innerHTML = `${reasonText} <span class="text-atelier-terracotta font-bold text-sm">*</span> <span class="text-[11px] font-sans text-atelier-inkMuted font-normal">(Wajib diisi)</span>`;
+  }
 
   const existingAns = answers[q.id] || {};
-  document.getElementById('question-reason').value = existingAns.reason || '';
+  const reasonEl = document.getElementById('question-reason');
+  if (reasonEl) {
+    reasonEl.value = existingAns.reason || '';
+    reasonEl.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+    reasonEl.placeholder = 'Tuliskan alasan atau penjelasanmu di sini (wajib diisi)...';
+  }
 
   const container = document.getElementById('question-options-container');
   container.innerHTML = '';
@@ -552,17 +563,14 @@ function validateCurrentAnswer() {
     }
   }
 
-  // 2. Validasi Pertanyaan Esai / Isian Singkat
-  const reasonVal = document.getElementById('question-reason')?.value?.trim() || '';
+  // 2. Validasi Pertanyaan Esai / Isian Singkat (Wajib Diisi)
+  const reasonEl = document.getElementById('question-reason');
+  const reasonVal = reasonEl?.value?.trim() || '';
   if (!reasonVal) {
-    showValidationAlert('Pertanyaan esai/alasan refleksi ini wajib diisi sebelum kamu dapat melanjutkan ke soal berikutnya.');
-    const reasonEl = document.getElementById('question-reason');
+    showValidationAlert('Kolom isian/alasan di atas wajib diisi sebelum kamu dapat melanjutkan ke soal berikutnya.');
     if (reasonEl) {
       reasonEl.focus();
-      reasonEl.classList.add('ring-2', 'ring-atelier-terracotta', 'border-atelier-terracotta');
-      setTimeout(() => {
-        reasonEl.classList.remove('ring-2', 'ring-atelier-terracotta', 'border-atelier-terracotta');
-      }, 2000);
+      reasonEl.classList.add('border-red-500', 'ring-2', 'ring-red-200');
     }
     return false;
   }
