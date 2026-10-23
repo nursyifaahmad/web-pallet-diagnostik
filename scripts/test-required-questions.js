@@ -184,11 +184,10 @@ setTimeout(async () => {
     const completeJson = JSON.parse(completeSub.body);
     assert(completeJson.status === 'success' && completeJson.data.name === 'Zahra Putri', 'Student assessment successfully stored permanently');
 
-    // 7. Check student HTML includes "Wajib Dijawab" and "Wajib Diisi" on essay
-    console.log('\n7. Checking Student Portal UI contains Required Badges & Alert banner...');
+    // 7. Check student HTML has clean design (no cluttered "Wajib Dijawab" badge) & has alert container
+    console.log('\n7. Checking Student Portal UI has clean design without badge clutter & has Alert banner...');
     const rootRes = await makeRequest('/');
-    assert(rootRes.body.includes('Wajib Dijawab'), 'UI contains "* Wajib Dijawab" badge');
-    assert(rootRes.body.includes('Wajib Diisi'), 'UI contains "* Wajib Diisi" badge on essay section');
+    assert(!rootRes.body.includes('Wajib Dijawab'), 'UI does NOT display clutter "* Wajib Dijawab" badge');
     assert(rootRes.body.includes('question-validation-alert'), 'UI contains question-validation-alert container');
 
     console.log(`\n========================================`);

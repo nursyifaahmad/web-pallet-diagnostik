@@ -449,7 +449,7 @@ function renderMediaSelector(container, existingAns) {
   if (selectedMediaCategory) {
     const subTitle = document.createElement('p');
     subTitle.className = 'text-xs font-mono font-semibold text-atelier-inkMuted uppercase tracking-wider pt-2';
-    subTitle.textContent = `Pilih Spesifikasi Media ${selectedMediaCategory} (Wajib) * :`;
+    subTitle.textContent = `Pilih Spesifikasi Media ${selectedMediaCategory}:`;
     wrapper.appendChild(subTitle);
 
     const subList = document.createElement('div');
