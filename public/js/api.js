@@ -174,6 +174,12 @@ const API = {
   },
 
   // Rubric
+  async getClassRubric(classId) {
+    const res = await fetch(`/api/rubric/class/${encodeURIComponent(classId)}`, {
+      headers: getAuthHeaders()
+    });
+    return await res.json();
+  },
   async getRubric(studentId) {
     const res = await fetch(`/api/rubric/${studentId}`, {
       headers: getAuthHeaders()

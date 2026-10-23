@@ -1,4 +1,6 @@
-// Teacher Dashboard Controller for PALLET Studio with Attendance No, Gender & Live Monitor
+// Teacher Dashboard Controller for PALLET Studio
+// Platform Navigation, 9-Stage Modul PALLET, Dynamic Learning Recommendations & RPP, Rubric Gradebook & Custom Calendar
+
 let allClassSummaries = [];
 let currentGrade = 7;
 let currentClass = 'VII-A';
@@ -26,6 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  setupMobileSidebarToggle();
   setupNavigation();
   setupClassSwitcher();
   await loadClassData();
@@ -38,60 +41,149 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Start background live polling for badge counts
   startLiveMonitorPolling();
+
+  // Default to Beranda Utama
+  switchMainTab('tab-home');
 });
 
-// 1. Navigation Tabs
+// ========================================================
+// 1. MOBILE SIDEBAR TOGGLE
+// ========================================================
+function setupMobileSidebarToggle() {
+  const toggleBtn = document.getElementById('btn-toggle-sidebar');
+  const sidebar = document.getElementById('sidebar-container');
+  if (toggleBtn && sidebar) {
+    toggleBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('hidden');
+    });
+  }
+}
+
+// ========================================================
+// 2. MAIN PLATFORM & 9-STAGE NAVIGATION
+// ========================================================
 function switchMainTab(tabId) {
+  // Normalize tabId
+  const cleanTabId = tabId.startsWith('nav-') ? tabId.replace('nav-', '') : tabId;
+  const targetSecId = cleanTabId.replace('tab-', 'section-');
+
+  // Hide all sections
   document.querySelectorAll('.tab-content-section').forEach(sec => sec.classList.add('hidden'));
-  document.querySelectorAll('.main-nav-btn').forEach(btn => {
-    btn.classList.remove('border-atelier-terracotta', 'text-atelier-terracotta');
-    btn.classList.add('border-transparent', 'text-atelier-inkMuted');
-  });
 
-  const targetSecId = tabId.replace('nav-', '').replace('tab-', 'section-');
+  // Reveal target section
   const targetSec = document.getElementById(targetSecId);
-  if (targetSec) targetSec.classList.remove('hidden');
-
-  const activeBtn = document.getElementById(tabId);
-  if (activeBtn) {
-    activeBtn.classList.remove('border-transparent', 'text-atelier-inkMuted');
-    activeBtn.classList.add('border-atelier-terracotta', 'text-atelier-terracotta');
+  if (targetSec) {
+    targetSec.classList.remove('hidden');
   }
 
-  isLiveTabActive = (tabId === 'nav-tab-live');
+  // Reset all platform nav buttons styling
+  document.querySelectorAll('.platform-nav-btn').forEach(btn => {
+    btn.classList.remove('bg-atelier-terracottaLight', 'text-atelier-terracotta', 'font-bold', 'border-atelier-terracotta/30');
+    btn.classList.add('text-atelier-ink', 'font-medium');
+    const arrow = btn.querySelector('.nav-arrow');
+    if (arrow) arrow.classList.replace('text-atelier-terracotta', 'text-atelier-inkMuted');
+  });
+
+  // Highlight active button
+  const activeBtn = document.getElementById(`nav-${cleanTabId}`);
+  if (activeBtn) {
+    activeBtn.classList.remove('text-atelier-ink', 'font-medium');
+    activeBtn.classList.add('bg-atelier-terracottaLight', 'text-atelier-terracotta', 'font-bold', 'border', 'border-atelier-terracotta/30');
+    const arrow = activeBtn.querySelector('.nav-arrow');
+    if (arrow) arrow.classList.replace('text-atelier-inkMuted', 'text-atelier-terracotta');
+  }
+
+  // Close sidebar on mobile after clicking
+  const sidebar = document.getElementById('sidebar-container');
+  if (sidebar && window.innerWidth < 1024) {
+    sidebar.classList.add('hidden');
+  }
+
+  isLiveTabActive = (cleanTabId === 'tab-m9-tracking');
 
   // Tab-specific refreshes
-  if (tabId === 'nav-tab-live') fetchLiveMonitorData();
-  if (tabId === 'nav-tab-questions') loadQuestionsList();
-  if (tabId === 'nav-tab-modul') generateModulAjarText();
-  if (tabId === 'nav-tab-share') updateShareLinkAndQR();
+  if (cleanTabId === 'tab-jenjang') {
+    renderJenjangMatrix(allClassSummaries);
+  } else if (cleanTabId === 'tab-m1-diagnostik') {
+    loadQuestionsList();
+    updateShareLinkAndQR();
+  } else if (cleanTabId === 'tab-m2-profile') {
+    populateProfileStudentSelect();
+    renderSelectedStudentProfile();
+  } else if (cleanTabId === 'tab-m3-analysis') {
+    renderHeatmap(currentRoster);
+  } else if (cleanTabId === 'tab-m4-roster') {
+    renderRosterTable(currentRoster);
+  } else if (cleanTabId === 'tab-m5-recommendation') {
+    renderLearningRecommendations(currentRoster);
+  } else if (cleanTabId === 'tab-m6-rpp') {
+    generateModulAjarText();
+  } else if (cleanTabId === 'tab-m7-studio') {
+    loadCalendarEvents();
+  } else if (cleanTabId === 'tab-m8-rubric') {
+    loadClassRubricGradebook(currentClass);
+    populateRubricStudentSelect(currentRoster);
+  } else if (cleanTabId === 'tab-m9-tracking') {
+    fetchLiveMonitorData();
+  } else if (cleanTabId === 'tab-class-dash') {
+    updateClassStats(currentRoster);
+  }
+}
+
+// Sub-Tab switcher for Tahap 1: Digital Diagnostik (CRUD vs Share Link)
+function switchM1SubTab(subTab) {
+  const btnCrud = document.getElementById('btn-m1-crud');
+  const btnShare = document.getElementById('btn-m1-share');
+  const contentCrud = document.getElementById('m1-content-crud');
+  const contentShare = document.getElementById('m1-content-share');
+
+  if (subTab === 'crud') {
+    btnCrud.className = 'px-4 py-2 rounded-xl text-xs font-semibold bg-atelier-terracotta text-white transition cursor-pointer';
+    btnShare.className = 'px-4 py-2 rounded-xl text-xs font-semibold bg-atelier-warm text-atelier-ink hover:bg-atelier-border transition cursor-pointer';
+    contentCrud.classList.remove('hidden');
+    contentShare.classList.add('hidden');
+  } else {
+    btnShare.className = 'px-4 py-2 rounded-xl text-xs font-semibold bg-atelier-terracotta text-white transition cursor-pointer';
+    btnCrud.className = 'px-4 py-2 rounded-xl text-xs font-semibold bg-atelier-warm text-atelier-ink hover:bg-atelier-border transition cursor-pointer';
+    contentCrud.classList.add('hidden');
+    contentShare.classList.remove('hidden');
+    updateShareLinkAndQR();
+  }
 }
 
 function setupNavigation() {
-  document.getElementById('btn-logout').addEventListener('click', async () => {
-    if (confirm('Apakah Anda yakin ingin keluar dari Studio Guru?')) {
-      await API.logout();
-      window.location.href = '/login/guru';
-    }
-  });
+  const btnLogout = document.getElementById('btn-logout');
+  if (btnLogout) {
+    btnLogout.addEventListener('click', async () => {
+      if (confirm('Apakah Anda yakin ingin keluar dari Studio Guru?')) {
+        await API.logout();
+        window.location.href = '/login/guru';
+      }
+    });
+  }
 
-  document.getElementById('btn-export-excel').addEventListener('click', () => {
-    window.location.href = `/api/export/excel?class=${encodeURIComponent(currentClass)}`;
-  });
+  const btnExport = document.getElementById('btn-export-excel');
+  if (btnExport) {
+    btnExport.addEventListener('click', () => {
+      window.location.href = `/api/export/excel?class=${encodeURIComponent(currentClass)}`;
+    });
+  }
 }
 
-// 2. Class Switcher (27 Classes: VII A-I, VIII A-I, IX A-I)
+// ========================================================
+// 3. CLASS SWITCHER (27 Classes: VII A-I, VIII A-I, IX A-I)
+// ========================================================
 const SECTIONS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
 
 function switchGradeTab(grade) {
   currentGrade = grade;
   document.querySelectorAll('.grade-tab-btn').forEach(btn => {
     btn.classList.remove('bg-atelier-terracotta', 'text-white');
-    btn.classList.add('bg-white', 'text-atelier-ink');
+    btn.classList.add('bg-atelier-warm', 'text-atelier-ink');
   });
   const activeBtn = document.getElementById(`tab-grade-${grade}`);
   if (activeBtn) {
-    activeBtn.classList.remove('bg-white', 'text-atelier-ink');
+    activeBtn.classList.remove('bg-atelier-warm', 'text-atelier-ink');
     activeBtn.classList.add('bg-atelier-terracotta', 'text-white');
   }
   renderSectionButtons();
@@ -99,8 +191,9 @@ function switchGradeTab(grade) {
 
 function renderSectionButtons() {
   const container = document.getElementById('section-buttons-container');
+  if (!container) return;
   container.innerHTML = '<span class="text-atelier-inkMuted text-[11px] mr-2 uppercase tracking-wider font-bold">Rombel:</span>';
-  
+
   const roman = currentGrade === 7 ? 'VII' : currentGrade === 8 ? 'VIII' : 'IX';
 
   SECTIONS.forEach(sec => {
@@ -125,27 +218,53 @@ async function selectClass(classId) {
   const roman = classId.split('-')[0];
   currentGrade = roman === 'VII' ? 7 : roman === 'VIII' ? 8 : 9;
 
-  document.getElementById('active-class-badge').textContent = currentClass;
-  document.getElementById('quick-add-class-label').textContent = currentClass;
-  document.getElementById('roster-class-title').textContent = currentClass;
-  document.getElementById('heatmap-class-title').textContent = currentClass;
-  document.getElementById('modul-class-name').textContent = currentClass;
-  document.getElementById('share-class-badge').textContent = currentClass;
-  document.getElementById('live-class-label').textContent = currentClass;
-  document.getElementById('live-table-class-title').textContent = currentClass;
+  // Sync grade tabs visually
+  document.querySelectorAll('.grade-tab-btn').forEach(btn => {
+    btn.classList.remove('bg-atelier-terracotta', 'text-white');
+    btn.classList.add('bg-atelier-warm', 'text-atelier-ink');
+  });
+  const activeGradeBtn = document.getElementById(`tab-grade-${currentGrade}`);
+  if (activeGradeBtn) {
+    activeGradeBtn.classList.remove('bg-atelier-warm', 'text-atelier-ink');
+    activeGradeBtn.classList.add('bg-atelier-terracotta', 'text-white');
+  }
+
+  // Update labels across all sections
+  const updateLabel = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+
+  updateLabel('active-class-badge', currentClass);
+  updateLabel('dash-class-title', currentClass);
+  updateLabel('quick-add-class-label', currentClass);
+  updateLabel('roster-class-title', currentClass);
+  updateLabel('heatmap-class-title', currentClass);
+  updateLabel('profile-class-title', currentClass);
+  updateLabel('recom-class-title', currentClass);
+  updateLabel('modul-class-name', currentClass);
+  updateLabel('share-class-badge', currentClass);
+  updateLabel('qr-class-name', currentClass);
+  updateLabel('rubric-gradebook-class', currentClass);
+  updateLabel('live-class-label', currentClass);
+  updateLabel('live-table-class-title', currentClass);
 
   renderSectionButtons();
   await loadCurrentClassDetail();
   updateShareLinkAndQR();
   fetchLiveMonitorData();
+  loadClassRubricGradebook(currentClass);
 }
 
-// 3. Load Classes & Roster Data
+// ========================================================
+// 4. LOAD CLASS DATA & CURRENT CLASS DETAIL
+// ========================================================
 async function loadClassData() {
   try {
     const res = await API.getClasses();
     if (res && res.status === 'success') {
       allClassSummaries = res.data;
+      renderJenjangMatrix(allClassSummaries);
       await loadCurrentClassDetail();
     }
   } catch (err) {
@@ -161,8 +280,11 @@ async function loadCurrentClassDetail() {
       renderRosterTable(currentRoster);
       updateClassStats(currentRoster);
       renderHeatmap(currentRoster);
-      populateRubricStudentSelect(currentRoster);
+      populateProfileStudentSelect();
+      renderSelectedStudentProfile();
+      renderLearningRecommendations(currentRoster);
       generateModulAjarText();
+      populateRubricStudentSelect(currentRoster);
     }
   } catch (err) {
     console.error('Failed to load class detail', err);
@@ -170,11 +292,14 @@ async function loadCurrentClassDetail() {
 }
 
 function updateClassStats(roster) {
-  document.getElementById('stat-total-students').textContent = `${roster.length} Siswa`;
+  const statTotal = document.getElementById('stat-total-students');
+  if (statTotal) statTotal.textContent = `${roster.length} Siswa`;
 
   if (roster.length === 0) {
-    document.getElementById('stat-dominant-style').textContent = '-';
-    document.getElementById('stat-top-media').textContent = '-';
+    const elDom = document.getElementById('stat-dominant-style');
+    const elMedia = document.getElementById('stat-top-media');
+    if (elDom) elDom.textContent = '-';
+    if (elMedia) elMedia.textContent = '-';
     return;
   }
 
@@ -188,11 +313,908 @@ function updateClassStats(roster) {
   const dominantStyle = Object.entries(styles).sort((a,b) => b[1] - a[1])[0]?.[0] || '-';
   const topMedia = Object.entries(media).sort((a,b) => b[1] - a[1])[0]?.[0] || '-';
 
-  document.getElementById('stat-dominant-style').textContent = dominantStyle;
-  document.getElementById('stat-top-media').textContent = topMedia;
+  const elDom = document.getElementById('stat-dominant-style');
+  const elMedia = document.getElementById('stat-top-media');
+  if (elDom) elDom.textContent = dominantStyle;
+  if (elMedia) elMedia.textContent = topMedia;
 }
 
-// 4. LIVE MONITOR ENGINE (REAL-TIME ASESMEN)
+// ========================================================
+// 5. PEMETAAN JENJANG (27-ROMBEL MATRIX)
+// ========================================================
+function renderJenjangMatrix(summaries) {
+  const container = document.getElementById('jenjang-matrix-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const grades = [
+    { num: 7, roman: 'VII', label: 'Jenjang Kelas VII (Fase D Awal)' },
+    { num: 8, roman: 'VIII', label: 'Jenjang Kelas VIII (Fase D Lanjutan)' },
+    { num: 9, roman: 'IX', label: 'Jenjang Kelas IX (Fase D Mahir)' }
+  ];
+
+  // Map summaries by class_id
+  const summaryMap = {};
+  if (Array.isArray(summaries)) {
+    summaries.forEach(c => {
+      summaryMap[c.class_id] = c;
+    });
+  }
+
+  grades.forEach(g => {
+    const block = document.createElement('div');
+    block.className = 'p-5 bg-white rounded-2xl border border-atelier-border space-y-3';
+
+    block.innerHTML = `
+      <div class="flex items-center justify-between border-b border-atelier-border pb-2.5">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-atelier-terracotta text-white font-serif font-black flex items-center justify-center text-xs">
+            ${g.roman}
+          </span>
+          <h4 class="font-serif font-bold text-base text-atelier-ink">${g.label}</h4>
+        </div>
+        <span class="font-mono text-xs text-atelier-inkMuted">9 Rombel (A s.d I)</span>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2.5 pt-1" id="jenjang-grid-${g.num}">
+      </div>
+    `;
+
+    container.appendChild(block);
+
+    const grid = block.querySelector(`#jenjang-grid-${g.num}`);
+    SECTIONS.forEach(sec => {
+      const classId = `${g.roman}-${sec}`;
+      const data = summaryMap[classId] || { student_count: 0 };
+      const count = data.student_count || 0;
+      const isCurrent = currentClass === classId;
+
+      let badgeColor = 'bg-gray-100 text-gray-600 border-gray-200';
+      let statusText = 'Kosong';
+      if (count >= 20) {
+        badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+        statusText = 'Lengkap';
+      } else if (count > 0) {
+        badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+        statusText = 'Sebagian';
+      }
+
+      const card = document.createElement('div');
+      card.className = `p-3 rounded-xl border transition cursor-pointer text-center space-y-1 hover:shadow-md ${
+        isCurrent ? 'border-atelier-terracotta bg-atelier-terracottaLight ring-2 ring-atelier-terracotta/40' : 'border-atelier-border bg-atelier-warm/30 hover:bg-white'
+      }`;
+      card.onclick = () => {
+        selectClass(classId);
+        switchMainTab('tab-class-dash');
+      };
+
+      card.innerHTML = `
+        <span class="font-mono font-bold text-sm block ${isCurrent ? 'text-atelier-terracotta' : 'text-atelier-ink'}">${classId}</span>
+        <span class="font-serif font-black text-lg block text-atelier-ink">${count}</span>
+        <span class="text-[10px] block font-mono text-atelier-inkMuted">Siswa</span>
+        <span class="inline-block px-1.5 py-0.2 text-[9px] font-mono font-bold rounded border ${badgeColor}">
+          ${statusText}
+        </span>
+      `;
+      grid.appendChild(card);
+    });
+  });
+}
+
+// ========================================================
+// 6. STUDENT ART PROFILE (TAHAP 2)
+// ========================================================
+function populateProfileStudentSelect() {
+  const select = document.getElementById('profile-student-select');
+  if (!select) return;
+
+  const currentVal = select.value;
+  select.innerHTML = '<option value="" disabled selected>Pilih siswa rombel...</option>';
+
+  currentRoster.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = `No. ${s.attendance_no || '-'} · ${s.name} (${s.gender || '-'})`;
+    select.appendChild(opt);
+  });
+
+  if (currentVal && currentRoster.some(s => s.id == currentVal)) {
+    select.value = currentVal;
+  } else if (currentRoster.length > 0) {
+    select.value = currentRoster[0].id;
+  }
+}
+
+function renderSelectedStudentProfile() {
+  const select = document.getElementById('profile-student-select');
+  const container = document.getElementById('student-art-card-display');
+  if (!select || !container) return;
+
+  const studentId = select.value;
+  const student = currentRoster.find(s => s.id == studentId);
+
+  if (!student) {
+    container.innerHTML = `
+      <div class="p-8 text-center text-atelier-inkMuted italic bg-atelier-warm/30 rounded-2xl border border-atelier-border">
+        Belum ada siswa dipilih atau rombel kelas ini masih kosong. Silakan tambahkan siswa atau pilih dari dropdown di atas.
+      </div>
+    `;
+    return;
+  }
+
+  // Determine artistic archetype
+  let archetype = 'Ilustrator Visual';
+  let archetypeDesc = 'Memiliki kepekaan estetika visual yang tinggi dan nyaman bekerja dengan instruksi berbasis gambar dan demonstrasi karya.';
+  if (student.category === '3D') {
+    archetype = 'Eksplorator Tiga Dimensi';
+    archetypeDesc = 'Sangat antusias mengolah bentuk ruang, tekstur fisik material, dan konstruksi media plastis maupun bahan daur ulang.';
+  } else if (student.style && student.style.includes('Kinestetik')) {
+    archetype = 'Artisan Taktil & Eksperimental';
+    archetypeDesc = 'Menemukan ide terbaik melalui trial and error langsung pada material dan kebebasan mengekspresikan teknik fisik.';
+  } else if (student.style && student.style.includes('Kolaboratif')) {
+    archetype = 'Komunikator Artistik Komunal';
+    archetypeDesc = 'Sangat hidup saat berdiskusi, bertukar gagasan kreatif dengan rekan kelompok, dan menyusun karya interaktif.';
+  }
+
+  const genderLabel = student.gender === 'L' ? 'Laki-laki (L)' : student.gender === 'P' ? 'Perempuan (P)' : 'Tidak ditentukan';
+
+  container.innerHTML = `
+    <div class="atelier-card p-6 bg-gradient-to-br from-white via-atelier-warm/30 to-atelier-terracottaLight/20 border border-atelier-border space-y-6">
+      
+      <!-- Top Header Profile -->
+      <div class="flex flex-wrap items-start justify-between gap-4 border-b border-atelier-border pb-4">
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-2xl bg-atelier-terracotta text-white flex items-center justify-center font-serif font-black text-2xl shadow-md">
+            ${student.name.charAt(0)}
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded font-mono font-bold text-xs bg-atelier-terracotta text-white">
+                No. Absen ${student.attendance_no || '-'}
+              </span>
+              <span class="font-mono text-xs text-atelier-inkMuted">Kelas ${currentClass}</span>
+              <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-atelier-warm text-atelier-ink border border-atelier-border">
+                ${genderLabel}
+              </span>
+            </div>
+            <h3 class="font-serif font-black text-2xl text-atelier-ink mt-1">${student.name}</h3>
+            <p class="font-mono text-xs text-atelier-terracotta font-bold mt-0.5">Arketipe: ${archetype}</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="window.print()" class="px-3 py-1.5 border border-atelier-border hover:bg-white rounded-xl text-xs font-medium transition cursor-pointer">
+            🖨️ Cetak Kartu Profil
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 Core Profile Dimensions -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+        <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-1">
+          <span class="block font-mono text-[10px] text-atelier-inkMuted uppercase">Gaya Belajar Diagnostik</span>
+          <strong class="font-serif font-bold text-sm text-atelier-terracotta block">${student.style || 'Visual Tutorial'}</strong>
+          <span class="text-[11px] text-atelier-inkMuted">Pendekatan pemahaman materi ajar</span>
+        </div>
+
+        <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-1">
+          <span class="block font-mono text-[10px] text-atelier-inkMuted uppercase">Pilihan Media Karya</span>
+          <strong class="font-serif font-bold text-sm text-atelier-ochre block">${student.category || '2D'} (${student.sub_option || 'Kering'})</strong>
+          <span class="text-[11px] text-atelier-inkMuted">Fokus eksplorasi alat & bahan</span>
+        </div>
+
+        <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-1">
+          <span class="block font-mono text-[10px] text-atelier-inkMuted uppercase">Tantangan Utama</span>
+          <strong class="font-serif font-bold text-sm text-atelier-ultramarine block">${student.challenge || 'Sketsa Proporsi'}</strong>
+          <span class="text-[11px] text-atelier-inkMuted">Area pendampingan (scaffolding)</span>
+        </div>
+
+        <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-1">
+          <span class="block font-mono text-[10px] text-atelier-inkMuted uppercase">Kondisi Afektif / Emosi</span>
+          <strong class="font-serif font-bold text-sm text-atelier-sage block">😊 ${student.feeling || 'Senang & Antusias'}</strong>
+          <span class="text-[11px] text-atelier-inkMuted">Kesiapan psikologis berkarya</span>
+        </div>
+      </div>
+
+      <!-- Persona Description & Custom Guidance -->
+      <div class="p-4 bg-white rounded-xl border border-atelier-border text-xs space-y-2">
+        <strong class="font-serif font-bold text-sm text-atelier-ink block">Karakteristik Seniman Muda:</strong>
+        <p class="text-atelier-ink leading-relaxed">${archetypeDesc}</p>
+        <div class="p-3 bg-atelier-warm/40 rounded-lg text-atelier-inkMuted text-[11px] leading-relaxed">
+          <strong class="text-atelier-ink">Rekomendasi Pemantik Studio:</strong> Sediakan bahan referensi sesuai preferensi ${student.category || '2D'} dan fasilitasi bimbingan bertahap pada tantangan ${student.challenge || 'sketsa'}.
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
+// ========================================================
+// 7. DYNAMIC LEARNING RECOMMENDATION (TAHAP 5)
+// ========================================================
+function renderLearningRecommendations(roster) {
+  const elTitle = document.getElementById('recom-class-title');
+  if (elTitle) elTitle.textContent = currentClass;
+
+  const dynKonten = document.getElementById('dyn-recom-konten');
+  const dynProses = document.getElementById('dyn-recom-proses');
+  const dynProduk = document.getElementById('dyn-recom-produk');
+  const dynStudio = document.getElementById('dyn-recom-studio');
+
+  if (!roster || roster.length === 0) {
+    const emptyMsg = 'Belum ada data murid di rombel ini. Bagikan tautan asesmen atau input data siswa terlebih dahulu.';
+    if (dynKonten) dynKonten.innerHTML = `<span class="italic text-atelier-inkMuted">${emptyMsg}</span>`;
+    if (dynProses) dynProses.innerHTML = `<span class="italic text-atelier-inkMuted">${emptyMsg}</span>`;
+    if (dynProduk) dynProduk.innerHTML = `<span class="italic text-atelier-inkMuted">${emptyMsg}</span>`;
+    if (dynStudio) dynStudio.innerHTML = `<span class="italic text-atelier-inkMuted">${emptyMsg}</span>`;
+    return;
+  }
+
+  const total = roster.length;
+
+  // 1. Tally styles
+  const styles = {};
+  const media = {};
+  const challenges = {};
+  let maleCount = 0;
+  let femaleCount = 0;
+
+  roster.forEach(s => {
+    styles[s.style || 'Visual Tutorial'] = (styles[s.style || 'Visual Tutorial'] || 0) + 1;
+    media[s.category || '2D'] = (media[s.category || '2D'] || 0) + 1;
+    challenges[s.challenge || 'Sketsa Proporsi'] = (challenges[s.challenge || 'Sketsa Proporsi'] || 0) + 1;
+    if (s.gender === 'L') maleCount++;
+    else if (s.gender === 'P') femaleCount++;
+  });
+
+  const sortedStyles = Object.entries(styles).sort((a,b) => b[1] - a[1]);
+  const dominantStyle = sortedStyles[0]?.[0] || 'Visual Tutorial';
+  const dominantStyleCount = sortedStyles[0]?.[1] || 0;
+  const dominantStylePct = Math.round((dominantStyleCount / total) * 100);
+
+  const sortedMedia = Object.entries(media).sort((a,b) => b[1] - a[1]);
+  const count2D = media['2D'] || 0;
+  const count3D = media['3D'] || 0;
+  const pct2D = Math.round((count2D / total) * 100);
+  const pct3D = Math.round((count3D / total) * 100);
+
+  const sortedChallenges = Object.entries(challenges).sort((a,b) => b[1] - a[1]);
+  const topChallenge = sortedChallenges[0]?.[0] || 'Sketsa Proporsi';
+  const topChallengeCount = sortedChallenges[0]?.[1] || 0;
+  const topChallengePct = Math.round((topChallengeCount / total) * 100);
+
+  // Content Differentiation text
+  if (dynKonten) {
+    let contentHtml = `Sebanyak <strong>${dominantStylePct}% siswa (${dominantStyleCount} anak)</strong> di kelas ${currentClass} memilih modalitas <strong>${dominantStyle}</strong>. `;
+    if (dominantStyle.includes('Visual')) {
+      contentHtml += `Siapkan panduan rupa infografis visual langkah-demi-langkah (sketsa anatomis, kartu contoh gradasi warna, dan bagan proporsi). Sediakan video demonstrasi singkat (2-3 menit) yang dapat diputar ulang oleh siswa.`;
+    } else if (dominantStyle.includes('Kinestetik')) {
+      contentHtml += `Sediakan artefak fisik, contoh model karya asli yang bisa disentuh langsung, dan demonstrasi taktil teknik alat/bahan secara nyata di depan meja studio.`;
+    } else if (dominantStyle.includes('Auditori')) {
+      contentHtml += `Sediakan narasi kontekstual mengenai filosofi karya seni, penjelasan verbal yang runtut mengenai makna simbol visual, dan musik latar pendukung konsentrasi berkarya.`;
+    } else {
+      contentHtml += `Fasilitasi sesi bedah karya berkelompok dengan papan inspirasi visual kolektif (moodboard) sebelum memulai karya individual.`;
+    }
+    dynKonten.innerHTML = contentHtml;
+  }
+
+  // Process Differentiation (Scaffolding)
+  if (dynProses) {
+    let prosesHtml = `Tantangan terbesar siswa kelas ini adalah <strong>${topChallenge} (${topChallengePct}% - ${topChallengeCount} siswa)</strong>. `;
+    if (topChallenge.includes('Sketsa') || topChallenge.includes('Proporsi')) {
+      prosesHtml += `Terapkan <em>Scaffolding Tingkat 1</em>: berikan lembar kerja berkisi (grid guide) atau teknik bentuk geometris dasar (lingkaran, tabung, kubus) untuk mempermudah peletakan proporsi awal sebelum siswa masuk ke pewarnaan.`;
+    } else if (topChallenge.includes('Warna') || topChallenge.includes('Pewarnaan')) {
+      prosesHtml += `Terapkan <em>Scaffolding Tingkat 1</em>: sediakan palet uji coba warna (swatch test sheet) dan kartu panduan lingkaran warna harmoni (komplementer, analog) agar siswa tidak ragu memadukan gradasi.`;
+    } else if (topChallenge.includes('Ide') || topChallenge.includes('Awal')) {
+      prosesHtml += `Terapkan <em>Scaffolding Tingkat 1</em>: fasilitasi sesi curah pendapat 10 menit menggunakan kartu kata kunci bertema lingkungan sekolah, budaya lokal, atau emosi personal siswa.`;
+    } else {
+      prosesHtml += `Terapkan <em>Scaffolding Tingkat 1</em>: bimbingan intensif pada teknik penegasan garis kontur (finishing line) dan kerapian pembersihan sisa media.`;
+    }
+    dynProses.innerHTML = prosesHtml;
+  }
+
+  // Product Differentiation
+  if (dynProduk) {
+    dynProduk.innerHTML = `
+      Kelas terbagi menjadi <strong>${pct2D}% media 2D (${count2D} siswa)</strong> dan <strong>${pct3D}% media 3D (${count3D} siswa)</strong>.
+      Berikan kebebasan menghasilkan artefak akhir multi-jalur: bagi siswa 2D dapat memilih gambar ilustratif/lukisan dengan teknik kering (pensil warna/spidol) atau basah (cat air), sedangkan bagi siswa 3D diarahkan membuat objek figuratif mini/makel menggunakan bahan plastis atau daur ulang kertas.
+    `;
+  }
+
+  // Studio Environment Layout
+  if (dynStudio) {
+    dynStudio.innerHTML = `
+      <strong>Zonasi Studio Kelas ${currentClass}:</strong> 
+      Bagi ruang kelas menjadi 2 zona kerja: 
+      <strong>Zona A (Meja 2D Kering & Sketsa, ${count2D} meja)</strong> dialokasikan di dekat jendela untuk pencahayaan alami optimal. 
+      <strong>Zona B (Meja 3D & Media Basah, ${count3D} meja)</strong> dialokasikan di area yang dekat dengan akses air bersih dan beralaskan koran/alas plastik untuk menjaga kebersihan meja kerja studio.
+    `;
+  }
+
+  // Populate Personal Recommendation select
+  populatePersonalSelect();
+  renderPersonalRecommendation();
+}
+
+function populatePersonalSelect() {
+  const select = document.getElementById('personal-student-select');
+  if (!select) return;
+
+  const currentVal = select.value;
+  select.innerHTML = '<option value="" disabled selected>Pilih siswa rombel...</option>';
+
+  currentRoster.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = `No. ${s.attendance_no || '-'} · ${s.name} (${s.style || 'Visual'} - ${s.category || '2D'})`;
+    select.appendChild(opt);
+  });
+
+  if (currentVal && currentRoster.some(s => s.id == currentVal)) {
+    select.value = currentVal;
+  } else if (currentRoster.length > 0) {
+    select.value = currentRoster[0].id;
+  }
+}
+
+function renderPersonalRecommendation() {
+  const select = document.getElementById('personal-student-select');
+  const container = document.getElementById('personal-recom-card');
+  if (!select || !container) return;
+
+  const studentId = select.value;
+  const student = currentRoster.find(s => s.id == studentId);
+
+  if (!student) {
+    container.innerHTML = '<p class="text-xs text-atelier-inkMuted italic">Pilih siswa di atas untuk melihat rekomendasi pendampingan personal.</p>';
+    return;
+  }
+
+  // Find a complementary peer partner in the roster
+  const peer = currentRoster.find(s => s.id !== student.id && (s.style !== student.style || s.category !== student.category));
+  const peerText = peer 
+    ? `<strong>No. ${peer.attendance_no || '-'} ${peer.name}</strong> (Gaya: ${peer.style || 'Visual'}, Media: ${peer.category || '2D'})`
+    : 'Rekan sebaya di meja sebelah';
+
+  container.innerHTML = `
+    <div class="space-y-4">
+      <!-- Student Badge Header -->
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-atelier-border pb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-atelier-terracotta text-white flex items-center justify-center font-serif font-black text-base">
+            ${student.attendance_no || '#'}
+          </div>
+          <div>
+            <h5 class="font-serif font-bold text-base text-atelier-ink">${student.name}</h5>
+            <span class="text-[11px] font-mono text-atelier-inkMuted">Kelas ${currentClass} · Jenis Kelamin: ${student.gender || '-'}</span>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-1.5">
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-atelier-terracottaLight text-atelier-terracotta">
+            ${student.style || 'Visual Tutorial'}
+          </span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-atelier-ochreLight text-atelier-ochre">
+            ${student.category || '2D'} (${student.sub_option || 'Kering'})
+          </span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-red-100 text-red-800">
+            Kendala: ${student.challenge || 'Sketsa'}
+          </span>
+        </div>
+      </div>
+
+      <!-- Specific Scaffolding for this student -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+        <div class="p-3.5 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-1">
+          <strong class="text-atelier-terracotta font-mono uppercase text-[10px] block">A. Strategi Bimbingan Guru (Personal Scaffolding)</strong>
+          <p class="text-atelier-ink leading-relaxed">
+            Karena ${student.name} memiliki modalitas <strong>${student.style || 'Visual'}</strong> namun menghadapi kendala pada <strong>${student.challenge || 'Sketsa Proporsi'}</strong>, berikan contoh visual gambar rangka garis (wireframe) berukuran 1:1 di dekat mejanya dan dorong ia membuat 2 alternatif sketsa kasar (thumbnails) sebelum menetapkan sketsa final.
+          </p>
+        </div>
+
+        <div class="p-3.5 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-1">
+          <strong class="text-atelier-sage font-mono uppercase text-[10px] block">B. Rekomendasi Partner Kolaborasi (Peer Buddy)</strong>
+          <p class="text-atelier-ink leading-relaxed">
+            Sandingkan meja kerja ${student.name} dengan ${peerText} agar mereka dapat saling memberikan apresiasi teman sebaya dan bertukar perspektif dalam eksplorasi media ${student.category || '2D'}.
+          </p>
+        </div>
+      </div>
+
+      <!-- Suggested Next Action -->
+      <div class="p-3 bg-white border border-atelier-border rounded-xl text-xs flex items-center justify-between">
+        <span class="text-atelier-inkMuted text-[11px]">
+          Target Sesi: Menyelesaikan sketsa kasar dalam 15 menit pertama dan memilih palet warna harmonis.
+        </span>
+        <button onclick="switchMainTab('tab-m8-rubric'); selectStudentForRubric(${student.id});" class="text-atelier-terracotta hover:underline font-mono text-[11px] font-bold cursor-pointer">
+          Buka Penilaian Rubrik Siswa Ini →
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ========================================================
+// 8. DYNAMIC RPP / MODUL AJAR GENERATOR (TAHAP 6)
+// ========================================================
+function generateModulAjarText() {
+  const container = document.getElementById('modul-ajar-document');
+  if (!container) return;
+
+  const total = currentRoster.length;
+  let maleCount = 0;
+  let femaleCount = 0;
+
+  const styles = {};
+  const media = {};
+  const challenges = {};
+
+  currentRoster.forEach(s => {
+    styles[s.style || 'Visual Tutorial'] = (styles[s.style || 'Visual Tutorial'] || 0) + 1;
+    media[s.category || '2D'] = (media[s.category || '2D'] || 0) + 1;
+    challenges[s.challenge || 'Sketsa Proporsi'] = (challenges[s.challenge || 'Sketsa Proporsi'] || 0) + 1;
+    if (s.gender === 'L') maleCount++;
+    else if (s.gender === 'P') femaleCount++;
+  });
+
+  const dominantStyle = Object.entries(styles).sort((a,b) => b[1] - a[1])[0]?.[0] || 'Visual Tutorial';
+  const dominantStyleCount = styles[dominantStyle] || 0;
+  const dominantStylePct = total > 0 ? Math.round((dominantStyleCount / total) * 100) : 0;
+
+  const count2D = media['2D'] || 0;
+  const count3D = media['3D'] || 0;
+  const topChallenge = Object.entries(challenges).sort((a,b) => b[1] - a[1])[0]?.[0] || 'Sketsa Proporsi';
+
+  container.innerHTML = `
+    <!-- Kop Modul Ajar Resmi -->
+    <div class="text-center border-b-2 border-atelier-ink pb-4 space-y-1">
+      <h2 class="font-serif font-black text-xl uppercase tracking-wider">MODUL AJAR SENI RUPA FASE D (SMP)</h2>
+      <p class="font-serif text-sm italic">Pendekatan Pembelajaran Berdiferensiasi Berbasis Profil Asesmen Diagnostik Siswa</p>
+      <div class="flex flex-wrap items-center justify-center gap-3 font-mono text-xs text-atelier-inkMuted pt-1">
+        <span>Satuan Pendidikan: SMP</span>
+        <span>•</span>
+        <span>Alokasi Waktu: 3 JP (3 x 40 Menit)</span>
+        <span>•</span>
+        <span class="font-bold text-atelier-terracotta">Kelas: ${currentClass}</span>
+        <span>•</span>
+        <span>Jumlah Siswa: ${total} Anak (${maleCount} L, ${femaleCount} P)</span>
+      </div>
+    </div>
+
+    <!-- I. Identitas & Capaian Pembelajaran -->
+    <div class="space-y-2">
+      <h3 class="font-serif font-bold text-base text-atelier-terracotta uppercase tracking-wide">I. Capaian Pembelajaran (CP) & Profil Pelajar Pancasila</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+        <div class="p-3 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-1">
+          <strong class="text-atelier-ink">Elemen Capaian Fase D:</strong>
+          <p class="text-atelier-inkMuted leading-relaxed">
+            <strong>Mengalami (Experiencing):</strong> Siswa mampu merefleksikan pengamatan visual lingkungan sekitar.<br>
+            <strong>Menciptakan (Making):</strong> Siswa mampu mengeksplorasi ragam media dan teknik berkarya seni rupa 2D dan 3D secara mandiri dan kreatif.
+          </p>
+        </div>
+        <div class="p-3 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-1">
+          <strong class="text-atelier-ink">Dimensi Profil Pelajar Pancasila:</strong>
+          <ul class="list-disc list-inside text-atelier-inkMuted space-y-0.5 leading-relaxed">
+            <li><strong>Kreatif:</strong> Mengembangkan gagasan orisinal melalui pilihan media seni.</li>
+            <li><strong>Mandiri:</strong> Memiliki ketekunan memecahkan kendala teknis dalam berkarya.</li>
+            <li><strong>Bergotong Royong:</strong> Memberikan apresiasi konstruktif kepada rekan sebaya.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- II. Karakteristik Diagnostik Kelas Aktif -->
+    <div class="space-y-2">
+      <h3 class="font-serif font-bold text-base text-atelier-terracotta uppercase tracking-wide">II. Karakteristik Riil Rombel ${currentClass} (Hasil Diagnostik)</h3>
+      <div class="p-4 bg-white border border-atelier-border rounded-xl text-xs space-y-2 leading-relaxed">
+        <p class="text-atelier-ink">
+          Berdasarkan hasil asesmen diagnostik terhadap <strong>${total} siswa</strong> di kelas <strong>${currentClass}</strong>:
+        </p>
+        <ul class="list-disc list-inside text-atelier-inkMuted space-y-1">
+          <li><strong>Dominasi Modalitas:</strong> Sebanyak <strong>${dominantStylePct}% siswa (${dominantStyleCount} anak)</strong> memiliki preferensi gaya belajar <strong>${dominantStyle}</strong>.</li>
+          <li><strong>Distribusi Media Pilihan:</strong> Terbagi menjadi <strong>${count2D} siswa (media 2D)</strong> dan <strong>${count3D} siswa (media 3D)</strong>.</li>
+          <li><strong>Fokus Titik Kendala:</strong> Kendala terbanyak yang dirasakan murid adalah pada tahapan <strong>${topChallenge}</strong>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- III. Strategi Pembelajaran Berdiferensiasi -->
+    <div class="space-y-2">
+      <h3 class="font-serif font-bold text-base text-atelier-terracotta uppercase tracking-wide">III. Rencana Diferensiasi Pembelajaran Spesifik Rombel</h3>
+      <div class="space-y-2.5 text-xs">
+        <div class="p-3 bg-white border border-atelier-border rounded-xl">
+          <strong class="text-atelier-terracotta font-mono uppercase">1. Diferensiasi Konten (Sesuai Gaya Dominan ${dominantStyle}):</strong>
+          <p class="text-atelier-ink mt-1 leading-relaxed">
+            Menyediakan variasi bahan ajar berupa modul visual infografis panduan sketsa proporsi untuk ${dominantStylePct}% siswa visual, kartu fisik contoh tekstur material untuk siswa kinestetik, dan penjelasan konsep filosofi bentuk untuk siswa auditori.
+          </p>
+        </div>
+        <div class="p-3 bg-white border border-atelier-border rounded-xl">
+          <strong class="text-atelier-ochre font-mono uppercase">2. Diferensiasi Proses (Scaffolding Tantangan ${topChallenge}):</strong>
+          <p class="text-atelier-ink mt-1 leading-relaxed">
+            Guru memberikan pendampingan intensif pada fase perancangan sketsa awal bagi siswa yang menghadapi kesulitan ${topChallenge}. Siswa dikelompokkan secara heterogen agar dapat saling mengapresiasi dan berbagi trik teknik berkarya.
+          </p>
+        </div>
+        <div class="p-3 bg-white border border-atelier-border rounded-xl">
+          <strong class="text-atelier-sage font-mono uppercase">3. Diferensiasi Produk (Keseimbangan 2D & 3D):</strong>
+          <p class="text-atelier-ink mt-1 leading-relaxed">
+            Siswa bebas memilih bentuk artefak akhir: <strong>Jalur 2D (${count2D} siswa)</strong> menghasilkan karya gambar/lukisan ekspresi, sedangkan <strong>Jalur 3D (${count3D} siswa)</strong> menghasilkan objek tiga dimensi dari bahan lempung/daur ulang dengan rubrik penilaian autentik yang adil.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- IV. Skenario Pembelajaran (120 Menit) -->
+    <div class="space-y-2">
+      <h3 class="font-serif font-bold text-base text-atelier-terracotta uppercase tracking-wide">IV. Skenario Pembelajaran Studio (3 x 40 Menit)</h3>
+      <div class="space-y-2 text-xs">
+        <div class="p-3 bg-atelier-warm/40 rounded-xl">
+          <strong>A. Kegiatan Awal (15 Menit):</strong>
+          <ul class="list-disc list-inside text-atelier-inkMuted mt-1 space-y-0.5">
+            <li>Apersepsi, salam, dan refleksi kesiapan emosional berkarya siswa.</li>
+            <li>Penyampaian tujuan pembelajaran dan instruksi alur kerja studio 3 fase berwaktu.</li>
+          </ul>
+        </div>
+        <div class="p-3 bg-atelier-warm/40 rounded-xl">
+          <strong>B. Kegiatan Inti Studio Berkarya (90 Menit):</strong>
+          <ul class="list-disc list-inside text-atelier-inkMuted mt-1 space-y-0.5">
+            <li><strong>Fase 1 (15 Menit - Eksplorasi Sketsa):</strong> Siswa merancang ide bentuk awal dengan bimbingan khusus pada ${topChallenge}.</li>
+            <li><strong>Fase 2 (60 Menit - Eksekusi Media):</strong> Siswa berkarya di zonasi masing-masing (Zona 2D atau Zona 3D) dengan teknik pilihan.</li>
+            <li><strong>Fase 3 (15 Menit - Apresiasi Sebaya):</strong> Siswa saling bertukar masukan konstruktif dengan teman kelompok heterogen.</li>
+          </ul>
+        </div>
+        <div class="p-3 bg-atelier-warm/40 rounded-xl">
+          <strong>C. Kegiatan Penutup (15 Menit):</strong>
+          <ul class="list-disc list-inside text-atelier-inkMuted mt-1 space-y-0.5">
+            <li>Refleksi pengalaman berkarya dan pembersihan area studio.</li>
+            <li>Pengunggahan dokumentasi foto hasil karya untuk penilaian rubrik autentik.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function copyModulAjarText() {
+  const container = document.getElementById('modul-ajar-document');
+  if (!container) return;
+  navigator.clipboard.writeText(container.innerText).then(() => {
+    alert('Teks Modul Ajar Dinamis kelas ' + currentClass + ' berhasil disalin ke clipboard!');
+  });
+}
+
+// ========================================================
+// 9. RUBRIK PENILAIAN AUTENTIK & GRADEBOOK (TAHAP 8)
+// ========================================================
+async function loadClassRubricGradebook(classId) {
+  const tbody = document.getElementById('rubric-gradebook-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="10" class="py-6 text-center text-atelier-inkMuted italic">
+        Memuat rekapitulasi nilai rubrik kelas ${classId}...
+      </td>
+    </tr>
+  `;
+
+  try {
+    const res = await API.getClassRubric(classId);
+    if (res && res.status === 'success') {
+      const records = res.data || [];
+      renderRubricGradebookTable(records);
+    }
+  } catch (err) {
+    console.error('Failed to load class rubric', err);
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="10" class="py-6 text-center text-red-500 italic">
+          Gagal memuat rekapitulasi nilai rubrik kelas.
+        </td>
+      </tr>
+    `;
+  }
+}
+
+function renderRubricGradebookTable(records) {
+  const tbody = document.getElementById('rubric-gradebook-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (records.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="10" class="py-8 text-center text-atelier-inkMuted italic">
+          Belum ada siswa terdaftar di rombel ${currentClass}. Tambahkan siswa atau bagikan tautan asesmen.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  records.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-atelier-warm/40 transition';
+
+    const hasScore = r.rubric_id !== null && r.total_score !== null;
+    const genderBadge = r.gender === 'L' ? '<span class="text-blue-600 font-bold">L</span>' : r.gender === 'P' ? '<span class="text-pink-600 font-bold">P</span>' : '-';
+
+    let predicateBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-gray-100 text-gray-500">Belum Dinilai</span>';
+    if (hasScore) {
+      if (r.total_score >= 88) {
+        predicateBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800">Istimewa</span>';
+      } else if (r.total_score >= 76) {
+        predicateBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-100 text-blue-800">Tuntas</span>';
+      } else {
+        predicateBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-100 text-amber-800">Bimbingan</span>';
+      }
+    }
+
+    tr.innerHTML = `
+      <td class="py-3 px-3 font-mono font-bold text-center text-atelier-terracotta">${r.attendance_no || '-'}</td>
+      <td class="py-3 px-3 font-semibold text-atelier-ink">${r.student_name}</td>
+      <td class="py-3 px-3 font-mono text-center">${genderBadge}</td>
+      <td class="py-3 px-3 font-mono text-[11px] text-center text-atelier-inkMuted">${r.style || '-'}</td>
+      <td class="py-3 px-3 font-mono font-bold text-center ${hasScore ? 'text-atelier-terracotta' : 'text-gray-400'}">${hasScore ? r.process_score : '-'}</td>
+      <td class="py-3 px-3 font-mono font-bold text-center ${hasScore ? 'text-atelier-ochre' : 'text-gray-400'}">${hasScore ? r.product_score : '-'}</td>
+      <td class="py-3 px-3 font-mono font-black text-center text-sm ${hasScore ? 'text-atelier-ink' : 'text-gray-400'}">${hasScore ? r.total_score : '-'}</td>
+      <td class="py-3 px-3 text-center">${predicateBadge}</td>
+      <td class="py-3 px-3 text-[11px] text-atelier-inkMuted italic max-w-xs truncate" title="${r.notes || ''}">
+        ${r.notes || '-'}
+      </td>
+      <td class="py-3 px-3 text-center">
+        <button onclick="selectStudentForRubric(${r.student_id}, ${r.process_score || 75}, ${r.product_score || 80}, '${encodeURIComponent(r.notes || '')}')" 
+          class="px-2.5 py-1 rounded-lg border border-atelier-border hover:bg-atelier-terracotta hover:text-white transition font-mono text-[11px] font-bold cursor-pointer">
+          ${hasScore ? 'Edit' : 'Beri Nilai'}
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function selectStudentForRubric(studentId, proc = 75, prod = 80, encodedNotes = '') {
+  const select = document.getElementById('rubric-student-select');
+  if (select) {
+    select.value = studentId;
+  }
+
+  const inputProc = document.getElementById('input-score-process');
+  const inputProd = document.getElementById('input-score-product');
+  const inputNotes = document.getElementById('rubric-notes');
+
+  if (inputProc) inputProc.value = proc;
+  if (inputProd) inputProd.value = prod;
+  if (inputNotes) inputNotes.value = decodeURIComponent(encodedNotes);
+
+  calculateRubricScore();
+
+  // Scroll smoothly to form
+  const form = document.getElementById('rubric-form');
+  if (form) {
+    form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function populateRubricStudentSelect(roster) {
+  const select = document.getElementById('rubric-student-select');
+  if (!select) return;
+
+  const currentVal = select.value;
+  select.innerHTML = '<option value="" disabled selected>Pilih siswa untuk dinilai...</option>';
+
+  roster.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = `No. ${s.attendance_no || '-'} · ${s.name} (${s.gender || '-'}) - ${s.category}`;
+    select.appendChild(opt);
+  });
+
+  if (currentVal && roster.some(s => s.id == currentVal)) {
+    select.value = currentVal;
+  }
+  calculateRubricScore();
+}
+
+function calculateRubricScore() {
+  const procEl = document.getElementById('input-score-process');
+  const prodEl = document.getElementById('input-score-product');
+  if (!procEl || !prodEl) return;
+
+  const proc = parseInt(procEl.value) || 75;
+  const prod = parseInt(prodEl.value) || 80;
+
+  const lblProc = document.getElementById('label-score-process');
+  const lblProd = document.getElementById('label-score-product');
+  if (lblProc) lblProc.textContent = `${proc}/100`;
+  if (lblProd) lblProd.textContent = `${prod}/100`;
+
+  const total = Math.round((proc * 0.5) + (prod * 0.5));
+  const elBadge = document.getElementById('rubric-total-score-badge');
+  if (elBadge) elBadge.textContent = `Nilai: ${total}`;
+
+  let predicate = 'Berkembang (Cukup)';
+  if (total >= 88) predicate = 'Sangat Mahir (Istimewa)';
+  else if (total >= 76) predicate = 'Mahir (Tuntas)';
+  else if (total < 65) predicate = 'Perlu Bimbingan Khusus';
+
+  const elPred = document.getElementById('rubric-predicate-badge');
+  if (elPred) elPred.textContent = `Predikat: ${predicate}`;
+}
+
+function setupRubricHandlers() {
+  const form = document.getElementById('rubric-form');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const studentId = document.getElementById('rubric-student-select').value;
+    if (!studentId) {
+      alert('Pilih siswa yang akan dinilai.');
+      return;
+    }
+
+    const proc = parseInt(document.getElementById('input-score-process').value);
+    const prod = parseInt(document.getElementById('input-score-product').value);
+    const total = Math.round((proc * 0.5) + (prod * 0.5));
+    const predicate = document.getElementById('rubric-predicate-badge').textContent.replace('Predikat: ', '');
+    const notes = document.getElementById('rubric-notes').value.trim();
+
+    try {
+      const res = await API.saveRubric({
+        student_id: studentId,
+        process_score: proc,
+        product_score: prod,
+        total_score: total,
+        predicate,
+        notes
+      });
+      if (res && res.status === 'success') {
+        alert('Penilaian rubrik autentik berhasil disimpan ke server database!');
+        await loadClassRubricGradebook(currentClass);
+      }
+    } catch (err) {
+      alert('Gagal menyimpan penilaian: ' + err.message);
+    }
+  });
+}
+
+function downloadRubricExcel() {
+  window.location.href = `/api/export/excel?class=${encodeURIComponent(currentClass)}&type=rubric`;
+}
+
+// ========================================================
+// 10. KALENDER AKADEMIK & KATEGORI KUSTOM
+// ========================================================
+function handleCalendarCategoryChange() {
+  const calType = document.getElementById('cal-type');
+  const customContainer = document.getElementById('cal-type-custom-container');
+  const customInput = document.getElementById('cal-type-custom');
+
+  if (calType && customContainer) {
+    if (calType.value === 'custom') {
+      customContainer.classList.remove('hidden');
+      if (customInput) customInput.focus();
+    } else {
+      customContainer.classList.add('hidden');
+    }
+  }
+}
+
+async function loadCalendarEvents() {
+  const container = document.getElementById('calendar-events-container');
+  if (!container) return;
+
+  try {
+    const res = await API.getCalendar();
+    if (res && res.status === 'success') {
+      const events = res.data;
+      const countBadge = document.getElementById('calendar-count-badge');
+      if (countBadge) countBadge.textContent = `${events.length} Kegiatan`;
+      container.innerHTML = '';
+
+      if (events.length === 0) {
+        container.innerHTML = '<p class="text-xs text-atelier-inkMuted italic">Belum ada agenda kegiatan di kalender.</p>';
+        return;
+      }
+
+      events.forEach(ev => {
+        const item = document.createElement('div');
+        item.className = `p-3 rounded-xl border flex items-center justify-between gap-3 text-xs transition ${
+          ev.completed ? 'bg-atelier-warm/40 border-atelier-border text-atelier-inkMuted' : 'bg-white border-atelier-border'
+        }`;
+
+        item.innerHTML = `
+          <div class="flex items-center gap-3">
+            <input type="checkbox" ${ev.completed ? 'checked' : ''} onchange="toggleEventStatus(${ev.id}, this.checked)"
+              class="rounded accent-atelier-terracotta cursor-pointer w-4 h-4">
+            <div>
+              <span class="font-semibold ${ev.completed ? 'line-through text-atelier-inkMuted' : 'text-atelier-ink'}">${ev.title}</span>
+              <div class="flex items-center gap-2 mt-0.5 text-[10px] font-mono text-atelier-inkMuted">
+                <span>📅 ${ev.event_date}</span>
+                <span>•</span>
+                <span class="px-1.5 py-0.2 rounded font-bold uppercase ${
+                  ev.type === 'asesmen' ? 'bg-blue-100 text-blue-800' :
+                  ev.type === 'praktik' ? 'bg-amber-100 text-amber-800' :
+                  ev.type === 'pameran' ? 'bg-purple-100 text-purple-800' :
+                  ev.type === 'deadline' ? 'bg-red-100 text-red-800' :
+                  'bg-emerald-100 text-emerald-800'
+                }">${ev.type}</span>
+              </div>
+            </div>
+          </div>
+          <button onclick="deleteEvent(${ev.id})" class="text-red-500 hover:text-red-700 font-mono text-xs px-2 py-1 cursor-pointer">
+            Hapus
+          </button>
+        `;
+        container.appendChild(item);
+      });
+    }
+  } catch (err) {
+    console.error('Failed to load calendar', err);
+  }
+}
+
+async function toggleEventStatus(id, completed) {
+  try {
+    await API.toggleCalendarEvent(id, completed);
+    await loadCalendarEvents();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function deleteEvent(id) {
+  if (confirm('Hapus kegiatan ini dari kalender?')) {
+    try {
+      await API.deleteCalendarEvent(id);
+      await loadCalendarEvents();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+}
+
+function setupCalendarHandlers() {
+  const form = document.getElementById('calendar-add-form');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = document.getElementById('cal-title').value.trim();
+    const event_date = document.getElementById('cal-date').value;
+    const typeSelect = document.getElementById('cal-type').value;
+
+    let finalType = typeSelect;
+    if (typeSelect === 'custom') {
+      const customVal = document.getElementById('cal-type-custom').value.trim();
+      if (!customVal) {
+        alert('Tuliskan nama kategori kustom.');
+        return;
+      }
+      finalType = customVal;
+    }
+
+    if (!title || !event_date) return;
+
+    try {
+      const res = await API.addCalendarEvent({
+        title,
+        event_date,
+        type: finalType,
+        class_id: currentClass
+      });
+      if (res && res.status === 'success') {
+        document.getElementById('cal-title').value = '';
+        const customInput = document.getElementById('cal-type-custom');
+        if (customInput) customInput.value = '';
+        await loadCalendarEvents();
+      }
+    } catch (err) {
+      alert('Gagal menambah agenda: ' + err.message);
+    }
+  });
+}
+
+// ========================================================
+// 11. LIVE MONITOR ENGINE (TAHAP 9)
+// ========================================================
 function startLiveMonitorPolling() {
   fetchLiveMonitorData();
   clearInterval(liveMonitorInterval);
@@ -207,18 +1229,22 @@ async function fetchLiveMonitorData() {
     if (res && res.status === 'success') {
       const { sessions, activeCount, completedCount } = res.data;
 
-      const navBadge = document.getElementById('live-active-badge-nav');
-      if (navBadge) navBadge.textContent = activeCount;
+      const sidebarBadge = document.getElementById('sidebar-live-badge');
+      if (sidebarBadge) sidebarBadge.textContent = activeCount;
 
-      document.getElementById('live-active-count').textContent = `${activeCount} Siswa`;
-      document.getElementById('live-completed-count').textContent = `${completedCount} Siswa`;
+      const elActive = document.getElementById('live-active-count');
+      const elCompleted = document.getElementById('live-completed-count');
+      const elAvg = document.getElementById('live-avg-progress');
+
+      if (elActive) elActive.textContent = `${activeCount} Siswa`;
+      if (elCompleted) elCompleted.textContent = `${completedCount} Siswa`;
 
       let avg = 0;
       if (sessions.length > 0) {
         const sum = sessions.reduce((acc, s) => acc + (s.progressPercent || 0), 0);
         avg = Math.round(sum / sessions.length);
       }
-      document.getElementById('live-avg-progress').textContent = `${avg}%`;
+      if (elAvg) elAvg.textContent = `${avg}%`;
 
       renderLiveMonitorTable(sessions);
     }
@@ -300,9 +1326,12 @@ function formatTimeAgo(dateStr) {
   return `${Math.floor(diffMin / 60)} jam lalu`;
 }
 
-// 5. Roster Table Management (With Attendance No & Gender)
+// ========================================================
+// 12. ROSTER TABLE MANAGEMENT (TAHAP 4)
+// ========================================================
 function renderRosterTable(students) {
   const tbody = document.getElementById('roster-table-body');
+  if (!tbody) return;
   tbody.innerHTML = '';
 
   if (students.length === 0) {
@@ -348,48 +1377,55 @@ function renderRosterTable(students) {
 }
 
 function setupRosterHandlers() {
-  document.getElementById('quick-add-student-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const attNo = document.getElementById('quick-att').value;
-    const name = document.getElementById('quick-name').value.trim();
-    const gender = document.getElementById('quick-gender').value;
-    const category = document.getElementById('quick-category').value;
-    const style = document.getElementById('quick-style').value;
+  const form = document.getElementById('quick-add-student-form');
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const attNo = document.getElementById('quick-att').value;
+      const name = document.getElementById('quick-name').value.trim();
+      const gender = document.getElementById('quick-gender').value;
+      const category = document.getElementById('quick-category').value;
+      const style = document.getElementById('quick-style').value;
 
-    if (!name || !attNo || !gender) return;
+      if (!name || !attNo || !gender) return;
 
-    try {
-      const res = await API.submitStudentAssessment({
-        attendance_no: attNo,
-        name,
-        gender,
-        class_id: currentClass,
-        category,
-        sub_option: 'Kering',
-        style,
-        challenge: 'Pencarian Ide Awal',
-        feeling: 'Senang'
-      });
+      try {
+        const res = await API.submitStudentAssessment({
+          attendance_no: attNo,
+          name,
+          gender,
+          class_id: currentClass,
+          category,
+          sub_option: 'Kering',
+          style,
+          challenge: 'Pencarian Ide Awal',
+          feeling: 'Senang'
+        });
 
-      if (res && res.status === 'success') {
-        document.getElementById('quick-name').value = '';
-        document.getElementById('quick-att').value = '';
-        document.getElementById('quick-gender').value = '';
-        await loadCurrentClassDetail();
+        if (res && res.status === 'success') {
+          document.getElementById('quick-name').value = '';
+          document.getElementById('quick-att').value = '';
+          document.getElementById('quick-gender').value = '';
+          await loadCurrentClassDetail();
+          await loadClassRubricGradebook(currentClass);
+        }
+      } catch (err) {
+        alert('Gagal menambah siswa: ' + err.message);
       }
-    } catch (err) {
-      alert('Gagal menambah siswa: ' + err.message);
-    }
-  });
+    });
+  }
 
-  document.getElementById('filter-roster-search').addEventListener('input', (e) => {
-    const q = e.target.value.toLowerCase();
-    const filtered = currentRoster.filter(s => 
-      s.name.toLowerCase().includes(q) || 
-      (s.attendance_no && s.attendance_no.toString().includes(q))
-    );
-    renderRosterTable(filtered);
-  });
+  const searchInput = document.getElementById('filter-roster-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      const filtered = currentRoster.filter(s => 
+        s.name.toLowerCase().includes(q) || 
+        (s.attendance_no && s.attendance_no.toString().includes(q))
+      );
+      renderRosterTable(filtered);
+    });
+  }
 }
 
 async function handleDeleteStudent(id, name) {
@@ -398,6 +1434,7 @@ async function handleDeleteStudent(id, name) {
       const res = await API.deleteStudent(id);
       if (res && res.status === 'success') {
         await loadCurrentClassDetail();
+        await loadClassRubricGradebook(currentClass);
       }
     } catch (err) {
       alert('Gagal menghapus siswa: ' + err.message);
@@ -405,11 +1442,15 @@ async function handleDeleteStudent(id, name) {
   }
 }
 
-// 6. Heatmap & Analisis Kelas
+// ========================================================
+// 13. HEATMAP & ANALISIS KELAS (TAHAP 3)
+// ========================================================
 function renderHeatmap(roster) {
   const stylesContainer = document.getElementById('heatmap-styles-list');
   const mediaContainer = document.getElementById('heatmap-media-list');
   const challengesContainer = document.getElementById('heatmap-challenges-list');
+
+  if (!stylesContainer || !mediaContainer || !challengesContainer) return;
 
   stylesContainer.innerHTML = '';
   mediaContainer.innerHTML = '';
@@ -456,11 +1497,14 @@ function renderHeatmap(roster) {
   renderBarList(challengesContainer, countBy('challenge'), 'bg-atelier-ultramarine');
 }
 
-// 7. CRUD Soal Diagnostik
+// ========================================================
+// 14. CRUD SOAL DIAGNOSTIK & TAUTAN (TAHAP 1)
+// ========================================================
 let loadedQuestions = [];
 
 async function loadQuestionsList() {
   const container = document.getElementById('questions-list-container');
+  if (!container) return;
   container.innerHTML = '<p class="text-xs text-atelier-inkMuted italic">Memuat daftar soal...</p>';
 
   try {
@@ -477,6 +1521,7 @@ async function loadQuestionsList() {
 
 function renderQuestionsList(questions) {
   const container = document.getElementById('questions-list-container');
+  if (!container) return;
   container.innerHTML = '';
 
   if (questions.length === 0) {
@@ -548,6 +1593,7 @@ function openQuestionModal(q = null) {
   const reasonInput = document.getElementById('form-q-reason');
   const optionsContainer = document.getElementById('modal-options-container');
 
+  if (!modal) return;
   optionsContainer.innerHTML = '';
 
   if (q) {
@@ -581,11 +1627,13 @@ function openQuestionModal(q = null) {
 }
 
 function closeQuestionModal() {
-  document.getElementById('modal-question').classList.add('hidden');
+  const modal = document.getElementById('modal-question');
+  if (modal) modal.classList.add('hidden');
 }
 
 function addQuestionOptionRow(val = '') {
   const container = document.getElementById('modal-options-container');
+  if (!container) return;
   const row = document.createElement('div');
   row.className = 'flex items-center gap-2';
   row.innerHTML = `
@@ -631,7 +1679,10 @@ async function confirmResetQuestions() {
 }
 
 function setupQuestionModalHandlers() {
-  document.getElementById('form-question').addEventListener('submit', async (e) => {
+  const form = document.getElementById('form-question');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('form-question-id').value;
     const category = document.getElementById('form-q-category').value.trim();
@@ -671,104 +1722,34 @@ function setupQuestionModalHandlers() {
   });
 }
 
-// 8. Modul Ajar Generator (Kurikulum Merdeka)
-function generateModulAjarText() {
-  const container = document.getElementById('modul-ajar-document');
-  if (!container) return;
+function updateShareLinkAndQR() {
+  const host = window.location.origin.includes('localhost') ? 'https://artuniverse.my.id' : window.location.origin;
+  const link = `${host}/?class=${encodeURIComponent(currentClass)}`;
 
-  const total = currentRoster.length;
-  const dominantStyle = document.getElementById('stat-dominant-style').textContent || 'Visual Tutorial';
-  const topMedia = document.getElementById('stat-top-media').textContent || '2D';
+  const linkInput = document.getElementById('share-link-input');
+  if (linkInput) linkInput.value = link;
 
-  container.innerHTML = `
-    <!-- Kop Modul -->
-    <div class="text-center border-b-2 border-atelier-ink pb-4 space-y-1">
-      <h2 class="font-serif font-black text-xl uppercase tracking-wider">MODUL AJAR SENI RUPA FASE D (SMP)</h2>
-      <p class="font-serif text-sm italic">Pendekatan Pembelajaran Berdiferensiasi Berbasis Profil Diagnostik Siswa</p>
-      <p class="font-mono text-xs text-atelier-inkMuted">Satuan Pendidikan: SMP · Alokasi Waktu: 3 JP (3 x 40 Menit) · Kelas: ${currentClass}</p>
-    </div>
+  const qrImg = document.getElementById('qr-code-img');
+  if (qrImg) {
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(link)}`;
+  }
 
-    <!-- I. Identitas & Capaian -->
-    <div class="space-y-2">
-      <h3 class="font-serif font-bold text-base text-atelier-terracotta uppercase tracking-wide">I. Capaian Pembelajaran & Profil Pelajar Pancasila</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-        <div class="p-3 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-1">
-          <strong class="text-atelier-ink">Elemen Capaian:</strong>
-          <p class="text-atelier-inkMuted">Mengalami (Experiencing) & Menciptakan (Making) karya seni rupa dengan memanfaatkan ragam media eksploratif 2D dan 3D.</p>
-        </div>
-        <div class="p-3 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-1">
-          <strong class="text-atelier-ink">Dimensi Profil Pancasila:</strong>
-          <p class="text-atelier-inkMuted">1. Kreatif (Orisinalitas gagasan berkarya), 2. Mandiri (Ketekunan menyelesaikan karya), 3. Gotong Royong (Apresiasi tim).</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- II. Karakteristik Profil Rombel -->
-    <div class="space-y-2">
-      <h3 class="font-serif font-bold text-base text-atelier-terracotta uppercase tracking-wide">II. Karakteristik Diagnostik Rombel ${currentClass}</h3>
-      <p class="text-xs text-atelier-ink leading-relaxed">
-        Berdasarkan hasil asesmen diagnostik terhadap <strong>${total} siswa terdata</strong> di kelas ${currentClass}, rombel ini memiliki dominasi gaya belajar <strong>${dominantStyle}</strong> dengan preferensi media utama <strong>${topMedia}</strong>. Pembelajaran dirancang melalui diferensiasi multi-jalur agar memfasilitasi keberagaman tersebut.
-      </p>
-    </div>
-
-    <!-- III. Rencana Diferensiasi Pembelajaran -->
-    <div class="space-y-2">
-      <h3 class="font-serif font-bold text-base text-atelier-terracotta uppercase tracking-wide">III. Strategi Pembelajaran Berdiferensiasi</h3>
-      <div class="space-y-2 text-xs">
-        <div class="p-3 bg-white border border-atelier-border rounded-xl">
-          <strong class="text-atelier-terracotta font-mono uppercase">1. Diferensiasi Konten:</strong>
-          <p class="text-atelier-ink mt-0.5">Guru menyiapkan variasi panduan berkarya: Modul infografis visual langkah-demi-langkah (untuk siswa Visual), materi audio-visual tutorial video, dan model fisik karya nyata (untuk siswa Kinestetik).</p>
-        </div>
-        <div class="p-3 bg-white border border-atelier-border rounded-xl">
-          <strong class="text-atelier-ochre font-mono uppercase">2. Diferensiasi Proses:</strong>
-          <p class="text-atelier-ink mt-0.5">Siswa bekerja secara heterogen atau mandiri. Guru memberikan bimbingan intensif (*scaffolding*) pada tahapan sketsa dan proporsi untuk siswa yang membutuhkan pendampingan lebih.</p>
-        </div>
-        <div class="p-3 bg-white border border-atelier-border rounded-xl">
-          <strong class="text-atelier-sage font-mono uppercase">3. Diferensiasi Produk:</strong>
-          <p class="text-atelier-ink mt-0.5">Siswa diberikan kebebasan memilih bentuk akhir karya: gambar 2D (pensil/cat air/digital) atau objek 3D (lempung/kertas/bahan daur ulang) sesuai minat diagnostiknya.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- IV. Langkah-Langkah Pembelajaran -->
-    <div class="space-y-2">
-      <h3 class="font-serif font-bold text-base text-atelier-terracotta uppercase tracking-wide">IV. Skenario Pembelajaran (120 Menit)</h3>
-      <div class="space-y-2 text-xs">
-        <div class="p-3 bg-atelier-warm/40 rounded-xl">
-          <strong>A. Kegiatan Awal (15 Menit):</strong>
-          <ul class="list-disc list-inside text-atelier-inkMuted mt-1 space-y-0.5">
-            <li>Apersepsi & refleksi emosi belajar seni rupa.</li>
-            <li>Penyampaian tujuan pembelajaran & pembagian bahan inspirasi berbasis minat media.</li>
-          </ul>
-        </div>
-        <div class="p-3 bg-atelier-warm/40 rounded-xl">
-          <strong>B. Kegiatan Inti Studio Berkarya (90 Menit):</strong>
-          <ul class="list-disc list-inside text-atelier-inkMuted mt-1 space-y-0.5">
-            <li><strong>Fase 1 (20 Menit):</strong> Eksplorasi sketsa proporsi & penentuan ide awal.</li>
-            <li><strong>Fase 2 (50 Menit):</strong> Eksekusi berkarya dengan media pilihan (2D kering/basah atau 3D).</li>
-            <li><strong>Fase 3 (20 Menit):</strong> Finishing detail, apresiasi kelompok heterogen, dan saling bertukar masukan konstruktif.</li>
-          </ul>
-        </div>
-        <div class="p-3 bg-atelier-warm/40 rounded-xl">
-          <strong>C. Kegiatan Penutup (15 Menit):</strong>
-          <ul class="list-disc list-inside text-atelier-inkMuted mt-1 space-y-0.5">
-            <li>Refleksi perasaan setelah berkarya dan dokumentasi foto karya ke portofolio digital.</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  `;
+  const qrClassName = document.getElementById('qr-class-name');
+  if (qrClassName) qrClassName.textContent = currentClass;
 }
 
-function copyModulAjarText() {
-  const container = document.getElementById('modul-ajar-document');
-  if (!container) return;
-  navigator.clipboard.writeText(container.innerText).then(() => {
-    alert('Teks Modul Ajar berhasil disalin ke clipboard!');
-  });
+function copyShareLink() {
+  const linkInput = document.getElementById('share-link-input');
+  if (linkInput) {
+    navigator.clipboard.writeText(linkInput.value).then(() => {
+      alert(`Tautan untuk Kelas ${currentClass} berhasil disalin! Siap dibagikan ke WhatsApp grup kelas.`);
+    });
+  }
 }
 
-// 9. Studio Timer
+// ========================================================
+// 15. STUDIO TIMER & HETEROGENEOUS GROUPS (TAHAP 7)
+// ========================================================
 function setTimerPhase(phase, minutes) {
   document.querySelectorAll('.timer-phase-btn').forEach(btn => {
     btn.className = 'timer-phase-btn p-2 rounded-lg border border-atelier-border bg-white text-atelier-ink';
@@ -785,7 +1766,9 @@ function setTimerPhase(phase, minutes) {
     'apresiasi': 'Fase 3: Finishing & Apresiasi Teman Sebaya'
   };
 
-  document.getElementById('timer-phase-label').textContent = phaseLabels[phase] || '';
+  const lbl = document.getElementById('timer-phase-label');
+  if (lbl) lbl.textContent = phaseLabels[phase] || '';
+
   pauseStudioTimer();
   timerSeconds = minutes * 60;
   updateTimerDisplay();
@@ -794,7 +1777,8 @@ function setTimerPhase(phase, minutes) {
 function updateTimerDisplay() {
   const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
   const s = (timerSeconds % 60).toString().padStart(2, '0');
-  document.getElementById('timer-display').textContent = `${m}:${s}`;
+  const el = document.getElementById('timer-display');
+  if (el) el.textContent = `${m}:${s}`;
 }
 
 function startStudioTimer() {
@@ -822,9 +1806,10 @@ function resetStudioTimer() {
   updateTimerDisplay();
 }
 
-// 10. Heterogeneous Group Generator
 function generateHeteroGroups() {
   const container = document.getElementById('hetero-groups-output');
+  if (!container) return;
+
   if (currentRoster.length === 0) {
     container.innerHTML = '<p class="text-xs text-red-500 italic">Rombel ini belum memiliki siswa untuk dibentuk kelompok.</p>';
     return;
@@ -859,187 +1844,4 @@ function generateHeteroGroups() {
     `;
     container.appendChild(card);
   });
-}
-
-// 11. Rubrik Penilaian Autentik
-function populateRubricStudentSelect(roster) {
-  const select = document.getElementById('rubric-student-select');
-  select.innerHTML = '<option value="" disabled selected>Pilih siswa untuk dinilai...</option>';
-  roster.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s.id;
-    opt.textContent = `No. ${s.attendance_no || '-'} · ${s.name} (${s.gender || '-'}) - ${s.category}`;
-    select.appendChild(opt);
-  });
-  calculateRubricScore();
-}
-
-function calculateRubricScore() {
-  const proc = parseInt(document.getElementById('input-score-process').value) || 75;
-  const prod = parseInt(document.getElementById('input-score-product').value) || 80;
-
-  document.getElementById('label-score-process').textContent = `${proc}/100`;
-  document.getElementById('label-score-product').textContent = `${prod}/100`;
-
-  const total = Math.round((proc * 0.5) + (prod * 0.5));
-  document.getElementById('rubric-total-score-badge').textContent = `Skor: ${total}`;
-
-  let predicate = 'Berkembang (Cukup)';
-  if (total >= 88) predicate = 'Sangat Mahir (Istimewa)';
-  else if (total >= 76) predicate = 'Mahir (Tuntas)';
-  else if (total < 65) predicate = 'Perlu Bimbingan Khusus';
-
-  document.getElementById('rubric-predicate-badge').textContent = `Predikat: ${predicate}`;
-}
-
-function setupRubricHandlers() {
-  document.getElementById('rubric-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const studentId = document.getElementById('rubric-student-select').value;
-    if (!studentId) {
-      alert('Pilih siswa yang akan dinilai.');
-      return;
-    }
-
-    const proc = parseInt(document.getElementById('input-score-process').value);
-    const prod = parseInt(document.getElementById('input-score-product').value);
-    const total = Math.round((proc * 0.5) + (prod * 0.5));
-    const predicate = document.getElementById('rubric-predicate-badge').textContent.replace('Predikat: ', '');
-    const notes = document.getElementById('rubric-notes').value.trim();
-
-    try {
-      const res = await API.saveRubric({
-        student_id: studentId,
-        process_score: proc,
-        product_score: prod,
-        total_score: total,
-        predicate,
-        notes
-      });
-      if (res && res.status === 'success') {
-        alert('Penilaian rubrik autentik berhasil disimpan ke database!');
-        document.getElementById('rubric-notes').value = '';
-      }
-    } catch (err) {
-      alert('Gagal menyimpan penilaian: ' + err.message);
-    }
-  });
-}
-
-// 12. Kalender Akademik Seni
-async function loadCalendarEvents() {
-  const container = document.getElementById('calendar-events-container');
-  try {
-    const res = await API.getCalendar();
-    if (res && res.status === 'success') {
-      const events = res.data;
-      document.getElementById('calendar-count-badge').textContent = `${events.length} Kegiatan`;
-      container.innerHTML = '';
-
-      if (events.length === 0) {
-        container.innerHTML = '<p class="text-xs text-atelier-inkMuted italic">Belum ada agenda kegiatan.</p>';
-        return;
-      }
-
-      events.forEach(ev => {
-        const item = document.createElement('div');
-        item.className = `p-3 rounded-xl border flex items-center justify-between gap-3 text-xs transition ${
-          ev.completed ? 'bg-atelier-warm/40 border-atelier-border text-atelier-inkMuted' : 'bg-white border-atelier-border'
-        }`;
-
-        item.innerHTML = `
-          <div class="flex items-center gap-3">
-            <input type="checkbox" ${ev.completed ? 'checked' : ''} onchange="toggleEventStatus(${ev.id}, this.checked)"
-              class="rounded accent-atelier-terracotta cursor-pointer w-4 h-4">
-            <div>
-              <span class="font-semibold ${ev.completed ? 'line-through text-atelier-inkMuted' : 'text-atelier-ink'}">${ev.title}</span>
-              <div class="flex items-center gap-2 mt-0.5 text-[10px] font-mono text-atelier-inkMuted">
-                <span>📅 ${ev.event_date}</span>
-                <span>•</span>
-                <span class="uppercase">${ev.type}</span>
-              </div>
-            </div>
-          </div>
-          <button onclick="deleteEvent(${ev.id})" class="text-red-500 hover:text-red-700 font-mono text-xs px-2 py-1 cursor-pointer">
-            Hapus
-          </button>
-        `;
-        container.appendChild(item);
-      });
-    }
-  } catch (err) {
-    console.error('Failed to load calendar', err);
-  }
-}
-
-async function toggleEventStatus(id, completed) {
-  try {
-    await API.toggleCalendarEvent(id, completed);
-    await loadCalendarEvents();
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-async function deleteEvent(id) {
-  if (confirm('Hapus kegiatan ini dari kalender?')) {
-    try {
-      await API.deleteCalendarEvent(id);
-      await loadCalendarEvents();
-    } catch (err) {
-      console.error(err);
-    }
-  }
-}
-
-function setupCalendarHandlers() {
-  document.getElementById('calendar-add-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const title = document.getElementById('cal-title').value.trim();
-    const event_date = document.getElementById('cal-date').value;
-    const type = document.getElementById('cal-type').value;
-
-    if (!title || !event_date) return;
-
-    try {
-      const res = await API.addCalendarEvent({
-        title,
-        event_date,
-        type,
-        class_id: currentClass
-      });
-      if (res && res.status === 'success') {
-        document.getElementById('cal-title').value = '';
-        await loadCalendarEvents();
-      }
-    } catch (err) {
-      alert('Gagal menambah agenda: ' + err.message);
-    }
-  });
-}
-
-// 13. Tautan Siswa & QR Code
-function updateShareLinkAndQR() {
-  const host = window.location.origin.includes('localhost') ? 'https://artuniverse.my.id' : window.location.origin;
-  const link = `${host}/?class=${encodeURIComponent(currentClass)}`;
-
-  const linkInput = document.getElementById('share-link-input');
-  if (linkInput) linkInput.value = link;
-
-  const qrImg = document.getElementById('qr-code-img');
-  if (qrImg) {
-    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(link)}`;
-  }
-
-  const qrClassName = document.getElementById('qr-class-name');
-  if (qrClassName) qrClassName.textContent = currentClass;
-}
-
-function copyShareLink() {
-  const linkInput = document.getElementById('share-link-input');
-  if (linkInput) {
-    navigator.clipboard.writeText(linkInput.value).then(() => {
-      alert(`Tautan untuk Kelas ${currentClass} berhasil disalin! Siap dibagikan ke WhatsApp grup kelas.`);
-    });
-  }
 }

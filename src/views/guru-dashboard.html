@@ -22,11 +22,11 @@
               terracotta: '#C2410C',
               terracottaDark: '#9A3412',
               terracottaLight: '#FFF7ED',
-              ultramarine: '#1E1B4B',
               ochre: '#B45309',
               ochreLight: '#FEF3C7',
               sage: '#15803D',
-              sageLight: '#F0FDF4'
+              sageLight: '#F0FDF4',
+              ultramarine: '#1E1B4B'
             }
           },
           fontFamily: {
@@ -44,28 +44,35 @@
 <body class="bg-atelier-bg text-atelier-ink min-h-screen flex flex-col paper-texture">
 
   <!-- TOP APP BAR -->
-  <header class="border-b border-atelier-border bg-white/90 backdrop-blur-md sticky top-0 z-30 no-print">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+  <header class="border-b border-atelier-border bg-white/95 backdrop-blur-md sticky top-0 z-30 no-print">
+    <div class="max-w-[1440px] mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
+      <!-- Left: Mobile Menu Toggle & Brand -->
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-atelier-terracotta text-white flex items-center justify-center font-serif font-black text-xl shadow-sm">
+        <button id="btn-toggle-sidebar" class="lg:hidden p-2 rounded-xl border border-atelier-border hover:bg-atelier-warm transition text-atelier-ink">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+
+        <div class="w-9 h-9 rounded-xl bg-atelier-terracotta text-white flex items-center justify-center font-serif font-black text-lg shadow-sm">
           P
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="font-serif font-bold text-lg text-atelier-ink leading-tight">PALLET Studio Guru</h1>
+            <h1 class="font-serif font-bold text-base md:text-lg text-atelier-ink leading-tight">PALLET Studio Guru</h1>
             <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-atelier-warm border border-atelier-border">Fase D SMP</span>
           </div>
-          <p class="text-xs text-atelier-inkMuted">Manajemen Pembelajaran Berdiferensiasi & Diagnostik Seni Rupa</p>
+          <p class="text-[11px] text-atelier-inkMuted hidden sm:block">Personalised Art Learning Profile & Asesmen Diagnostik Seni Rupa</p>
         </div>
       </div>
 
-      <!-- Quick Actions -->
+      <!-- Right: Quick Actions -->
       <div class="flex items-center gap-2">
         <a href="/" target="_blank" class="px-3 py-1.5 rounded-lg border border-atelier-border hover:bg-atelier-warm transition text-xs font-medium flex items-center gap-1.5">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
           </svg>
-          <span>Portal Siswa</span>
+          <span class="hidden md:inline">Portal Siswa</span>
         </a>
 
         <button id="btn-export-excel" class="px-3 py-1.5 rounded-lg bg-atelier-sage text-white hover:bg-green-800 transition text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm">
@@ -80,20 +87,105 @@
         </button>
       </div>
     </div>
+  </header>
 
-    <!-- 27-CLASS MULTI-GRADE SWITCHER -->
-    <div class="border-t border-atelier-border bg-atelier-warm/50 px-4 py-2">
-      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+  <!-- BODY CONTAINER WITH SIDEBAR & MAIN CONTENT -->
+  <div class="max-w-[1440px] w-full mx-auto px-4 py-4 flex-1 flex flex-col lg:flex-row gap-6">
+
+    <!-- ======================================================== -->
+    <!-- LEFT SIDEBAR: NAVIGASI PLATFORM & 9 TAHAP MODUL PALLET -->
+    <!-- Sesuai Persis dengan Prototipe Google Sites PALLET      -->
+    <!-- ======================================================== -->
+    <aside id="sidebar-container" class="hidden lg:block w-full lg:w-72 flex-shrink-0 no-print">
+      <div class="atelier-card p-4 bg-white/95 border border-atelier-border rounded-2xl shadow-sm sticky top-16 space-y-4">
+        
+        <!-- SECTION 1: NAVIGASI PLATFORM -->
+        <div>
+          <p class="text-[11px] font-mono font-bold text-atelier-inkMuted uppercase tracking-wider px-3 mb-2">NAVIGASI PLATFORM</p>
+          <nav class="space-y-1">
+            <button onclick="switchMainTab('tab-home')" id="nav-tab-home" class="platform-nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition text-atelier-ink hover:bg-atelier-warm">
+              <span class="text-sm">🏠</span>
+              <span>Beranda Utama</span>
+            </button>
+            <button onclick="switchMainTab('tab-class-dash')" id="nav-tab-class-dash" class="platform-nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition text-atelier-ink hover:bg-atelier-warm">
+              <span class="text-sm">📊</span>
+              <span>Dashboard Kelas Aktif</span>
+            </button>
+            <button onclick="switchMainTab('tab-jenjang')" id="nav-tab-jenjang" class="platform-nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition text-atelier-ink hover:bg-atelier-warm">
+              <span class="text-sm">🗺️</span>
+              <span>Pemetaan Jenjang (VII–IX A–I)</span>
+            </button>
+          </nav>
+        </div>
+
+        <div class="border-t border-atelier-border"></div>
+
+        <!-- SECTION 2: 9 TAHAP MODUL PALLET -->
+        <div>
+          <p class="text-[11px] font-mono font-bold text-atelier-inkMuted uppercase tracking-wider px-3 mb-2">9 TAHAP MODUL PALLET</p>
+          <nav class="space-y-1">
+            <button onclick="switchMainTab('tab-m1-diagnostik')" id="nav-tab-m1-diagnostik" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+              <span>1. Digital Diagnostik</span>
+              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+            </button>
+            <button onclick="switchMainTab('tab-m2-profile')" id="nav-tab-m2-profile" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+              <span>2. Student Art Profile</span>
+              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+            </button>
+            <button onclick="switchMainTab('tab-m3-analysis')" id="nav-tab-m3-analysis" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+              <span>3. Class Analysis</span>
+              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+            </button>
+            <button onclick="switchMainTab('tab-m4-roster')" id="nav-tab-m4-roster" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+              <span>4. Teacher Dashboard</span>
+              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+            </button>
+            <button onclick="switchMainTab('tab-m5-recommendation')" id="nav-tab-m5-recommendation" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+              <span>5. Learning Recommendation</span>
+              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+            </button>
+            <button onclick="switchMainTab('tab-m6-rpp')" id="nav-tab-m6-rpp" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+              <span>6. Learning Plan (RPP)</span>
+              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+            </button>
+            <button onclick="switchMainTab('tab-m7-studio')" id="nav-tab-m7-studio" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+              <span>7. Implementation Studio</span>
+              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+            </button>
+            <button onclick="switchMainTab('tab-m8-rubric')" id="nav-tab-m8-rubric" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+              <span>8. Assessment & Reflection</span>
+              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+            </button>
+            <button onclick="switchMainTab('tab-m9-tracking')" id="nav-tab-m9-tracking" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+              <div class="flex items-center gap-2">
+                <span>9. Student Tracking</span>
+                <span id="sidebar-live-badge" class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-emerald-100 text-emerald-800 font-bold">0</span>
+              </div>
+              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+            </button>
+          </nav>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- ======================================================== -->
+    <!-- MAIN CONTENT AREA -->
+    <!-- ======================================================== -->
+    <main class="flex-1 min-w-0 space-y-4">
+
+      <!-- 27-CLASS MULTI-GRADE SWITCHER BAR (Always on Top of Content) -->
+      <div class="atelier-card p-3 bg-white border border-atelier-border rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sm no-print">
         <!-- Grade Tabs: VII, VIII, IX -->
         <div class="flex items-center gap-1 font-mono text-xs">
           <span class="text-atelier-inkMuted text-[11px] mr-2 uppercase tracking-wider font-bold">Jenjang:</span>
-          <button onclick="switchGradeTab(7)" id="tab-grade-7" class="grade-tab-btn px-3 py-1 rounded-md font-bold transition bg-atelier-terracotta text-white">Kelas VII</button>
-          <button onclick="switchGradeTab(8)" id="tab-grade-8" class="grade-tab-btn px-3 py-1 rounded-md font-bold transition bg-white text-atelier-ink hover:bg-atelier-warm">Kelas VIII</button>
-          <button onclick="switchGradeTab(9)" id="tab-grade-9" class="grade-tab-btn px-3 py-1 rounded-md font-bold transition bg-white text-atelier-ink hover:bg-atelier-warm">Kelas IX</button>
+          <button onclick="switchGradeTab(7)" id="tab-grade-7" class="grade-tab-btn px-3 py-1 rounded-lg font-bold transition bg-atelier-terracotta text-white">Kelas VII</button>
+          <button onclick="switchGradeTab(8)" id="tab-grade-8" class="grade-tab-btn px-3 py-1 rounded-lg font-bold transition bg-atelier-warm text-atelier-ink hover:bg-atelier-border">Kelas VIII</button>
+          <button onclick="switchGradeTab(9)" id="tab-grade-9" class="grade-tab-btn px-3 py-1 rounded-lg font-bold transition bg-atelier-warm text-atelier-ink hover:bg-atelier-border">Kelas IX</button>
         </div>
 
         <!-- Section Buttons: A s.d I -->
-        <div class="flex items-center gap-1 font-mono text-xs" id="section-buttons-container">
+        <div class="flex items-center gap-1 font-mono text-xs overflow-x-auto py-1" id="section-buttons-container">
           <span class="text-atelier-inkMuted text-[11px] mr-2 uppercase tracking-wider font-bold">Rombel:</span>
           <!-- Rendered via guru.js (A, B, C, D, E, F, G, H, I) -->
         </div>
@@ -106,573 +198,826 @@
           </span>
         </div>
       </div>
-    </div>
 
-    <!-- MAIN NAVIGATION TABS -->
-    <div class="border-t border-atelier-border bg-white px-4">
-      <div class="max-w-7xl mx-auto flex items-center gap-1 overflow-x-auto text-xs font-semibold py-1">
-        <button onclick="switchMainTab('tab-roster')" id="nav-tab-roster" class="main-nav-btn px-3.5 py-2 rounded-lg transition border-b-2 border-atelier-terracotta text-atelier-terracotta">
-          Roster & Profil Kelas
-        </button>
-
-        <!-- LIVE MONITOR TAB -->
-        <button onclick="switchMainTab('tab-live')" id="nav-tab-live" class="main-nav-btn px-3.5 py-2 rounded-lg transition border-b-2 border-transparent text-atelier-inkMuted hover:text-atelier-ink flex items-center gap-2">
-          <span class="relative flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span>Live Monitor Asesmen</span>
-          <span id="live-active-badge-nav" class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-emerald-100 text-emerald-800 font-bold">0</span>
-        </button>
-
-        <button onclick="switchMainTab('tab-heatmap')" id="nav-tab-heatmap" class="main-nav-btn px-3.5 py-2 rounded-lg transition border-b-2 border-transparent text-atelier-inkMuted hover:text-atelier-ink">
-          Heatmap Analisis Rombel
-        </button>
-        <button onclick="switchMainTab('tab-questions')" id="nav-tab-questions" class="main-nav-btn px-3.5 py-2 rounded-lg transition border-b-2 border-transparent text-atelier-inkMuted hover:text-atelier-ink flex items-center gap-1.5">
-          <span>Kelola Soal Diagnostik (CRUD)</span>
-        </button>
-        <button onclick="switchMainTab('tab-modul')" id="nav-tab-modul" class="main-nav-btn px-3.5 py-2 rounded-lg transition border-b-2 border-transparent text-atelier-inkMuted hover:text-atelier-ink">
-          Generator Modul Ajar
-        </button>
-        <button onclick="switchMainTab('tab-studio')" id="nav-tab-studio" class="main-nav-btn px-3.5 py-2 rounded-lg transition border-b-2 border-transparent text-atelier-inkMuted hover:text-atelier-ink">
-          Studio Tools (Timer & Tim)
-        </button>
-        <button onclick="switchMainTab('tab-rubric')" id="nav-tab-rubric" class="main-nav-btn px-3.5 py-2 rounded-lg transition border-b-2 border-transparent text-atelier-inkMuted hover:text-atelier-ink">
-          Rubrik Penilaian Autentik
-        </button>
-        <button onclick="switchMainTab('tab-calendar')" id="nav-tab-calendar" class="main-nav-btn px-3.5 py-2 rounded-lg transition border-b-2 border-transparent text-atelier-inkMuted hover:text-atelier-ink">
-          Kalender Akademik Seni
-        </button>
-        <button onclick="switchMainTab('tab-share')" id="nav-tab-share" class="main-nav-btn px-3.5 py-2 rounded-lg transition border-b-2 border-transparent text-atelier-inkMuted hover:text-atelier-ink">
-          Tautan Siswa & QR
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- MAIN DASHBOARD CONTENT -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
-
-    <!-- ========================================== -->
-    <!-- TAB 1: ROSTER & PROFIL KELAS -->
-    <!-- ========================================== -->
-    <div id="section-roster" class="tab-content-section space-y-6">
-      <!-- 4 Quick Stats Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="atelier-card p-4 space-y-1">
-          <span class="block text-[11px] font-mono font-bold text-atelier-inkMuted uppercase">Total Siswa Terdata</span>
-          <p id="stat-total-students" class="font-serif font-bold text-2xl text-atelier-ink">0 Siswa</p>
-          <p class="text-[11px] text-atelier-inkMuted">Di rombel kelas aktif</p>
-        </div>
-        <div class="atelier-card p-4 space-y-1">
-          <span class="block text-[11px] font-mono font-bold text-atelier-inkMuted uppercase">Modalitas Dominan</span>
-          <p id="stat-dominant-style" class="font-serif font-bold text-2xl text-atelier-terracotta">-</p>
-          <p class="text-[11px] text-atelier-inkMuted">Karakter cara belajar kelas</p>
-        </div>
-        <div class="atelier-card p-4 space-y-1">
-          <span class="block text-[11px] font-mono font-bold text-atelier-inkMuted uppercase">Media Terfavorit</span>
-          <p id="stat-top-media" class="font-serif font-bold text-2xl text-atelier-ochre">-</p>
-          <p class="text-[11px] text-atelier-inkMuted">Minat media pilihan terbanyak</p>
-        </div>
-        <div class="atelier-card p-4 space-y-1">
-          <span class="block text-[11px] font-mono font-bold text-atelier-inkMuted uppercase">Kesiapan Tim Heterogen</span>
-          <p id="stat-hetero-status" class="font-serif font-bold text-2xl text-atelier-sage">Siap Bentuk</p>
-          <p class="text-[11px] text-atelier-inkMuted">Berdasarkan diversitas rombel</p>
-        </div>
-      </div>
-
-      <!-- Quick Add Student Form (With Attendance No & Gender) -->
-      <div class="atelier-card p-5 space-y-3 bg-white">
-        <h3 class="font-serif font-bold text-base text-atelier-ink">Input Cepat Siswa ke Rombel <span id="quick-add-class-label" class="font-mono text-atelier-terracotta">VII-A</span></h3>
-        <form id="quick-add-student-form" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-3">
-          <input type="number" id="quick-att" placeholder="No. Absen" min="1" max="60" required
-            class="px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none">
-          <input type="text" id="quick-name" placeholder="Nama Lengkap Siswa..." required
-            class="px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none sm:col-span-2">
-          <select id="quick-gender" required class="px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white">
-            <option value="" disabled selected>L/P</option>
-            <option value="L">Laki-laki (L)</option>
-            <option value="P">Perempuan (P)</option>
-          </select>
-          <select id="quick-category" class="px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white">
-            <option value="2D">2D</option>
-            <option value="3D">3D</option>
-            <option value="Digital">Digital</option>
-          </select>
-          <select id="quick-style" class="px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white">
-            <option value="Visual Tutorial">Visual Tutorial</option>
-            <option value="Kinestetik Eksploratif">Kinestetik Eksploratif</option>
-            <option value="Auditori / Demonstrasi">Auditori</option>
-            <option value="Sosial Kolaboratif">Kolaboratif</option>
-          </select>
-          <button type="submit" class="py-2 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white font-semibold rounded-xl text-xs transition cursor-pointer shadow-sm col-span-2 sm:col-span-1">
-            + Tambah
-          </button>
-        </form>
-      </div>
-
-      <!-- Students Table -->
-      <div class="atelier-card overflow-hidden">
-        <div class="p-4 border-b border-atelier-border flex flex-wrap items-center justify-between gap-3 bg-atelier-warm/40">
-          <div>
-            <h3 class="font-serif font-bold text-base text-atelier-ink">Daftar Siswa Selesai Asesmen Kelas <span id="roster-class-title" class="font-mono text-atelier-terracotta">VII-A</span></h3>
-            <p class="text-xs text-atelier-inkMuted">Hasil pemetaan permanen tersimpan di database (diurutkan nomor absen)</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <input type="text" id="filter-roster-search" placeholder="Cari nama siswa..." 
-              class="px-3 py-1.5 rounded-lg border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white">
-          </div>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
-            <thead class="bg-atelier-warm/80 font-mono text-[11px] text-atelier-inkMuted uppercase border-b border-atelier-border">
-              <tr>
-                <th class="py-3 px-4 text-center" style="width: 80px;">No. Absen</th>
-                <th class="py-3 px-4">Nama Siswa</th>
-                <th class="py-3 px-4 text-center" style="width: 60px;">L/P</th>
-                <th class="py-3 px-4">Modalitas / Gaya Belajar</th>
-                <th class="py-3 px-4">Minat Media</th>
-                <th class="py-3 px-4">Tantangan Utama</th>
-                <th class="py-3 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody id="roster-table-body" class="divide-y divide-atelier-border">
-              <!-- Rendered via JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- TAB: LIVE MONITOR ASESMEN REAL-TIME -->
-    <!-- ========================================== -->
-    <div id="section-live" class="tab-content-section hidden space-y-6">
-      <div class="atelier-card p-6 space-y-6">
-        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-atelier-border pb-4">
-          <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="relative flex h-2.5 w-2.5">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+      <!-- ======================================================== -->
+      <!-- VIEW: BERANDA UTAMA (🏠) -->
+      <!-- ======================================================== -->
+      <div id="section-home" class="tab-content-section space-y-6">
+        <!-- Hero Welcome Card -->
+        <div class="atelier-card p-6 md:p-8 bg-gradient-to-br from-white via-atelier-warm/40 to-atelier-terracottaLight/30 border border-atelier-border space-y-4">
+          <div class="flex items-start justify-between">
+            <div class="space-y-2">
+              <span class="inline-block px-3 py-1 bg-atelier-terracottaLight text-atelier-terracotta text-xs font-mono font-bold rounded-lg border border-atelier-terracotta/20">
+                Ekosistem Pembelajaran Berdiferensiasi Seni Rupa
               </span>
-              <h3 class="font-serif font-bold text-xl text-atelier-ink">Live Monitor Pengerjaan Asesmen Siswa</h3>
+              <h2 class="font-serif font-black text-2xl md:text-3xl text-atelier-ink leading-tight">
+                Selamat Datang di Studio Guru PALLET
+              </h2>
+              <p class="text-xs md:text-sm text-atelier-inkMuted max-w-2xl leading-relaxed">
+                Platform kurasi profil artistik siswa, perancangan pembelajaran berdiferensiasi Kurikulum Merdeka (Fase D SMP), dan manajemen asesmen diagnostik terintegrasi untuk 27 rombel kelas.
+              </p>
             </div>
-            <p class="text-xs text-atelier-inkMuted">Pantau langsung siswa kelas <span id="live-class-label" class="font-mono font-bold text-atelier-terracotta">VII-A</span> yang sedang aktif menjawab kuesioner saat jam pelajaran.</p>
+            <div class="hidden md:block w-16 h-16 rounded-2xl bg-atelier-terracotta/10 text-atelier-terracotta flex items-center justify-center font-serif font-black text-3xl">
+              🎨
+            </div>
           </div>
-          <div class="flex items-center gap-3">
-            <span class="text-[11px] font-mono text-atelier-inkMuted flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Sinkronisasi aktif (3 detik)
-            </span>
-            <button onclick="fetchLiveMonitorData()" class="px-3 py-1.5 border border-atelier-border hover:bg-atelier-warm rounded-lg text-xs font-mono font-medium transition cursor-pointer">
-              ↻ Refresh
+
+          <!-- 3 Quick Pillars -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-1">
+              <span class="text-lg">🎯</span>
+              <h4 class="font-serif font-bold text-sm text-atelier-ink">Diagnostik Non-Kognitif</h4>
+              <p class="text-[11px] text-atelier-inkMuted">Memetakan gaya belajar (Visual, Kinestetik, Auditori, Kolaboratif) dan preferensi media (2D vs 3D).</p>
+            </div>
+            <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-1">
+              <span class="text-lg">📝</span>
+              <h4 class="font-serif font-bold text-sm text-atelier-ink">Modul Ajar & RPP Dinamis</h4>
+              <p class="text-[11px] text-atelier-inkMuted">Rekomendasi strategi ajar yang otomatis menyesuaikan jawaban riil murid di rombel aktif.</p>
+            </div>
+            <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-1">
+              <span class="text-lg">⚖️</span>
+              <h4 class="font-serif font-bold text-sm text-atelier-ink">Rubrik Autentik & Rekap Nilai</h4>
+              <p class="text-[11px] text-atelier-inkMuted">Penilaian 4 dimensi autentik dengan tabel rekapitulasi nilai dan fitur unduh file Excel.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 9 Tahap Visual Map -->
+        <div class="atelier-card p-6 space-y-4">
+          <div class="border-b border-atelier-border pb-3 flex items-center justify-between">
+            <h3 class="font-serif font-bold text-base text-atelier-ink">Alur 9 Tahap Modul PALLET</h3>
+            <span class="text-xs font-mono text-atelier-inkMuted">Klik untuk membuka tahap</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+            <button onclick="switchMainTab('tab-m1-diagnostik')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
+              <div>
+                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 1</span>
+                <span class="font-semibold text-atelier-ink">Digital Diagnostik</span>
+              </div>
+              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
+            </button>
+            <button onclick="switchMainTab('tab-m2-profile')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
+              <div>
+                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 2</span>
+                <span class="font-semibold text-atelier-ink">Student Art Profile</span>
+              </div>
+              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
+            </button>
+            <button onclick="switchMainTab('tab-m3-analysis')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
+              <div>
+                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 3</span>
+                <span class="font-semibold text-atelier-ink">Class Analysis</span>
+              </div>
+              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
+            </button>
+            <button onclick="switchMainTab('tab-m4-roster')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
+              <div>
+                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 4</span>
+                <span class="font-semibold text-atelier-ink">Teacher Dashboard</span>
+              </div>
+              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
+            </button>
+            <button onclick="switchMainTab('tab-m5-recommendation')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
+              <div>
+                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 5</span>
+                <span class="font-semibold text-atelier-ink">Learning Recommendation</span>
+              </div>
+              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
+            </button>
+            <button onclick="switchMainTab('tab-m6-rpp')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
+              <div>
+                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 6</span>
+                <span class="font-semibold text-atelier-ink">Learning Plan (RPP)</span>
+              </div>
+              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
+            </button>
+            <button onclick="switchMainTab('tab-m7-studio')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
+              <div>
+                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 7</span>
+                <span class="font-semibold text-atelier-ink">Implementation Studio</span>
+              </div>
+              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
+            </button>
+            <button onclick="switchMainTab('tab-m8-rubric')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
+              <div>
+                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 8</span>
+                <span class="font-semibold text-atelier-ink">Assessment & Reflection</span>
+              </div>
+              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
+            </button>
+            <button onclick="switchMainTab('tab-m9-tracking')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
+              <div>
+                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 9</span>
+                <span class="font-semibold text-atelier-ink">Student Tracking</span>
+              </div>
+              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
             </button>
           </div>
         </div>
+      </div>
 
-        <!-- 3 Live Summary Metrics -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div class="p-4 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-1">
-            <span class="block text-[11px] font-mono font-bold text-emerald-800 uppercase">Sedang Aktif Mengerjakan</span>
-            <p id="live-active-count" class="font-serif font-black text-3xl text-emerald-700">0 Siswa</p>
-            <p class="text-[11px] text-emerald-600">Siswa berinteraksi dalam 15 menit terakhir</p>
+      <!-- ======================================================== -->
+      <!-- VIEW: DASHBOARD KELAS AKTIF (📊) -->
+      <!-- ======================================================== -->
+      <div id="section-class-dash" class="tab-content-section hidden space-y-6">
+        <div class="atelier-card p-5 space-y-4">
+          <div class="flex items-center justify-between border-b border-atelier-border pb-3">
+            <div>
+              <h3 class="font-serif font-bold text-xl text-atelier-ink">Status Kelas Aktif: <span id="dash-class-title" class="font-mono text-atelier-terracotta">VII-A</span></h3>
+              <p class="text-xs text-atelier-inkMuted">Ringkasan cepat progres asesmen diagnostik dan diferensiasi kelas yang dipilih.</p>
+            </div>
+            <button onclick="switchMainTab('tab-m9-tracking')" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition flex items-center gap-1.5 cursor-pointer">
+              <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+              <span>Buka Live Monitor</span>
+            </button>
           </div>
-          <div class="p-4 bg-atelier-terracottaLight border border-atelier-terracotta/30 rounded-xl space-y-1">
-            <span class="block text-[11px] font-mono font-bold text-atelier-terracotta uppercase">Telah Selesai (Submit)</span>
-            <p id="live-completed-count" class="font-serif font-black text-3xl text-atelier-terracotta">0 Siswa</p>
-            <p class="text-[11px] text-atelier-inkMuted">Jawaban tersimpan permanen</p>
+
+          <!-- 4 Quick Stats Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-1">
+              <span class="block text-[11px] font-mono font-bold text-atelier-inkMuted uppercase">Total Siswa Terdata</span>
+              <p id="stat-total-students" class="font-serif font-bold text-2xl text-atelier-ink">0 Siswa</p>
+              <p class="text-[11px] text-atelier-inkMuted">Di rombel kelas aktif</p>
+            </div>
+            <div class="p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-1">
+              <span class="block text-[11px] font-mono font-bold text-atelier-inkMuted uppercase">Modalitas Dominan</span>
+              <p id="stat-dominant-style" class="font-serif font-bold text-2xl text-atelier-terracotta">-</p>
+              <p class="text-[11px] text-atelier-inkMuted">Karakter cara belajar kelas</p>
+            </div>
+            <div class="p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-1">
+              <span class="block text-[11px] font-mono font-bold text-atelier-inkMuted uppercase">Media Terfavorit</span>
+              <p id="stat-top-media" class="font-serif font-bold text-2xl text-atelier-ochre">-</p>
+              <p class="text-[11px] text-atelier-inkMuted">Minat media pilihan terbanyak</p>
+            </div>
+            <div class="p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-1">
+              <span class="block text-[11px] font-mono font-bold text-atelier-inkMuted uppercase">Kesiapan Tim Heterogen</span>
+              <p id="stat-hetero-status" class="font-serif font-bold text-2xl text-atelier-sage">Siap Bentuk</p>
+              <p class="text-[11px] text-atelier-inkMuted">Berdasarkan diversitas rombel</p>
+            </div>
           </div>
-          <div class="p-4 bg-atelier-warm border border-atelier-border rounded-xl space-y-1">
-            <span class="block text-[11px] font-mono font-bold text-atelier-inkMuted uppercase">Rata-rata Kemajuan Kelas</span>
-            <p id="live-avg-progress" class="font-serif font-black text-3xl text-atelier-ink">0%</p>
-            <p class="text-[11px] text-atelier-inkMuted">Berdasarkan nomor soal berjalan</p>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- VIEW: PEMETAAN JENJANG (VII-IX A-I) (🗺️) -->
+      <!-- ======================================================== -->
+      <div id="section-jenjang" class="tab-content-section hidden space-y-6">
+        <div class="atelier-card p-6 space-y-4">
+          <div class="border-b border-atelier-border pb-3">
+            <h3 class="font-serif font-bold text-xl text-atelier-ink">Pemetaan Matriks 27 Rombel (Fase D SMP)</h3>
+            <p class="text-xs text-atelier-inkMuted">Pantau kelengkapan asesmen diagnostik di seluruh rombel jenjang Kelas VII, VIII, dan IX (A s.d I). Klik pada salah satu rombel untuk langsung membuka dan mengelolanya.</p>
+          </div>
+
+          <div id="jenjang-matrix-container" class="space-y-6">
+            <!-- Rendered dynamically by guru.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- VIEW: TAHAP 1 - DIGITAL DIAGNOSTIK (CRUD SOAL & TAUTAN) -->
+      <!-- ======================================================== -->
+      <div id="section-m1-diagnostik" class="tab-content-section hidden space-y-6">
+        <!-- Sub-navigation between Soal CRUD & Tautan Share -->
+        <div class="flex items-center gap-2 border-b border-atelier-border pb-3">
+          <button onclick="switchM1SubTab('crud')" id="btn-m1-crud" class="px-4 py-2 rounded-xl text-xs font-semibold bg-atelier-terracotta text-white transition cursor-pointer">
+            Kelola Butir Soal Diagnostik (CRUD)
+          </button>
+          <button onclick="switchM1SubTab('share')" id="btn-m1-share" class="px-4 py-2 rounded-xl text-xs font-semibold bg-atelier-warm text-atelier-ink hover:bg-atelier-border transition cursor-pointer">
+            Tautan Siswa & QR Code Rombel
+          </button>
+        </div>
+
+        <!-- M1 Content A: CRUD Questions -->
+        <div id="m1-content-crud" class="atelier-card p-6 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-atelier-border pb-4">
+            <div>
+              <h3 class="font-serif font-bold text-xl text-atelier-ink">Manajemen Bank Soal Asesmen Diagnostik</h3>
+              <p class="text-xs text-atelier-inkMuted">Tambah, ubah, atau sesuaikan butir pertanyaan asesmen diagnostik non-kognitif.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openQuestionModal()" class="px-3.5 py-2 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                <span>Tambah Soal Baru</span>
+              </button>
+              <button onclick="confirmResetQuestions()" class="px-3 py-2 border border-atelier-border hover:bg-atelier-warm text-atelier-ink text-xs font-medium rounded-xl transition cursor-pointer">
+                Reset ke 10 Soal Default
+              </button>
+            </div>
+          </div>
+
+          <div id="questions-list-container" class="space-y-3">
+            <!-- Rendered via guru.js -->
           </div>
         </div>
 
-        <!-- Live Students Table -->
-        <div class="border border-atelier-border rounded-xl overflow-hidden bg-white">
-          <div class="p-3.5 bg-atelier-warm/50 border-b border-atelier-border font-serif font-bold text-sm text-atelier-ink">
-            Daftar Aktivitas Siswa di Kelas <span id="live-table-class-title" class="font-mono text-atelier-terracotta">VII-A</span>
+        <!-- M1 Content B: Share Link & QR -->
+        <div id="m1-content-share" class="atelier-card p-6 md:p-8 space-y-6 max-w-2xl mx-auto text-center hidden">
+          <div class="space-y-2">
+            <span class="inline-block px-3 py-1 bg-atelier-terracottaLight text-atelier-terracotta text-xs font-mono font-semibold rounded-full border border-atelier-terracotta/20">
+              Akses Asesmen Siswa Langsung
+            </span>
+            <h3 class="font-serif font-bold text-2xl text-atelier-ink">Tautan & QR Code Kelas <span id="share-class-badge" class="font-mono text-atelier-terracotta">VII-A</span></h3>
+            <p class="text-xs text-atelier-inkMuted max-w-md mx-auto leading-relaxed">
+              Bagikan tautan ini ke grup WhatsApp kelas atau proyeksikan di layar kelas agar siswa dapat langsung mengisi asesmen tanpa perlu login.
+            </p>
+          </div>
+
+          <!-- Generated QR Code Image -->
+          <div class="p-6 bg-atelier-warm/50 rounded-2xl border border-atelier-border inline-block mx-auto shadow-sm">
+            <img id="qr-code-img" src="" alt="QR Code Kelas" class="w-48 h-48 mx-auto rounded-xl border border-atelier-border bg-white p-2">
+            <p class="text-[11px] font-mono text-atelier-inkMuted mt-3">Scan untuk membuka kelas <span id="qr-class-name">VII-A</span></p>
+          </div>
+
+          <!-- Link Copy Box -->
+          <div class="flex items-center gap-2 max-w-lg mx-auto">
+            <input type="text" id="share-link-input" readonly
+              class="flex-1 px-4 py-2.5 rounded-xl border border-atelier-border font-mono text-xs bg-white text-atelier-ink outline-none">
+            <button onclick="copyShareLink()" class="px-5 py-2.5 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white font-semibold rounded-xl text-xs transition cursor-pointer shadow-sm">
+              Salin Link
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- VIEW: TAHAP 2 - STUDENT ART PROFILE -->
+      <!-- ======================================================== -->
+      <div id="section-m2-profile" class="tab-content-section hidden space-y-6">
+        <div class="atelier-card p-6 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-atelier-border pb-3">
+            <div>
+              <h3 class="font-serif font-bold text-xl text-atelier-ink">Student Art Profile & Kartu Seniman</h3>
+              <p class="text-xs text-atelier-inkMuted">Pratinjau profil artistik individual siswa di kelas <span id="profile-class-title" class="font-mono font-bold text-atelier-terracotta">VII-A</span>.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <label for="profile-student-select" class="text-xs font-mono font-semibold text-atelier-inkMuted">Pilih Siswa:</label>
+              <select id="profile-student-select" class="px-3 py-1.5 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white font-medium" onchange="renderSelectedStudentProfile()">
+                <option value="" disabled selected>Pilih siswa...</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Individual Student Art Profile Card Display -->
+          <div id="student-art-card-display" class="space-y-4">
+            <p class="text-xs text-atelier-inkMuted italic p-4 text-center">Pilih salah satu siswa dari daftar dropdown di atas untuk melihat Kartu Profil Seniman lengkapnya.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- VIEW: TAHAP 3 - CLASS ANALYSIS (HEATMAP & METRICS) -->
+      <!-- ======================================================== -->
+      <div id="section-m3-analysis" class="tab-content-section hidden space-y-6">
+        <div class="atelier-card p-6 space-y-4">
+          <div class="border-b border-atelier-border pb-4">
+            <h3 class="font-serif font-bold text-xl text-atelier-ink">Matriks Heatmap Kebutuhan Belajar Kelas <span id="heatmap-class-title" class="font-mono text-atelier-terracotta">VII-A</span></h3>
+            <p class="text-xs text-atelier-inkMuted">Distribusi visual pemetaan modalitas belajar, media, dan kendala berkarya untuk menentukan diferensiasi pembelajaran Kurikulum Merdeka.</p>
+          </div>
+
+          <!-- 3 Heatmap Distribution Blocks -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+            <!-- Modality Distribution -->
+            <div class="space-y-3 p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border">
+              <h4 class="font-serif font-bold text-sm text-atelier-ink">1. Distribusi Modalitas Belajar</h4>
+              <div id="heatmap-styles-list" class="space-y-2 text-xs">
+                <!-- Rendered by JS -->
+              </div>
+            </div>
+
+            <!-- Media Distribution -->
+            <div class="space-y-3 p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border">
+              <h4 class="font-serif font-bold text-sm text-atelier-ink">2. Preferensi Media (2D vs 3D)</h4>
+              <div id="heatmap-media-list" class="space-y-2 text-xs">
+                <!-- Rendered by JS -->
+              </div>
+            </div>
+
+            <!-- Challenges Distribution -->
+            <div class="space-y-3 p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border">
+              <h4 class="font-serif font-bold text-sm text-atelier-ink">3. Titik Kendala Berkarya</h4>
+              <div id="heatmap-challenges-list" class="space-y-2 text-xs">
+                <!-- Rendered by JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- VIEW: TAHAP 4 - TEACHER DASHBOARD (ROSTER KELAS LENGKAP) -->
+      <!-- ======================================================== -->
+      <div id="section-m4-roster" class="tab-content-section hidden space-y-6">
+        <!-- Quick Add Student Form (With Attendance No & Gender) -->
+        <div class="atelier-card p-5 space-y-3 bg-white">
+          <h3 class="font-serif font-bold text-base text-atelier-ink">Input Cepat Siswa ke Rombel <span id="quick-add-class-label" class="font-mono text-atelier-terracotta">VII-A</span></h3>
+          <form id="quick-add-student-form" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-3">
+            <input type="number" id="quick-att" placeholder="No. Absen" min="1" max="60" required
+              class="px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none">
+            <input type="text" id="quick-name" placeholder="Nama Lengkap Siswa..." required
+              class="px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none sm:col-span-2">
+            <select id="quick-gender" required class="px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white">
+              <option value="" disabled selected>L/P</option>
+              <option value="L">Laki-laki (L)</option>
+              <option value="P">Perempuan (P)</option>
+            </select>
+            <select id="quick-category" class="px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white">
+              <option value="2D">2D</option>
+              <option value="3D">3D</option>
+            </select>
+            <select id="quick-style" class="px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white">
+              <option value="Visual Tutorial">Visual Tutorial</option>
+              <option value="Kinestetik Eksploratif">Kinestetik Eksploratif</option>
+              <option value="Auditori / Demonstrasi">Auditori</option>
+              <option value="Sosial Kolaboratif">Kolaboratif</option>
+            </select>
+            <button type="submit" class="py-2 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white font-semibold rounded-xl text-xs transition cursor-pointer shadow-sm col-span-2 sm:col-span-1">
+              + Tambah
+            </button>
+          </form>
+        </div>
+
+        <!-- Students Table -->
+        <div class="atelier-card overflow-hidden">
+          <div class="p-4 border-b border-atelier-border flex flex-wrap items-center justify-between gap-3 bg-atelier-warm/40">
+            <div>
+              <h3 class="font-serif font-bold text-base text-atelier-ink">Daftar Siswa Kelas <span id="roster-class-title" class="font-mono text-atelier-terracotta">VII-A</span></h3>
+              <p class="text-xs text-atelier-inkMuted">Hasil pemetaan permanen tersimpan di database (diurutkan nomor absen)</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="text" id="filter-roster-search" placeholder="Cari nama siswa..." 
+                class="px-3 py-1.5 rounded-lg border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white">
+            </div>
           </div>
 
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
               <thead class="bg-atelier-warm/80 font-mono text-[11px] text-atelier-inkMuted uppercase border-b border-atelier-border">
                 <tr>
-                  <th class="py-3 px-4 text-center" style="width: 70px;">Absen</th>
+                  <th class="py-3 px-4 text-center" style="width: 80px;">No. Absen</th>
                   <th class="py-3 px-4">Nama Siswa</th>
-                  <th class="py-3 px-4 text-center" style="width: 50px;">L/P</th>
-                  <th class="py-3 px-4">Posisi Soal Terakhir</th>
-                  <th class="py-3 px-4" style="width: 25%;">Progres Pengerjaan</th>
-                  <th class="py-3 px-4">Pilihan Media</th>
-                  <th class="py-3 px-4">Waktu Aktivitas</th>
-                  <th class="py-3 px-4 text-center">Status</th>
+                  <th class="py-3 px-4 text-center" style="width: 60px;">L/P</th>
+                  <th class="py-3 px-4">Modalitas Belajar</th>
+                  <th class="py-3 px-4">Minat Media</th>
+                  <th class="py-3 px-4">Tantangan Utama</th>
+                  <th class="py-3 px-4 text-center">Aksi</th>
                 </tr>
               </thead>
-              <tbody id="live-table-body" class="divide-y divide-atelier-border">
-                <!-- Rendered by guru.js -->
+              <tbody id="roster-table-body" class="divide-y divide-atelier-border">
+                <!-- Rendered via JS -->
               </tbody>
             </table>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- ========================================== -->
-    <!-- TAB 2: HEATMAP ANALISIS ROMBEL -->
-    <!-- ========================================== -->
-    <div id="section-heatmap" class="tab-content-section hidden space-y-6">
-      <div class="atelier-card p-6 space-y-4">
-        <div class="border-b border-atelier-border pb-4">
-          <h3 class="font-serif font-bold text-xl text-atelier-ink">Matriks Heatmap Kebutuhan Belajar Kelas <span id="heatmap-class-title" class="font-mono text-atelier-terracotta">VII-A</span></h3>
-          <p class="text-xs text-atelier-inkMuted">Distribusi visual pemetaan modalitas belajar, media, dan kendala berkarya untuk menentukan diferensiasi pembelajaran Kurikulum Merdeka.</p>
-        </div>
-
-        <!-- 3 Heatmap Distribution Blocks -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-          <!-- Modality Distribution -->
-          <div class="space-y-3 p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border">
-            <h4 class="font-serif font-bold text-sm text-atelier-ink">1. Distribusi Modalitas Belajar</h4>
-            <div id="heatmap-styles-list" class="space-y-2 text-xs">
-              <!-- Rendered by JS -->
+      <!-- ======================================================== -->
+      <!-- VIEW: TAHAP 5 - LEARNING RECOMMENDATION (DINAMIS DARI DATA) -->
+      <!-- ======================================================== -->
+      <div id="section-m5-recommendation" class="tab-content-section hidden space-y-6">
+        <div class="atelier-card p-6 space-y-6">
+          <div class="border-b border-atelier-border pb-4">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-atelier-terracottaLight text-atelier-terracotta border border-atelier-terracotta/30">
+                100% Dinamis Berbasis Jawaban Siswa
+              </span>
             </div>
+            <h3 class="font-serif font-bold text-2xl text-atelier-ink mt-1">Rekomendasi Pembelajaran Berdiferensiasi</h3>
+            <p class="text-xs text-atelier-inkMuted">Strategi ajar yang secara otomatis dikalkulasi dari agregasi jawaban murid kelas <span id="recom-class-title" class="font-mono font-bold text-atelier-terracotta">VII-A</span>.</p>
           </div>
 
-          <!-- Media Distribution -->
-          <div class="space-y-3 p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border">
-            <h4 class="font-serif font-bold text-sm text-atelier-ink">2. Preferensi Media (2D vs 3D)</h4>
-            <div id="heatmap-media-list" class="space-y-2 text-xs">
-              <!-- Rendered by JS -->
-            </div>
-          </div>
-
-          <!-- Challenges Distribution -->
-          <div class="space-y-3 p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border">
-            <h4 class="font-serif font-bold text-sm text-atelier-ink">3. Titik Kendala Berkarya</h4>
-            <div id="heatmap-challenges-list" class="space-y-2 text-xs">
-              <!-- Rendered by JS -->
-            </div>
-          </div>
-        </div>
-
-        <!-- Differentiated Learning Strategic Matrix -->
-        <div class="pt-4 border-t border-atelier-border space-y-3">
-          <h4 class="font-serif font-bold text-base text-atelier-ink">Rekomendasi Diferensiasi Khusus Rombel Ini:</h4>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-            <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-1.5">
-              <span class="block font-mono text-[10px] text-atelier-terracotta font-bold uppercase">Diferensiasi Konten</span>
-              <p id="recom-konten" class="text-atelier-ink leading-relaxed">
-                Sediakan perpaduan referensi cetak infografis langkah menggambar untuk siswa Visual dan contoh karya fisik 3D untuk siswa Kinestetik.
-              </p>
-            </div>
-            <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-1.5">
-              <span class="block font-mono text-[10px] text-atelier-ochre font-bold uppercase">Diferensiasi Proses</span>
-              <p id="recom-proses" class="text-atelier-ink leading-relaxed">
-                Fasilitasi sesi demonstrasi bertahap (*scaffolding*) pada tahapan sketsa awal dan proporsi sebelum siswa melakukan eksekusi mandiri.
-              </p>
-            </div>
-            <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-1.5">
-              <span class="block font-mono text-[10px] text-atelier-sage font-bold uppercase">Diferensiasi Produk</span>
-              <p id="recom-produk" class="text-atelier-ink leading-relaxed">
-                Berikan kebebasan opsi luaran karya: siswa peminat 2D menghasilkan karya gambar/lukis, sementara siswa 3D menghasilkan relief/kriya bahan daur ulang.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- TAB 3: KELOLA SOAL DIAGNOSTIK (CRUD) -->
-    <!-- ========================================== -->
-    <div id="section-questions" class="tab-content-section hidden space-y-6">
-      <div class="atelier-card p-6 space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-atelier-border pb-4">
-          <div>
-            <h3 class="font-serif font-bold text-xl text-atelier-ink">Manajemen Soal Asesmen Diagnostik</h3>
-            <p class="text-xs text-atelier-inkMuted">Tambah, ubah, atau sesuaikan butir pertanyaan asesmen diagnostik yang akan dijawab oleh siswa.</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="openQuestionModal()" class="px-3.5 py-2 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-              </svg>
-              <span>Tambah Soal Baru</span>
-            </button>
-            <button onclick="confirmResetQuestions()" class="px-3 py-2 border border-atelier-border hover:bg-atelier-warm text-atelier-ink text-xs font-medium rounded-xl transition cursor-pointer">
-              Reset ke 10 Soal Default
-            </button>
-          </div>
-        </div>
-
-        <!-- Questions List Container -->
-        <div id="questions-list-container" class="space-y-3">
-          <!-- Rendered via guru.js -->
-        </div>
-      </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- TAB 4: GENERATOR MODUL AJAR KURIKULUM MERDEKA -->
-    <!-- ========================================== -->
-    <div id="section-modul" class="tab-content-section hidden space-y-6">
-      <div class="atelier-card p-6 space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-atelier-border pb-4 no-print">
-          <div>
-            <h3 class="font-serif font-bold text-xl text-atelier-ink">Generator Modul Ajar Seni Rupa Berdiferensiasi</h3>
-            <p class="text-xs text-atelier-inkMuted">Rencana Pembelajaran Kurikulum Merdeka yang secara otomatis disesuaikan dengan karakteristik rombel <span id="modul-class-name" class="font-mono font-bold text-atelier-terracotta">VII-A</span>.</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="window.print()" class="px-3.5 py-2 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-              </svg>
-              <span>Cetak Modul Ajar (PDF)</span>
-            </button>
-            <button onclick="copyModulAjarText()" class="px-3 py-2 border border-atelier-border hover:bg-atelier-warm text-atelier-ink text-xs font-medium rounded-xl transition cursor-pointer">
-              Salin Teks Lengkap
-            </button>
-          </div>
-        </div>
-
-        <!-- Rendered Modul Ajar Document Content -->
-        <div id="modul-ajar-document" class="p-6 md:p-8 bg-white border border-atelier-border rounded-xl space-y-6 text-sm font-sans leading-relaxed">
-          <!-- Filled dynamically by guru.js -->
-        </div>
-      </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- TAB 5: STUDIO TOOLS (TIMER & KELOMPOK) -->
-    <!-- ========================================== -->
-    <div id="section-studio" class="tab-content-section hidden space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Studio Practice Timer (Pomodoro 3 Fase) -->
-        <div class="atelier-card p-6 space-y-5">
-          <div class="border-b border-atelier-border pb-3">
-            <h3 class="font-serif font-bold text-lg text-atelier-ink">Timer Sesi Praktik Studio Berkarya</h3>
-            <p class="text-xs text-atelier-inkMuted">Alokasi waktu terstruktur untuk eksplorasi sketsa, eksekusi media, dan apresiasi karya.</p>
-          </div>
-
-          <!-- Phase Switcher -->
-          <div class="grid grid-cols-3 gap-2 font-mono text-xs">
-            <button onclick="setTimerPhase('sketsa', 15)" id="btn-phase-sketsa" class="timer-phase-btn p-2 rounded-lg border border-atelier-terracotta bg-atelier-terracottaLight text-atelier-terracotta font-bold">1. Sketsa (15m)</button>
-            <button onclick="setTimerPhase('eksekusi', 30)" id="btn-phase-eksekusi" class="timer-phase-btn p-2 rounded-lg border border-atelier-border bg-white text-atelier-ink">2. Eksekusi (30m)</button>
-            <button onclick="setTimerPhase('apresiasi', 15)" id="btn-phase-apresiasi" class="timer-phase-btn p-2 rounded-lg border border-atelier-border bg-white text-atelier-ink">3. Apresiasi (15m)</button>
-          </div>
-
-          <!-- Giant Digital Timer Display -->
-          <div class="text-center py-6 bg-atelier-warm/40 rounded-2xl border border-atelier-border">
-            <div id="timer-display" class="font-mono font-bold text-5xl md:text-6xl text-atelier-ink tracking-tight">
-              15:00
-            </div>
-            <p id="timer-phase-label" class="font-mono text-xs text-atelier-terracotta font-bold uppercase mt-2">
-              Fase 1: Eksplorasi Ide & Sketsa Proporsi
-            </p>
-          </div>
-
-          <!-- Controls -->
-          <div class="flex items-center justify-center gap-3">
-            <button onclick="startStudioTimer()" id="btn-timer-start" class="px-6 py-2.5 bg-atelier-terracotta text-white rounded-xl font-semibold text-xs hover:bg-atelier-terracottaDark transition cursor-pointer shadow-sm">
-              Mulai Timer
-            </button>
-            <button onclick="pauseStudioTimer()" id="btn-timer-pause" class="px-5 py-2.5 border border-atelier-border hover:bg-atelier-warm text-atelier-ink rounded-xl font-medium text-xs transition cursor-pointer">
-              Jeda
-            </button>
-            <button onclick="resetStudioTimer()" class="px-5 py-2.5 border border-atelier-border hover:bg-atelier-warm text-atelier-ink rounded-xl font-medium text-xs transition cursor-pointer">
-              Reset
-            </button>
-          </div>
-        </div>
-
-        <!-- Heterogeneous Group Generator -->
-        <div class="atelier-card p-6 space-y-5">
-          <div class="border-b border-atelier-border pb-3">
-            <h3 class="font-serif font-bold text-lg text-atelier-ink">Generator Kelompok Heterogen</h3>
-            <p class="text-xs text-atelier-inkMuted">Membagi rombel menjadi kelompok kerja kolaboratif dengan variasi gaya belajar yang seimbang.</p>
-          </div>
-
-          <div class="flex items-center gap-3 text-xs">
-            <label for="group-size-input" class="font-mono text-atelier-inkMuted uppercase">Jumlah Anggota per Tim:</label>
-            <select id="group-size-input" class="px-3 py-1.5 rounded-lg border border-atelier-border bg-white font-mono text-xs outline-none">
-              <option value="3">3 Siswa</option>
-              <option value="4" selected>4 Siswa</option>
-              <option value="5">5 Siswa</option>
-            </select>
-            <button onclick="generateHeteroGroups()" class="px-4 py-2 bg-atelier-ultramarine text-white rounded-xl font-semibold text-xs hover:bg-indigo-950 transition cursor-pointer shadow-sm">
-              Acak Kelompok Seimbang
-            </button>
-          </div>
-
-          <!-- Output Groups Grid -->
-          <div id="hetero-groups-output" class="space-y-3 max-h-96 overflow-y-auto pr-1">
-            <p class="text-xs text-atelier-inkMuted italic">Tekan "Acak Kelompok Seimbang" untuk membagi siswa rombel aktif.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- TAB 6: RUBRIK PENILAIAN AUTENTIK -->
-    <!-- ========================================== -->
-    <div id="section-rubric" class="tab-content-section hidden space-y-6">
-      <div class="atelier-card p-6 space-y-5">
-        <div class="border-b border-atelier-border pb-4">
-          <h3 class="font-serif font-bold text-xl text-atelier-ink">Rubrik Penilaian Autentik Seni Rupa</h3>
-          <p class="text-xs text-atelier-inkMuted">Penilaian berbobot ganda: Proses Berkarya (Ide, Eksplorasi) dan Produk Akhir (Kreativitas, Teknik, Finishing).</p>
-        </div>
-
-        <form id="rubric-form" class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label for="rubric-student-select" class="block text-xs font-mono font-semibold text-atelier-ink uppercase tracking-wider mb-2">
-                Pilih Siswa Kelas Aktif
-              </label>
-              <select id="rubric-student-select" required class="w-full px-4 py-2.5 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white">
-                <option value="" disabled selected>Pilih siswa untuk dinilai...</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-mono font-semibold text-atelier-ink uppercase tracking-wider mb-2">
-                Predikat Otomatis Terkalkulasi
-              </label>
-              <div class="flex items-center gap-3">
-                <span id="rubric-total-score-badge" class="px-3.5 py-2 rounded-xl bg-atelier-terracottaLight font-mono font-bold text-base text-atelier-terracotta border border-atelier-terracotta/30">
-                  Skor: 0
+          <!-- Macro Class Recommendations (Konten, Proses, Produk, Ruang) -->
+          <div class="space-y-3">
+            <h4 class="font-serif font-bold text-base text-atelier-ink">A. Strategi Diferensiasi Kelas (Tingkat Rombel)</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-2">
+                <span class="inline-block px-2.5 py-0.5 rounded font-mono text-[10px] text-atelier-terracotta bg-atelier-terracottaLight font-bold uppercase">
+                  1. Diferensiasi Konten
                 </span>
-                <span id="rubric-predicate-badge" class="px-3 py-2 rounded-xl bg-atelier-warm font-mono text-xs font-bold text-atelier-ink border border-atelier-border">
-                  Predikat: -
+                <p id="dyn-recom-konten" class="text-atelier-ink leading-relaxed">
+                  Memuat analisis data...
+                </p>
+              </div>
+
+              <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-2">
+                <span class="inline-block px-2.5 py-0.5 rounded font-mono text-[10px] text-atelier-ochre bg-atelier-ochreLight font-bold uppercase">
+                  2. Diferensiasi Proses (Scaffolding)
+                </span>
+                <p id="dyn-recom-proses" class="text-atelier-ink leading-relaxed">
+                  Memuat analisis data...
+                </p>
+              </div>
+
+              <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-2">
+                <span class="inline-block px-2.5 py-0.5 rounded font-mono text-[10px] text-atelier-sage bg-atelier-sageLight font-bold uppercase">
+                  3. Diferensiasi Produk
+                </span>
+                <p id="dyn-recom-produk" class="text-atelier-ink leading-relaxed">
+                  Memuat analisis data...
+                </p>
+              </div>
+            </div>
+
+            <!-- Atelier Studio Environment Layout Recommendation -->
+            <div class="p-4 bg-atelier-warm/50 rounded-xl border border-atelier-border text-xs space-y-1">
+              <strong class="font-mono text-[11px] text-atelier-ink uppercase">Rekomendasi Penataan Ruang Studio Atelier:</strong>
+              <p id="dyn-recom-studio" class="text-atelier-inkMuted leading-relaxed">
+                Memuat rekomendasi penataan ruang...
+              </p>
+            </div>
+          </div>
+
+          <div class="border-t border-atelier-border"></div>
+
+          <!-- Micro / Personal Student Pedagogical Recommendation -->
+          <div class="space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h4 class="font-serif font-bold text-base text-atelier-ink">B. Rekomendasi Pendampingan Individual Siswa</h4>
+                <p class="text-xs text-atelier-inkMuted">Pilih siswa untuk melihat rekomendasi bimbingan personal spesifik berdasarkan jawaban kuesioner & esainya.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <select id="personal-student-select" class="px-3 py-1.5 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white font-medium" onchange="renderPersonalRecommendation()">
+                  <option value="" disabled selected>Pilih siswa rombel...</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="personal-recom-card" class="p-5 bg-white border border-atelier-border rounded-xl space-y-3">
+              <p class="text-xs text-atelier-inkMuted italic">Pilih siswa di atas untuk melihat rekomendasi pendampingan personal.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- VIEW: TAHAP 6 - LEARNING PLAN (RPP / MODUL AJAR DINAMIS) -->
+      <!-- ======================================================== -->
+      <div id="section-m6-rpp" class="tab-content-section hidden space-y-6">
+        <div class="atelier-card p-6 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-atelier-border pb-4 no-print">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-atelier-terracottaLight text-atelier-terracotta border border-atelier-terracotta/30">
+                  Kurikulum Merdeka · Fase D SMP
                 </span>
               </div>
+              <h3 class="font-serif font-bold text-2xl text-atelier-ink mt-1">Generator Modul Ajar / RPP Berdiferensiasi</h3>
+              <p class="text-xs text-atelier-inkMuted">Disusun secara dinamis berdasarkan data karakteristik aktual rombel <span id="modul-class-name" class="font-mono font-bold text-atelier-terracotta">VII-A</span>.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="window.print()" class="px-3.5 py-2 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                </svg>
+                <span>Cetak RPP (PDF)</span>
+              </button>
+              <button onclick="copyModulAjarText()" class="px-3 py-2 border border-atelier-border hover:bg-atelier-warm text-atelier-ink text-xs font-medium rounded-xl transition cursor-pointer">
+                Salin Teks Lengkap
+              </button>
             </div>
           </div>
 
-          <!-- Rubric Sliders: Process & Product -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-            <!-- Process Dimension -->
-            <div class="p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-4">
-              <div class="flex justify-between items-center">
-                <h4 class="font-serif font-bold text-sm text-atelier-ink">A. Nilai Proses Berkarya (Bobot 50%)</h4>
-                <span id="label-score-process" class="font-mono font-bold text-xs text-atelier-terracotta">75/100</span>
-              </div>
-              <input type="range" id="input-score-process" min="50" max="100" value="75" step="1" 
-                class="w-full accent-atelier-terracotta cursor-pointer" oninput="calculateRubricScore()">
-              <p class="text-[11px] text-atelier-inkMuted leading-relaxed">
-                Aspek: Orisinalitas ide awal, ketekunan eksplorasi media, kemandirian memecahkan kendala, dan keaktifan konsultasi.
-              </p>
-            </div>
-
-            <!-- Product Dimension -->
-            <div class="p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-4">
-              <div class="flex justify-between items-center">
-                <h4 class="font-serif font-bold text-sm text-atelier-ink">B. Nilai Produk Akhir (Bobot 50%)</h4>
-                <span id="label-score-product" class="font-mono font-bold text-xs text-atelier-ochre">80/100</span>
-              </div>
-              <input type="range" id="input-score-product" min="50" max="100" value="80" step="1"
-                class="w-full accent-atelier-ochre cursor-pointer" oninput="calculateRubricScore()">
-              <p class="text-[11px] text-atelier-inkMuted leading-relaxed">
-                Aspek: Penguasaan teknik media (kering/basah/3D), keharmonisan proporsi & warna, serta kerapian penyelesaian finishing.
-              </p>
-            </div>
+          <!-- Rendered Modul Ajar Document Content -->
+          <div id="modul-ajar-document" class="p-6 md:p-8 bg-white border border-atelier-border rounded-xl space-y-6 text-sm font-sans leading-relaxed">
+            <!-- Filled dynamically by guru.js -->
           </div>
-
-          <div>
-            <label for="rubric-notes" class="block text-xs font-mono font-semibold text-atelier-ink uppercase tracking-wider mb-2">
-              Catatan Apresiasi & Rekomendasi Guru
-            </label>
-            <textarea id="rubric-notes" rows="2" placeholder="Tuliskan catatan apresiasi personal untuk karya siswa ini..."
-              class="w-full px-4 py-2.5 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none"></textarea>
-          </div>
-
-          <button type="submit" class="px-6 py-2.5 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white font-semibold rounded-xl text-xs transition cursor-pointer shadow-sm">
-            Simpan Nilai Asesmen Autentik
-          </button>
-        </form>
+        </div>
       </div>
-    </div>
 
-    <!-- ========================================== -->
-    <!-- TAB 7: KALENDER AKADEMIK SENI -->
-    <!-- ========================================== -->
-    <div id="section-calendar" class="tab-content-section hidden space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Add Event Form -->
-        <div class="atelier-card p-5 space-y-4">
-          <h3 class="font-serif font-bold text-base text-atelier-ink">Tambah Agenda Kegiatan Seni</h3>
-          <form id="calendar-add-form" class="space-y-3">
-            <div>
-              <label for="cal-title" class="block text-xs font-mono font-semibold text-atelier-ink uppercase mb-1">Judul Agenda</label>
-              <input type="text" id="cal-title" placeholder="Contoh: Asesmen Diagnostik Awal Semester" required
-                class="w-full px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none">
+      <!-- ======================================================== -->
+      <!-- VIEW: TAHAP 7 - IMPLEMENTATION STUDIO & KALENDER KUSTOM -->
+      <!-- ======================================================== -->
+      <div id="section-m7-studio" class="tab-content-section hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Studio Practice Timer (Pomodoro 3 Fase) -->
+          <div class="atelier-card p-6 space-y-5">
+            <div class="border-b border-atelier-border pb-3">
+              <h3 class="font-serif font-bold text-lg text-atelier-ink">Timer Sesi Praktik Studio Berkarya</h3>
+              <p class="text-xs text-atelier-inkMuted">Alokasi waktu terstruktur: eksplorasi sketsa, eksekusi media, dan apresiasi karya.</p>
             </div>
-            <div>
-              <label for="cal-date" class="block text-xs font-mono font-semibold text-atelier-ink uppercase mb-1">Tanggal</label>
-              <input type="date" id="cal-date" required
-                class="w-full px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white">
+
+            <!-- Phase Switcher -->
+            <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+              <button onclick="setTimerPhase('sketsa', 15)" id="btn-phase-sketsa" class="timer-phase-btn p-2 rounded-lg border border-atelier-terracotta bg-atelier-terracottaLight text-atelier-terracotta font-bold">1. Sketsa (15m)</button>
+              <button onclick="setTimerPhase('eksekusi', 30)" id="btn-phase-eksekusi" class="timer-phase-btn p-2 rounded-lg border border-atelier-border bg-white text-atelier-ink">2. Eksekusi (30m)</button>
+              <button onclick="setTimerPhase('apresiasi', 15)" id="btn-phase-apresiasi" class="timer-phase-btn p-2 rounded-lg border border-atelier-border bg-white text-atelier-ink">3. Apresiasi (15m)</button>
             </div>
-            <div>
-              <label for="cal-type" class="block text-xs font-mono font-semibold text-atelier-ink uppercase mb-1">Kategori Kegiatan</label>
-              <select id="cal-type" class="w-full px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white">
-                <option value="asesmen">Asesmen & Refleksi</option>
-                <option value="praktik">Praktik Studio Berkarya</option>
-                <option value="pameran">Pameran & Apresiasi</option>
+
+            <!-- Giant Digital Timer Display -->
+            <div class="text-center py-6 bg-atelier-warm/40 rounded-2xl border border-atelier-border">
+              <div id="timer-display" class="font-mono font-bold text-5xl md:text-6xl text-atelier-ink tracking-tight">
+                15:00
+              </div>
+              <p id="timer-phase-label" class="font-mono text-xs text-atelier-terracotta font-bold uppercase mt-2">
+                Fase 1: Eksplorasi Ide & Sketsa Proporsi
+              </p>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex items-center justify-center gap-3">
+              <button onclick="startStudioTimer()" id="btn-timer-start" class="px-6 py-2.5 bg-atelier-terracotta text-white rounded-xl font-semibold text-xs hover:bg-atelier-terracottaDark transition cursor-pointer shadow-sm">
+                Mulai Timer
+              </button>
+              <button onclick="pauseStudioTimer()" id="btn-timer-pause" class="px-5 py-2.5 border border-atelier-border hover:bg-atelier-warm text-atelier-ink rounded-xl font-medium text-xs transition cursor-pointer">
+                Jeda
+              </button>
+              <button onclick="resetStudioTimer()" class="px-5 py-2.5 border border-atelier-border hover:bg-atelier-warm text-atelier-ink rounded-xl font-medium text-xs transition cursor-pointer">
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <!-- Heterogeneous Group Generator -->
+          <div class="atelier-card p-6 space-y-5">
+            <div class="border-b border-atelier-border pb-3">
+              <h3 class="font-serif font-bold text-lg text-atelier-ink">Generator Kelompok Heterogen</h3>
+              <p class="text-xs text-atelier-inkMuted">Membagi rombel menjadi tim kolaboratif dengan variasi gaya belajar seimbang.</p>
+            </div>
+
+            <div class="flex items-center gap-3 text-xs">
+              <label for="group-size-input" class="font-mono text-atelier-inkMuted uppercase">Jumlah Anggota:</label>
+              <select id="group-size-input" class="px-3 py-1.5 rounded-lg border border-atelier-border bg-white font-mono text-xs outline-none">
+                <option value="3">3 Siswa</option>
+                <option value="4" selected>4 Siswa</option>
+                <option value="5">5 Siswa</option>
               </select>
+              <button onclick="generateHeteroGroups()" class="px-4 py-2 bg-atelier-ultramarine text-white rounded-xl font-semibold text-xs hover:bg-indigo-950 transition cursor-pointer shadow-sm">
+                Acak Kelompok Seimbang
+              </button>
             </div>
-            <button type="submit" class="w-full py-2.5 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white font-semibold rounded-xl text-xs transition cursor-pointer shadow-sm">
-              + Jadwalkan Agenda
-            </button>
-          </form>
+
+            <div id="hetero-groups-output" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+              <p class="text-xs text-atelier-inkMuted italic">Tekan "Acak Kelompok Seimbang" untuk membagi siswa rombel aktif.</p>
+            </div>
+          </div>
         </div>
 
-        <!-- Events List -->
-        <div class="lg:col-span-2 atelier-card p-5 space-y-4">
-          <div class="flex items-center justify-between border-b border-atelier-border pb-3">
-            <h3 class="font-serif font-bold text-base text-atelier-ink">Daftar Agenda Kegiatan Semester Ini</h3>
+        <!-- Kalender Akademik Seni (Dengan Opsi Kategori Kustom) -->
+        <div class="atelier-card p-6 space-y-5">
+          <div class="border-b border-atelier-border pb-3 flex items-center justify-between">
+            <div>
+              <h3 class="font-serif font-bold text-lg text-atelier-ink">Kalender Akademik Seni Rupa</h3>
+              <p class="text-xs text-atelier-inkMuted">Jadwal agenda asesmen, praktik, pameran, maupun kegiatan seni kustom lainnya.</p>
+            </div>
             <span id="calendar-count-badge" class="font-mono text-xs text-atelier-inkMuted">0 Kegiatan</span>
           </div>
 
-          <div id="calendar-events-container" class="space-y-2.5">
-            <!-- Rendered via guru.js -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Add Event Form -->
+            <div class="space-y-4 p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border">
+              <h4 class="font-serif font-bold text-sm text-atelier-ink">Tambah Agenda Kegiatan</h4>
+              <form id="calendar-add-form" class="space-y-3 text-xs">
+                <div>
+                  <label for="cal-title" class="block font-mono font-semibold uppercase mb-1">Judul Agenda</label>
+                  <input type="text" id="cal-title" placeholder="Contoh: Kunjungan Galeri / Workshop Batik" required
+                    class="w-full px-3 py-2 rounded-xl border border-atelier-border focus:border-atelier-terracotta outline-none bg-white">
+                </div>
+                <div>
+                  <label for="cal-date" class="block font-mono font-semibold uppercase mb-1">Tanggal</label>
+                  <input type="date" id="cal-date" required
+                    class="w-full px-3 py-2 rounded-xl border border-atelier-border focus:border-atelier-terracotta outline-none bg-white">
+                </div>
+                <div>
+                  <label for="cal-type" class="block font-mono font-semibold uppercase mb-1">Kategori Kegiatan</label>
+                  <select id="cal-type" onchange="handleCalendarCategoryChange()" class="w-full px-3 py-2 rounded-xl border border-atelier-border focus:border-atelier-terracotta outline-none bg-white">
+                    <option value="asesmen">Asesmen & Refleksi</option>
+                    <option value="praktik">Praktik Studio Berkarya</option>
+                    <option value="pameran">Pameran & Apresiasi</option>
+                    <option value="deadline">Batas Akhir / Deadline</option>
+                    <option value="custom">Lainnya (Kategori Kustom)...</option>
+                  </select>
+                </div>
+                <!-- Custom Category Input (shown when cal-type == 'custom') -->
+                <div id="cal-type-custom-container" class="hidden">
+                  <label for="cal-type-custom" class="block font-mono font-semibold uppercase mb-1 text-atelier-terracotta">Tuliskan Kategori Baru:</label>
+                  <input type="text" id="cal-type-custom" placeholder="Contoh: Kunjungan Museum / Lomba Poster"
+                    class="w-full px-3 py-2 rounded-xl border border-atelier-terracotta focus:ring-2 focus:ring-atelier-terracottaLight outline-none bg-white">
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white font-semibold rounded-xl transition cursor-pointer shadow-sm">
+                  + Jadwalkan Agenda
+                </button>
+              </form>
+            </div>
+
+            <!-- Events List -->
+            <div class="lg:col-span-2 space-y-3">
+              <div id="calendar-events-container" class="space-y-2.5">
+                <!-- Rendered via guru.js -->
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- ========================================== -->
-    <!-- TAB 8: TAUTAN SISWA & QR CODE -->
-    <!-- ========================================== -->
-    <div id="section-share" class="tab-content-section hidden space-y-6">
-      <div class="atelier-card p-6 md:p-8 space-y-6 max-w-2xl mx-auto text-center">
-        <div class="space-y-2">
-          <span class="inline-block px-3 py-1 bg-atelier-terracottaLight text-atelier-terracotta text-xs font-mono font-semibold rounded-full border border-atelier-terracotta/20">
-            Akses Asesmen Siswa Langsung
-          </span>
-          <h3 class="font-serif font-bold text-2xl text-atelier-ink">Tautan & QR Code Kelas <span id="share-class-badge" class="font-mono text-atelier-terracotta">VII-A</span></h3>
-          <p class="text-xs text-atelier-inkMuted max-w-md mx-auto leading-relaxed">
-            Bagikan tautan ini ke grup WhatsApp kelas atau proyeksikan di layar proyektor kelas agar siswa dapat langsung mengisi asesmen tanpa perlu login.
-          </p>
+      <!-- ======================================================== -->
+      <!-- VIEW: TAHAP 8 - ASSESSMENT & REFLECTION (RUBRIK & TABEL NILAI) -->
+      <!-- ======================================================== -->
+      <div id="section-m8-rubric" class="tab-content-section hidden space-y-6">
+        <!-- Rubric Gradebook Table Section (Melihat & Mengunduh Nilai Siswa) -->
+        <div class="atelier-card p-6 space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-atelier-border pb-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-atelier-sageLight text-atelier-sage border border-atelier-sage/30">
+                  Data Tersimpan di Server Database
+                </span>
+              </div>
+              <h3 class="font-serif font-bold text-2xl text-atelier-ink mt-1">Rekapitulasi Nilai Siswa Kelas <span id="rubric-gradebook-class" class="font-mono text-atelier-terracotta">VII-A</span></h3>
+              <p class="text-xs text-atelier-inkMuted">Akses dan unduh hasil penilaian autentik 4 dimensi seni rupa siswa secara terpusat.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="downloadRubricExcel()" class="px-3.5 py-2 bg-atelier-sage hover:bg-green-800 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                <span>Unduh Rekap Nilai (.xlsx)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Gradebook Table -->
+          <div class="border border-atelier-border rounded-xl overflow-hidden bg-white">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-atelier-warm/80 font-mono text-[11px] text-atelier-inkMuted uppercase border-b border-atelier-border">
+                  <tr>
+                    <th class="py-3 px-3 text-center" style="width: 60px;">Absen</th>
+                    <th class="py-3 px-3">Nama Siswa</th>
+                    <th class="py-3 px-3 text-center" style="width: 50px;">L/P</th>
+                    <th class="py-3 px-3 text-center">Gaya Belajar</th>
+                    <th class="py-3 px-3 text-center">Skor Proses</th>
+                    <th class="py-3 px-3 text-center">Skor Produk</th>
+                    <th class="py-3 px-3 text-center">Nilai Akhir</th>
+                    <th class="py-3 px-3 text-center">Predikat</th>
+                    <th class="py-3 px-3">Catatan Apresiasi</th>
+                    <th class="py-3 px-3 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="rubric-gradebook-body" class="divide-y divide-atelier-border">
+                  <!-- Rendered via guru.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
-        <!-- Generated QR Code Image -->
-        <div class="p-6 bg-atelier-warm/50 rounded-2xl border border-atelier-border inline-block mx-auto shadow-sm">
-          <img id="qr-code-img" src="" alt="QR Code Kelas" class="w-48 h-48 mx-auto rounded-xl border border-atelier-border bg-white p-2">
-          <p class="text-[11px] font-mono text-atelier-inkMuted mt-3">Scan untuk langsung membuka kelas <span id="qr-class-name">VII-A</span></p>
-        </div>
+        <!-- Rubric Grading Form -->
+        <div class="atelier-card p-6 space-y-5">
+          <div class="border-b border-atelier-border pb-4">
+            <h3 class="font-serif font-bold text-xl text-atelier-ink">Form Input Penilaian Rubrik Autentik</h3>
+            <p class="text-xs text-atelier-inkMuted">Penilaian berbobot ganda: Proses Berkarya (Ide, Eksplorasi) dan Produk Akhir (Kreativitas, Teknik, Finishing).</p>
+          </div>
 
-        <!-- Link Copy Box -->
-        <div class="flex items-center gap-2 max-w-lg mx-auto">
-          <input type="text" id="share-link-input" readonly
-            class="flex-1 px-4 py-2.5 rounded-xl border border-atelier-border font-mono text-xs bg-white text-atelier-ink outline-none">
-          <button onclick="copyShareLink()" class="px-5 py-2.5 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white font-semibold rounded-xl text-xs transition cursor-pointer shadow-sm">
-            Salin Link
-          </button>
+          <form id="rubric-form" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label for="rubric-student-select" class="block text-xs font-mono font-semibold text-atelier-ink uppercase tracking-wider mb-2">
+                  Pilih Siswa Kelas Aktif
+                </label>
+                <select id="rubric-student-select" required class="w-full px-4 py-2.5 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white font-medium">
+                  <option value="" disabled selected>Pilih siswa untuk dinilai...</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-mono font-semibold text-atelier-ink uppercase tracking-wider mb-2">
+                  Predikat Otomatis Terkalkulasi
+                </label>
+                <div class="flex items-center gap-3">
+                  <span id="rubric-total-score-badge" class="px-3.5 py-2 rounded-xl bg-atelier-terracottaLight font-mono font-bold text-base text-atelier-terracotta border border-atelier-terracotta/30">
+                    Nilai: 78
+                  </span>
+                  <span id="rubric-predicate-badge" class="px-3 py-2 rounded-xl bg-atelier-warm font-mono text-xs font-bold text-atelier-ink border border-atelier-border">
+                    Predikat: Sangat Baik
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rubric Sliders: Process & Product -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+              <!-- Process Dimension -->
+              <div class="p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-4">
+                <div class="flex justify-between items-center">
+                  <h4 class="font-serif font-bold text-sm text-atelier-ink">A. Nilai Proses Berkarya (Bobot 50%)</h4>
+                  <span id="label-score-process" class="font-mono font-bold text-xs text-atelier-terracotta">75/100</span>
+                </div>
+                <input type="range" id="input-score-process" min="50" max="100" value="75" step="1" 
+                  class="w-full accent-atelier-terracotta cursor-pointer" oninput="calculateRubricScore()">
+                <p class="text-[11px] text-atelier-inkMuted leading-relaxed">
+                  Aspek: Orisinalitas ide awal, ketekunan eksplorasi media, kemandirian memecahkan kendala, dan keaktifan konsultasi.
+                </p>
+              </div>
+
+              <!-- Product Dimension -->
+              <div class="p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-4">
+                <div class="flex justify-between items-center">
+                  <h4 class="font-serif font-bold text-sm text-atelier-ink">B. Nilai Produk Akhir (Bobot 50%)</h4>
+                  <span id="label-score-product" class="font-mono font-bold text-xs text-atelier-ochre">80/100</span>
+                </div>
+                <input type="range" id="input-score-product" min="50" max="100" value="80" step="1" 
+                  class="w-full accent-atelier-ochre cursor-pointer" oninput="calculateRubricScore()">
+                <p class="text-[11px] text-atelier-inkMuted leading-relaxed">
+                  Aspek: Penguasaan teknik media (kering/basah/3D), keharmonisan proporsi & warna, serta kerapian penyelesaian finishing.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label for="rubric-notes" class="block text-xs font-mono font-semibold text-atelier-ink uppercase tracking-wider mb-2">
+                Catatan Apresiasi & Rekomendasi Guru
+              </label>
+              <textarea id="rubric-notes" rows="2" placeholder="Tuliskan catatan apresiasi personal untuk karya siswa ini..."
+                class="w-full px-4 py-2.5 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none"></textarea>
+            </div>
+
+            <button type="submit" class="px-6 py-2.5 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white font-semibold rounded-xl text-xs transition cursor-pointer shadow-sm">
+              Simpan Nilai Asesmen Autentik
+            </button>
+          </form>
         </div>
       </div>
-    </div>
 
-  </main>
+      <!-- ======================================================== -->
+      <!-- VIEW: TAHAP 9 - STUDENT TRACKING (LIVE MONITOR & REKAP) -->
+      <!-- ======================================================== -->
+      <div id="section-m9-tracking" class="tab-content-section hidden space-y-6">
+        <div class="atelier-card p-6 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-atelier-border pb-4">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="relative flex h-2.5 w-2.5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <h3 class="font-serif font-bold text-xl text-atelier-ink">Live Monitor Pengerjaan Asesmen Siswa</h3>
+              </div>
+              <p class="text-xs text-atelier-inkMuted">Pantau langsung siswa kelas <span id="live-class-label" class="font-mono font-bold text-atelier-terracotta">VII-A</span> yang sedang aktif menjawab kuesioner saat jam pelajaran.</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-[11px] font-mono text-atelier-inkMuted flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Sinkronisasi aktif (3.5 detik)
+              </span>
+              <button onclick="fetchLiveMonitorData()" class="px-3 py-1.5 border border-atelier-border hover:bg-atelier-warm rounded-lg text-xs font-mono font-medium transition cursor-pointer">
+                ↻ Refresh
+              </button>
+            </div>
+          </div>
+
+          <!-- 3 Live Summary Metrics -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="p-4 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-1">
+              <span class="block text-[11px] font-mono font-bold text-emerald-800 uppercase">Sedang Aktif Mengerjakan</span>
+              <p id="live-active-count" class="font-serif font-black text-3xl text-emerald-700">0 Siswa</p>
+              <p class="text-[11px] text-emerald-600">Siswa berinteraksi dalam 15 menit terakhir</p>
+            </div>
+            <div class="p-4 bg-atelier-terracottaLight border border-atelier-terracotta/30 rounded-xl space-y-1">
+              <span class="block text-[11px] font-mono font-bold text-atelier-terracotta uppercase">Telah Selesai (Submit)</span>
+              <p id="live-completed-count" class="font-serif font-black text-3xl text-atelier-terracotta">0 Siswa</p>
+              <p class="text-[11px] text-atelier-inkMuted">Jawaban tersimpan permanen</p>
+            </div>
+            <div class="p-4 bg-atelier-warm border border-atelier-border rounded-xl space-y-1">
+              <span class="block text-[11px] font-mono font-bold text-atelier-inkMuted uppercase">Rata-rata Kemajuan Kelas</span>
+              <p id="live-avg-progress" class="font-serif font-black text-3xl text-atelier-ink">0%</p>
+              <p class="text-[11px] text-atelier-inkMuted">Berdasarkan nomor soal berjalan</p>
+            </div>
+          </div>
+
+          <!-- Live Students Table -->
+          <div class="border border-atelier-border rounded-xl overflow-hidden bg-white">
+            <div class="p-3.5 bg-atelier-warm/50 border-b border-atelier-border font-serif font-bold text-sm text-atelier-ink">
+              Daftar Aktivitas Siswa di Kelas <span id="live-table-class-title" class="font-mono text-atelier-terracotta">VII-A</span>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-atelier-warm/80 font-mono text-[11px] text-atelier-inkMuted uppercase border-b border-atelier-border">
+                  <tr>
+                    <th class="py-3 px-4 text-center" style="width: 70px;">Absen</th>
+                    <th class="py-3 px-4">Nama Siswa</th>
+                    <th class="py-3 px-4 text-center" style="width: 50px;">L/P</th>
+                    <th class="py-3 px-4">Posisi Soal Terakhir</th>
+                    <th class="py-3 px-4" style="width: 25%;">Progres Pengerjaan</th>
+                    <th class="py-3 px-4">Pilihan Media</th>
+                    <th class="py-3 px-4">Waktu Aktivitas</th>
+                    <th class="py-3 px-4 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="live-table-body" class="divide-y divide-atelier-border">
+                  <!-- Rendered by guru.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
 
   <!-- MODAL: ADD / EDIT DIAGNOSTIC QUESTION -->
   <div id="modal-question" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
