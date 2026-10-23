@@ -44,16 +44,16 @@ router.get('/live-monitor', requireAuth, (req, res) => {
     let rows;
     if (classId) {
       rows = db.prepare(`
-        SELECT session_id, attendance_no, student_name, gender, class_id, current_step, total_steps, current_category, status, last_active, answers_json
+        SELECT session_id, attendance_no, student_name, gender, class_id, current_step, total_steps, current_category, status, last_active, created_at, updated_at, answers_json
         FROM student_live_sessions
         WHERE class_id = ?
-        ORDER BY last_active DESC
+        ORDER BY COALESCE(updated_at, last_active) DESC
       `).all(classId);
     } else {
       rows = db.prepare(`
-        SELECT session_id, attendance_no, student_name, gender, class_id, current_step, total_steps, current_category, status, last_active, answers_json
+        SELECT session_id, attendance_no, student_name, gender, class_id, current_step, total_steps, current_category, status, last_active, created_at, updated_at, answers_json
         FROM student_live_sessions
-        ORDER BY last_active DESC
+        ORDER BY COALESCE(updated_at, last_active) DESC
       `).all();
     }
 
@@ -63,6 +63,9 @@ router.get('/live-monitor', requireAuth, (req, res) => {
 
       const mediaAns = Object.values(answers).find(a => a && a.category);
       const chosenMedia = mediaAns ? `${mediaAns.category} (${mediaAns.subOption || 'Kering'})` : '-';
+
+      const lastActiveTs = r.updated_at || r.last_active;
+      const createdAtTs = r.created_at || r.last_active;
 
       return {
         sessionId: r.session_id,
@@ -75,7 +78,9 @@ router.get('/live-monitor', requireAuth, (req, res) => {
         progressPercent,
         currentCategory: r.current_category || 'Memulai Asesmen',
         status: r.status,
-        lastActive: r.last_active,
+        lastActive: lastActiveTs,
+        createdAt: createdAtTs,
+        updatedAt: lastActiveTs,
         chosenMedia
       };
     });
@@ -107,13 +112,14 @@ router.post('/live-progress', (req, res) => {
   }
 
   const attNo = attendance_no !== undefined ? attendance_no : attendanceNo;
+  const nowIso = new Date().toISOString();
 
   try {
     const answersJson = JSON.stringify(answers || {});
     
     db.prepare(`
-      INSERT INTO student_live_sessions (session_id, attendance_no, student_name, gender, class_id, current_step, total_steps, current_category, status, last_active, answers_json)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'in_progress', CURRENT_TIMESTAMP, ?)
+      INSERT INTO student_live_sessions (session_id, attendance_no, student_name, gender, class_id, current_step, total_steps, current_category, status, last_active, created_at, updated_at, answers_json)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'in_progress', ?, ?, ?, ?)
       ON CONFLICT(session_id) DO UPDATE SET
         attendance_no = COALESCE(excluded.attendance_no, student_live_sessions.attendance_no),
         student_name = excluded.student_name,
@@ -123,9 +129,10 @@ router.post('/live-progress', (req, res) => {
         total_steps = excluded.total_steps,
         current_category = excluded.current_category,
         status = 'in_progress',
-        last_active = CURRENT_TIMESTAMP,
+        last_active = excluded.last_active,
+        updated_at = excluded.updated_at,
         answers_json = excluded.answers_json
-    `).run(sessionId, attNo ? parseInt(attNo) : null, studentName.trim(), gender || null, classId, currentStep || 1, totalSteps || 10, currentCategory || '', answersJson);
+    `).run(sessionId, attNo ? parseInt(attNo) : null, studentName.trim(), gender || null, classId, currentStep || 1, totalSteps || 10, currentCategory || '', nowIso, nowIso, nowIso, answersJson);
 
     res.json({ status: 'success', message: 'Live progress tersinkronisasi.' });
   } catch (err) {
@@ -220,9 +227,10 @@ router.post('/', (req, res) => {
     const parsedAttNo = targetAttendanceNo ? parseInt(targetAttendanceNo) : null;
     const formattedGender = (gender === 'L' || gender === 'Laki-laki') ? 'L' : (gender === 'P' || gender === 'Perempuan') ? 'P' : (gender || null);
 
+    const nowIso = new Date().toISOString();
     const result = db.prepare(`
-      INSERT INTO students (attendance_no, name, gender, class_id, category, sub_option, style, challenge, feeling, answers_json)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO students (attendance_no, name, gender, class_id, category, sub_option, style, challenge, feeling, answers_json, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       parsedAttNo,
       name.trim(),
@@ -233,15 +241,17 @@ router.post('/', (req, res) => {
       style || 'Visual Tutorial',
       challenge || 'Pencarian Ide Awal',
       feeling || 'Sangat senang',
-      answersJson
+      answersJson,
+      nowIso,
+      nowIso
     );
 
     if (sessionId) {
       db.prepare(`
         UPDATE student_live_sessions
-        SET status = 'completed', last_active = CURRENT_TIMESTAMP
+        SET status = 'completed', last_active = ?, updated_at = ?
         WHERE session_id = ?
-      `).run(sessionId);
+      `).run(nowIso, nowIso, sessionId);
     }
 
     res.json({

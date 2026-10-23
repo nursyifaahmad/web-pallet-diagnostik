@@ -1261,7 +1261,7 @@ function renderLiveMonitorTable(sessions) {
   if (sessions.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" class="py-8 text-center text-atelier-inkMuted italic">
+        <td colspan="9" class="py-8 text-center text-atelier-inkMuted italic">
           Belum ada siswa yang sedang membuka asesmen di kelas ${currentClass} saat ini. Bagikan tautan kelas kepada siswa.
         </td>
       </tr>
@@ -1274,21 +1274,30 @@ function renderLiveMonitorTable(sessions) {
     const tr = document.createElement('tr');
     tr.className = 'hover:bg-atelier-warm/40 transition';
 
-    const timeAgo = formatTimeAgo(s.lastActive);
     const genderBadge = s.gender === 'L' ? '<span class="text-blue-600 font-bold">L</span>' : s.gender === 'P' ? '<span class="text-pink-600 font-bold">P</span>' : '-';
 
+    const startClock = formatClockTime(s.createdAt);
+    const startAgo = formatTimeAgo(s.createdAt);
+
+    const lastTs = s.updatedAt || s.lastActive;
+    const lastClock = formatClockTime(lastTs);
+    const lastAgo = formatTimeAgo(lastTs);
+    const lastDateObj = parseSafeDate(lastTs);
+    const diffSec = lastDateObj ? Math.floor((new Date().getTime() - lastDateObj.getTime()) / 1000) : 999;
+    const isRecent = !isCompleted && diffSec < 20;
+
     tr.innerHTML = `
-      <td class="py-3 px-4 font-mono font-bold text-center text-atelier-terracotta">${s.attendanceNo || '-'}</td>
-      <td class="py-3 px-4 font-semibold text-atelier-ink flex items-center gap-2">
+      <td class="py-3 px-3 font-mono font-bold text-center text-atelier-terracotta">${s.attendanceNo || '-'}</td>
+      <td class="py-3 px-3 font-semibold text-atelier-ink flex items-center gap-2">
         <span class="w-2 h-2 rounded-full ${isCompleted ? 'bg-blue-500' : 'bg-emerald-500 animate-pulse'}"></span>
         <span>${s.name}</span>
       </td>
-      <td class="py-3 px-4 font-mono text-center">${genderBadge}</td>
-      <td class="py-3 px-4">
+      <td class="py-3 px-3 font-mono text-center">${genderBadge}</td>
+      <td class="py-3 px-3">
         <span class="font-mono text-[11px] font-bold text-atelier-terracotta">Soal ${s.currentStep}/${s.totalSteps}</span>
-        <span class="block text-[10px] text-atelier-inkMuted">${s.currentCategory}</span>
+        <span class="block text-[10px] text-atelier-inkMuted truncate max-w-[130px]" title="${s.currentCategory}">${s.currentCategory}</span>
       </td>
-      <td class="py-3 px-4">
+      <td class="py-3 px-3">
         <div class="flex items-center gap-2">
           <div class="flex-1 bg-atelier-border h-2 rounded-full overflow-hidden">
             <div class="${isCompleted ? 'bg-blue-600' : 'bg-emerald-600'} h-full rounded-full transition-all duration-300" style="width: ${s.progressPercent}%;"></div>
@@ -1296,13 +1305,21 @@ function renderLiveMonitorTable(sessions) {
           <span class="font-mono text-[11px] font-bold ${isCompleted ? 'text-blue-600' : 'text-emerald-700'}">${s.progressPercent}%</span>
         </div>
       </td>
-      <td class="py-3 px-4 font-mono text-[11px] text-atelier-ochre font-medium">
+      <td class="py-3 px-3 font-mono text-[11px] text-atelier-ochre font-medium">
         ${s.chosenMedia}
       </td>
-      <td class="py-3 px-4 font-mono text-[11px] text-atelier-inkMuted">
-        ${timeAgo}
+      <td class="py-3 px-3 text-center">
+        <span class="font-mono text-xs font-semibold text-atelier-ink block">${startClock} WIB</span>
+        <span class="block text-[10px] text-atelier-inkMuted">${startAgo}</span>
       </td>
-      <td class="py-3 px-4 text-center">
+      <td class="py-3 px-3">
+        <div class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full ${isCompleted ? 'bg-blue-400' : isRecent ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}"></span>
+          <span class="font-mono text-xs font-bold ${isCompleted ? 'text-blue-700' : isRecent ? 'text-emerald-700' : 'text-amber-800'}">${lastAgo}</span>
+        </div>
+        <span class="block text-[10px] font-mono text-atelier-inkMuted ml-3">${lastClock} WIB</span>
+      </td>
+      <td class="py-3 px-3 text-center">
         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
           isCompleted 
             ? 'bg-blue-100 text-blue-800 border border-blue-200' 
@@ -1316,14 +1333,42 @@ function renderLiveMonitorTable(sessions) {
   });
 }
 
+// Robust date parser that handles ISO strings, SQLite CURRENT_TIMESTAMP, and UTC vs local time
+function parseSafeDate(dateStr) {
+  if (!dateStr) return null;
+  if (typeof dateStr !== 'string') return new Date(dateStr);
+  // ISO with explicit timezone (Z or +/-offset)
+  if (dateStr.includes('T') && (dateStr.endsWith('Z') || dateStr.includes('+') || (dateStr.lastIndexOf('-') > 7))) {
+    return new Date(dateStr);
+  }
+  // ISO without timezone, treat as UTC
+  if (dateStr.includes('T')) {
+    return new Date(dateStr + 'Z');
+  }
+  // SQLite format "YYYY-MM-DD HH:MM:SS" (which is in UTC)
+  return new Date(dateStr.replace(' ', 'T') + 'Z');
+}
+
+function formatClockTime(dateStr) {
+  const d = parseSafeDate(dateStr);
+  if (!d || isNaN(d.getTime())) return '-';
+  const hh = d.getHours().toString().padStart(2, '0');
+  const mm = d.getMinutes().toString().padStart(2, '0');
+  const ss = d.getSeconds().toString().padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
+}
+
 function formatTimeAgo(dateStr) {
-  if (!dateStr) return 'Baru saja';
-  const diffSec = Math.floor((new Date() - new Date(dateStr)) / 1000);
-  if (diffSec < 10) return 'Baru saja';
+  const d = parseSafeDate(dateStr);
+  if (!d || isNaN(d.getTime())) return 'Baru saja';
+  const diffSec = Math.floor((new Date().getTime() - d.getTime()) / 1000);
+  if (diffSec < 5) return 'Baru saja';
   if (diffSec < 60) return `${diffSec} detik lalu`;
   const diffMin = Math.floor(diffSec / 60);
   if (diffMin < 60) return `${diffMin} menit lalu`;
-  return `${Math.floor(diffMin / 60)} jam lalu`;
+  const diffHour = Math.floor(diffMin / 60);
+  if (diffHour < 24) return `${diffHour} jam lalu`;
+  return `${Math.floor(diffHour / 24)} hari lalu`;
 }
 
 // ========================================================

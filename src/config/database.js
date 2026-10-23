@@ -92,6 +92,7 @@ function initSchema() {
       feeling TEXT,
       answers_json TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(class_id) REFERENCES classes(id)
     );
 
@@ -107,6 +108,8 @@ function initSchema() {
       current_category TEXT,
       status TEXT DEFAULT 'in_progress',
       last_active DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       answers_json TEXT
     );
 
@@ -146,6 +149,11 @@ function initSchema() {
       db.exec('ALTER TABLE students ADD COLUMN gender TEXT;');
       console.log('[DB Migration] Added column gender to students');
     }
+    if (!studentCols.includes('updated_at')) {
+      db.exec('ALTER TABLE students ADD COLUMN updated_at DATETIME;');
+      db.exec('UPDATE students SET updated_at = created_at WHERE updated_at IS NULL;');
+      console.log('[DB Migration] Added column updated_at to students');
+    }
 
     const sessionCols = db.prepare('PRAGMA table_info(student_live_sessions)').all().map(c => c.name);
     if (!sessionCols.includes('attendance_no')) {
@@ -155,6 +163,16 @@ function initSchema() {
     if (!sessionCols.includes('gender')) {
       db.exec('ALTER TABLE student_live_sessions ADD COLUMN gender TEXT;');
       console.log('[DB Migration] Added column gender to student_live_sessions');
+    }
+    if (!sessionCols.includes('created_at')) {
+      db.exec('ALTER TABLE student_live_sessions ADD COLUMN created_at DATETIME;');
+      db.exec('UPDATE student_live_sessions SET created_at = last_active WHERE created_at IS NULL;');
+      console.log('[DB Migration] Added column created_at to student_live_sessions');
+    }
+    if (!sessionCols.includes('updated_at')) {
+      db.exec('ALTER TABLE student_live_sessions ADD COLUMN updated_at DATETIME;');
+      db.exec('UPDATE student_live_sessions SET updated_at = last_active WHERE updated_at IS NULL;');
+      console.log('[DB Migration] Added column updated_at to student_live_sessions');
     }
   } catch (err) {
     console.warn('[DB Migration Warning]', err.message);
