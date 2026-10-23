@@ -1,0 +1,9 @@
+node_modules
+.git
+.gitignore
+data/*.db*
+scratch
+*.html
+!public/**/*.html
+*.log
+.env

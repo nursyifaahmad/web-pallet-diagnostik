@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Guru · PALLET Studio Seni</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            atelier: {
+              bg: '#FAF8F5',
+              surface: '#FFFFFF',
+              warm: '#F5F1EB',
+              border: '#E7E2DA',
+              borderMedium: '#D1C9BC',
+              ink: '#1C1917',
+              inkMuted: '#78716C',
+              terracotta: '#C2410C',
+              terracottaDark: '#9A3412',
+              terracottaLight: '#FFF7ED',
+              ultramarine: '#1E1B4B'
+            }
+          },
+          fontFamily: {
+            serif: ['Fraunces', 'Georgia', 'serif'],
+            sans: ['Plus Jakarta Sans', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
+</head>
+<body class="bg-atelier-bg text-atelier-ink min-h-screen flex items-center justify-center p-4 paper-texture">
+
+  <div class="max-w-md w-full">
+    <!-- Brand Header -->
+    <div class="text-center mb-8 space-y-2">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-atelier-terracotta text-white flex items-center justify-center font-serif font-black text-2xl shadow-md">
+        P
+      </div>
+      <h1 class="font-serif font-bold text-2xl text-atelier-ink">PALLET Studio Guru</h1>
+      <p class="text-xs text-atelier-inkMuted">Masuk untuk mengelola 27 rombel kelas & asesmen diagnostik</p>
+    </div>
+
+    <!-- Login Card -->
+    <div class="atelier-card p-6 md:p-8 space-y-6 bg-white border border-atelier-border shadow-sm">
+      <div id="error-alert" class="hidden p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 space-y-1">
+        <p id="error-message" class="font-medium">Username atau password tidak sesuai.</p>
+      </div>
+
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label for="username" class="block text-xs font-mono font-semibold text-atelier-ink uppercase tracking-wider mb-2">
+            Username / Email
+          </label>
+          <input type="text" id="username" value="guru" required autocomplete="username"
+            class="w-full px-4 py-3 rounded-xl border border-atelier-border focus:border-atelier-terracotta focus:ring-2 focus:ring-atelier-terracottaLight outline-none transition text-sm">
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label for="password" class="block text-xs font-mono font-semibold text-atelier-ink uppercase tracking-wider">
+              Password
+            </label>
+            <span class="text-[11px] font-mono text-atelier-inkMuted">Default: guru123</span>
+          </div>
+          <input type="password" id="password" value="guru123" required autocomplete="current-password"
+            class="w-full px-4 py-3 rounded-xl border border-atelier-border focus:border-atelier-terracotta focus:ring-2 focus:ring-atelier-terracottaLight outline-none transition text-sm">
+        </div>
+
+        <button type="submit" id="btn-submit"
+          class="w-full py-3.5 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white font-semibold rounded-xl transition duration-150 shadow-sm flex items-center justify-center gap-2 cursor-pointer text-sm">
+          <span>Masuk ke Dashboard Guru</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </button>
+      </form>
+    </div>
+
+    <!-- Back to Student Home -->
+    <div class="text-center mt-6">
+      <a href="/" class="text-xs text-atelier-inkMuted hover:text-atelier-terracotta transition font-mono inline-flex items-center gap-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        <span>Kembali ke Beranda Asesmen Siswa</span>
+      </a>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    const form = document.getElementById('login-form');
+    const errAlert = document.getElementById('error-alert');
+    const errMsg = document.getElementById('error-message');
+    const btnSubmit = document.getElementById('btn-submit');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errAlert.classList.add('hidden');
+      btnSubmit.disabled = true;
+      btnSubmit.innerHTML = '<span>Memverifikasi...</span>';
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await API.login(username, password);
+        if (res && res.status === 'success') {
+          window.location.href = '/guru';
+        } else {
+          errMsg.textContent = res.message || 'Username atau password tidak sesuai.';
+          errAlert.classList.remove('hidden');
+          btnSubmit.disabled = false;
+          btnSubmit.innerHTML = '<span>Masuk ke Dashboard Guru</span>';
+        }
+      } catch (err) {
+        console.error('Login error', err);
+        errMsg.textContent = 'Gagal terhubung ke server. Silakan coba lagi.';
+        errAlert.classList.remove('hidden');
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = '<span>Masuk ke Dashboard Guru</span>';
+      }
+    });
+  </script>
+</body>
+</html>

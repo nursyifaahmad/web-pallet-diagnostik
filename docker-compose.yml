@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  pallet-diagnostik:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pallet-diagnostik
+    restart: unless-stopped
+    ports:
+      - "3090:3090"
+    environment:
+      - PORT=3090
+      - NODE_ENV=production
+      - JWT_SECRET=artuniverse_pallet_diagnostik_secret_key_2026
+      - DB_DIR=/app/data
+    volumes:
+      # Data persisten database SQLite disimpan langsung di hard drive Mini PC
+      - /mnt/storage2/pallet/data:/app/data

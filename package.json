@@ -1,0 +1,32 @@
+{
+  "name": "web-pallet-diagnostik",
+  "version": "1.0.0",
+  "description": "PALLET - Personalised Art Learning Profile & Diagnostik Seni Rupa Fase D SMP",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "seed": "node src/config/seed.js",
+    "push": "node scripts/sync-git.js"
+  },
+  "keywords": [
+    "pallet",
+    "diagnostik",
+    "seni-rupa",
+    "kurikulum-merdeka",
+    "docker",
+    "express",
+    "sqlite"
+  ],
+  "author": "Art Universe",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "xlsx": "^0.18.5"
+  }
+}

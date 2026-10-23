@@ -1,0 +1,130 @@
+/* PALLET Studio Atelier Design System */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,400..800&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --font-serif: 'Fraunces', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Atelier Organic Palette */
+  --bg-atelier: #FAF8F5;
+  --bg-surface: #FFFFFF;
+  --bg-surface-warm: #F5F1EB;
+  
+  --border-light: #E7E2DA;
+  --border-medium: #D1C9BC;
+  
+  --ink-primary: #1C1917;
+  --ink-secondary: #57534E;
+  --ink-muted: #78716C;
+  --ink-faint: #A8A29E;
+
+  --terracotta: #C2410C;
+  --terracotta-dark: #9A3412;
+  --terracotta-light: #FFF7ED;
+
+  --ultramarine: #1E1B4B;
+  --ultramarine-accent: #3730A3;
+  --ultramarine-light: #EEF2FF;
+
+  --ochre: #B45309;
+  --ochre-light: #FEF3C7;
+
+  --sage: #15803D;
+  --sage-light: #F0FDF4;
+
+  --violet: #5B21B6;
+  --violet-light: #F5F3FF;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-atelier);
+  color: var(--ink-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Tactile Craft Card Styles */
+.atelier-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.04), 0 1px 2px rgba(28, 25, 23, 0.02);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.atelier-card:hover {
+  border-color: var(--border-medium);
+}
+
+/* Subtle textured background */
+.paper-texture {
+  background-image: radial-gradient(rgba(120, 113, 108, 0.08) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* Custom Selection Pill */
+.option-pill {
+  border: 1.5px solid var(--border-light);
+  background: #FFFFFF;
+  border-radius: 0.875rem;
+  padding: 0.875rem 1.125rem;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.option-pill:hover {
+  border-color: var(--terracotta);
+  background-color: var(--terracotta-light);
+}
+
+.option-pill.selected {
+  border-color: var(--terracotta);
+  background-color: var(--terracotta-light);
+  box-shadow: 0 0 0 1px var(--terracotta);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-atelier);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-muted);
+}
+
+/* Print Styles for Modul Ajar Kurikulum Merdeka */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .atelier-card {
+    border: 1px solid #CCCCCC !important;
+    box-shadow: none !important;
+  }
+}

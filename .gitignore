@@ -1,0 +1,11 @@
+node_modules/
+data/*.db*
+!data/.gitkeep
+.env
+*.log
+gas.html
+site.html
+pallet_app*.html
+script2.js
+goog_init_args.txt
+exact_questions.js
