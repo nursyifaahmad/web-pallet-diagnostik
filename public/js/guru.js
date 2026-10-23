@@ -135,7 +135,14 @@ function switchMainTab(tabId) {
   } else if (cleanTabId === 'tab-m5-recommendation') {
     renderLearningRecommendations(currentRoster);
   } else if (cleanTabId === 'tab-m6-rpp') {
-    generateModulAjarText();
+    const grade = currentClass.split('-')[0] || 'VII';
+    const timeInput = document.getElementById('rpp-target-time-input');
+    if (timeInput && (!timeInput.value || timeInput.value.includes('Kelas'))) {
+      timeInput.value = `Kelas ${grade} (2 x 45 Menit / 1 Pertemuan)`;
+    }
+    if (isModulAjarGenerated) {
+      generateModulAjarText();
+    }
   } else if (cleanTabId === 'tab-m7-studio') {
     loadCalendarEvents();
   } else if (cleanTabId === 'tab-m8-rubric') {
@@ -421,7 +428,14 @@ async function loadCurrentClassDetail() {
       populateProfileStudentSelect();
       renderSelectedStudentProfile();
       renderLearningRecommendations(currentRoster);
-      generateModulAjarText();
+      const grade = currentClass.split('-')[0] || 'VII';
+      const timeInput = document.getElementById('rpp-target-time-input');
+      if (timeInput && (!timeInput.value || timeInput.value.includes('Kelas'))) {
+        timeInput.value = `Kelas ${grade} (2 x 45 Menit / 1 Pertemuan)`;
+      }
+      if (isModulAjarGenerated) {
+        generateModulAjarText();
+      }
       populateRubricStudentSelect(currentRoster);
       updateHeroLivePreview(currentRoster);
     }
@@ -1069,9 +1083,53 @@ function renderPersonalRecommendation() {
 // ========================================================
 // 8. DYNAMIC RPP / MODUL AJAR GENERATOR (TAHAP 6)
 // ========================================================
+let isModulAjarGenerated = false;
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function triggerGenerateModulAjar() {
+  isModulAjarGenerated = true;
+  generateModulAjarText();
+  const btn = document.getElementById('btn-generate-rpp');
+  if (btn) {
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<span class="text-emerald-300">✓</span><span>Modul Ajar Berhasil Dibuat!</span>`;
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+    }, 2000);
+  }
+}
+
+function printModulAjar() {
+  if (!isModulAjarGenerated) {
+    triggerGenerateModulAjar();
+  }
+  setTimeout(() => {
+    window.print();
+  }, 250);
+}
+
 function generateModulAjarText() {
   const container = document.getElementById('modul-ajar-document');
   if (!container) return;
+
+  if (!isModulAjarGenerated) {
+    container.className = 'p-6 md:p-8 bg-[#FDFCFE] border border-slate-200/90 rounded-2xl min-h-[140px] text-slate-400 font-mono text-sm italic transition-all duration-300';
+    container.innerHTML = `// Klik "Generate Modul Ajar Otomatis" untuk menyusun modul RPP berdiferensiasi.`;
+    return;
+  }
+
+  const topicInput = document.getElementById('rpp-topic-input');
+  const topic = (topicInput && topicInput.value.trim()) ? topicInput.value.trim() : 'Eksplorasi Ragam Hias Nusantara dalam Media 2D & 3D';
+  const targetTimeInput = document.getElementById('rpp-target-time-input');
+  const targetTime = (targetTimeInput && targetTimeInput.value.trim()) ? targetTimeInput.value.trim() : `Kelas ${currentClass.split('-')[0] || 'VII'} (2 x 45 Menit / 1 Pertemuan)`;
 
   const total = currentRoster.length;
   let maleCount = 0;
@@ -1097,39 +1155,46 @@ function generateModulAjarText() {
   const count3D = media['3D'] || 0;
   const topChallenge = Object.entries(challenges).sort((a,b) => b[1] - a[1])[0]?.[0] || 'Sketsa Proporsi';
 
+  container.className = 'p-6 md:p-8 bg-white border border-slate-200/90 rounded-3xl space-y-6 text-sm font-sans leading-relaxed text-slate-800 shadow-2xs transition-all duration-300';
   container.innerHTML = `
     <!-- Kop Modul Ajar Resmi -->
-    <div class="text-center border-b-2 border-atelier-ink pb-4 space-y-1">
-      <h2 class="font-serif font-black text-xl uppercase tracking-wider">MODUL AJAR SENI RUPA FASE D (SMP)</h2>
-      <p class="font-serif text-sm italic">Pendekatan Pembelajaran Berdiferensiasi Berbasis Profil Asesmen Diagnostik Siswa</p>
-      <div class="flex flex-wrap items-center justify-center gap-3 font-mono text-xs text-atelier-inkMuted pt-1">
-        <span>Satuan Pendidikan: SMP</span>
+    <div class="text-center border-b-2 border-slate-900 pb-5 space-y-1.5">
+      <div class="inline-block px-3 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#EDE9FE] text-[#6D28D9] border border-[#DDD6FE] uppercase mb-1">
+        Kurikulum Merdeka · Fase D SMP
+      </div>
+      <h2 class="font-serif font-black text-xl sm:text-2xl text-slate-900 uppercase tracking-wider">MODUL AJAR SENI RUPA BERDIFERENSIASI</h2>
+      <p class="font-serif text-base text-[#6366F1] font-semibold">${escapeHtml(topic)}</p>
+      <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-4 font-mono text-xs text-slate-500 pt-1.5">
+        <span class="font-semibold text-slate-700">Satuan Pendidikan: SMP</span>
         <span>•</span>
-        <span>Alokasi Waktu: 3 JP (3 x 40 Menit)</span>
+        <span class="font-semibold text-slate-700">Target & Waktu: ${escapeHtml(targetTime)}</span>
         <span>•</span>
-        <span class="font-bold text-atelier-terracotta">Kelas: ${currentClass}</span>
+        <span class="font-bold text-[#6366F1]">Kelas Aktif: ${currentClass}</span>
         <span>•</span>
-        <span>Jumlah Siswa: ${total} Anak (${maleCount} L, ${femaleCount} P)</span>
+        <span class="font-semibold text-slate-700">Total Siswa: ${total} Anak (${maleCount} L, ${femaleCount} P)</span>
       </div>
     </div>
 
     <!-- I. Identitas & Capaian Pembelajaran -->
     <div class="space-y-2">
-      <h3 class="font-serif font-bold text-base text-atelier-terracotta uppercase tracking-wide">I. Capaian Pembelajaran (CP) & Profil Pelajar Pancasila</h3>
+      <h3 class="font-serif font-bold text-base text-[#6366F1] uppercase tracking-wide flex items-center gap-2">
+        <span>📌</span>
+        <span>I. Capaian Pembelajaran (CP) & Dimensi Profil Pelajar Pancasila</span>
+      </h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-        <div class="p-3 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-1">
-          <strong class="text-atelier-ink">Elemen Capaian Fase D:</strong>
-          <p class="text-atelier-inkMuted leading-relaxed">
+        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-1.5">
+          <strong class="text-slate-900 block font-semibold">Elemen Capaian Fase D:</strong>
+          <p class="text-slate-600 leading-relaxed">
             <strong>Mengalami (Experiencing):</strong> Siswa mampu merefleksikan pengamatan visual lingkungan sekitar.<br>
             <strong>Menciptakan (Making):</strong> Siswa mampu mengeksplorasi ragam media dan teknik berkarya seni rupa 2D dan 3D secara mandiri dan kreatif.
           </p>
         </div>
-        <div class="p-3 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-1">
-          <strong class="text-atelier-ink">Dimensi Profil Pelajar Pancasila:</strong>
-          <ul class="list-disc list-inside text-atelier-inkMuted space-y-0.5 leading-relaxed">
-            <li><strong>Kreatif:</strong> Mengembangkan gagasan orisinal melalui pilihan media seni.</li>
-            <li><strong>Mandiri:</strong> Memiliki ketekunan memecahkan kendala teknis dalam berkarya.</li>
-            <li><strong>Bergotong Royong:</strong> Memberikan apresiasi konstruktif kepada rekan sebaya.</li>
+        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-1.5">
+          <strong class="text-slate-900 block font-semibold">Dimensi Profil Pelajar Pancasila:</strong>
+          <ul class="list-disc list-inside text-slate-600 space-y-0.5 leading-relaxed">
+            <li><strong>Kreatif:</strong> Mengembangkan gagasan orisinal melalui pilihan media seni visual.</li>
+            <li><strong>Mandiri:</strong> Memiliki ketekunan memecahkan kendala teknis dalam proses berkarya.</li>
+            <li><strong>Bergotong Royong:</strong> Memberikan apresiasi dan masukan konstruktif dalam kerja kolaborasi.</li>
           </ul>
         </div>
       </div>
@@ -1137,70 +1202,91 @@ function generateModulAjarText() {
 
     <!-- II. Karakteristik Diagnostik Kelas Aktif -->
     <div class="space-y-2">
-      <h3 class="font-serif font-bold text-base text-atelier-terracotta uppercase tracking-wide">II. Karakteristik Riil Rombel ${currentClass} (Hasil Diagnostik)</h3>
-      <div class="p-4 bg-white border border-atelier-border rounded-xl text-xs space-y-2 leading-relaxed">
-        <p class="text-atelier-ink">
-          Berdasarkan hasil asesmen diagnostik terhadap <strong>${total} siswa</strong> di kelas <strong>${currentClass}</strong>:
+      <h3 class="font-serif font-bold text-base text-[#6366F1] uppercase tracking-wide flex items-center gap-2">
+        <span>📊</span>
+        <span>II. Karakteristik Riil Rombel ${currentClass} (Hasil Diagnostik Aktual)</span>
+      </h3>
+      <div class="p-4 bg-white border border-slate-200/90 rounded-2xl text-xs space-y-2 leading-relaxed shadow-2xs">
+        <p class="text-slate-800">
+          Berdasarkan hasil pemetaan asesmen diagnostik terhadap <strong>${total} siswa</strong> di kelas <strong>${currentClass}</strong>:
         </p>
-        <ul class="list-disc list-inside text-atelier-inkMuted space-y-1">
-          <li><strong>Dominasi Modalitas:</strong> Sebanyak <strong>${dominantStylePct}% siswa (${dominantStyleCount} anak)</strong> memiliki preferensi gaya belajar <strong>${dominantStyle}</strong>.</li>
-          <li><strong>Distribusi Media Pilihan:</strong> Terbagi menjadi <strong>${count2D} siswa (media 2D)</strong> dan <strong>${count3D} siswa (media 3D)</strong>.</li>
-          <li><strong>Fokus Titik Kendala:</strong> Kendala terbanyak yang dirasakan murid adalah pada tahapan <strong>${topChallenge}</strong>.</li>
+        <ul class="list-disc list-inside text-slate-600 space-y-1">
+          <li><strong>Dominasi Modalitas Belajar:</strong> Sebanyak <strong>${dominantStylePct}% siswa (${dominantStyleCount} anak)</strong> memiliki preferensi gaya belajar <strong>${dominantStyle}</strong>.</li>
+          <li><strong>Distribusi Minat Media:</strong> Terbagi menjadi <strong>${count2D} siswa (media 2D Drawing/Lukis/Grafis)</strong> dan <strong>${count3D} siswa (media 3D Kriya/Patung/Clay)</strong>.</li>
+          <li><strong>Titik Hambatan Utama:</strong> Titik kendala terbanyak yang dirasakan murid saat berkarya adalah pada fase <strong>${topChallenge}</strong>.</li>
         </ul>
       </div>
     </div>
 
     <!-- III. Strategi Pembelajaran Berdiferensiasi -->
     <div class="space-y-2">
-      <h3 class="font-serif font-bold text-base text-atelier-terracotta uppercase tracking-wide">III. Rencana Diferensiasi Pembelajaran Spesifik Rombel</h3>
-      <div class="space-y-2.5 text-xs">
-        <div class="p-3 bg-white border border-atelier-border rounded-xl">
-          <strong class="text-atelier-terracotta font-mono uppercase">1. Diferensiasi Konten (Sesuai Gaya Dominan ${dominantStyle}):</strong>
-          <p class="text-atelier-ink mt-1 leading-relaxed">
-            Menyediakan variasi bahan ajar berupa modul visual infografis panduan sketsa proporsi untuk ${dominantStylePct}% siswa visual, kartu fisik contoh tekstur material untuk siswa kinestetik, dan penjelasan konsep filosofi bentuk untuk siswa auditori.
+      <h3 class="font-serif font-bold text-base text-[#6366F1] uppercase tracking-wide flex items-center gap-2">
+        <span>🎯</span>
+        <span>III. Matriks Strategi Pembelajaran Berdiferensiasi</span>
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+        <div class="p-4 bg-[#F5F3FF] border border-[#DDD6FE] rounded-2xl space-y-1">
+          <strong class="text-[#6D28D9] font-mono text-[11px] uppercase block">1. Diferensiasi Konten:</strong>
+          <p class="text-slate-700 leading-relaxed">
+            Menyediakan variasi referensi ajar: Video tutorial langkah demi langkah untuk ${dominantStylePct}% siswa modalitas ${dominantStyle}, serta panduan visual infografis bagi peminat eksplorasi mandiri.
           </p>
         </div>
-        <div class="p-3 bg-white border border-atelier-border rounded-xl">
-          <strong class="text-atelier-ochre font-mono uppercase">2. Diferensiasi Proses (Scaffolding Tantangan ${topChallenge}):</strong>
-          <p class="text-atelier-ink mt-1 leading-relaxed">
-            Guru memberikan pendampingan intensif pada fase perancangan sketsa awal bagi siswa yang menghadapi kesulitan ${topChallenge}. Siswa dikelompokkan secara heterogen agar dapat saling mengapresiasi dan berbagi trik teknik berkarya.
+        <div class="p-4 bg-[#FDF2F8] border border-[#FBCFE8] rounded-2xl space-y-1">
+          <strong class="text-[#BE185D] font-mono text-[11px] uppercase block">2. Diferensiasi Proses:</strong>
+          <p class="text-slate-700 leading-relaxed">
+            Membentuk kelompok heterogen (3–4 orang). Memberikan bimbingan scaffolding intensif pada fase perancangan sketsa awal bagi siswa dengan kendala ${topChallenge}.
           </p>
         </div>
-        <div class="p-3 bg-white border border-atelier-border rounded-xl">
-          <strong class="text-atelier-sage font-mono uppercase">3. Diferensiasi Produk (Keseimbangan 2D & 3D):</strong>
-          <p class="text-atelier-ink mt-1 leading-relaxed">
-            Siswa bebas memilih bentuk artefak akhir: <strong>Jalur 2D (${count2D} siswa)</strong> menghasilkan karya gambar/lukisan ekspresi, sedangkan <strong>Jalur 3D (${count3D} siswa)</strong> menghasilkan objek tiga dimensi dari bahan lempung/daur ulang dengan rubrik penilaian autentik yang adil.
+        <div class="p-4 bg-[#F0FDFA] border border-[#CCFBF1] rounded-2xl space-y-1">
+          <strong class="text-[#0F766E] font-mono text-[11px] uppercase block">3. Diferensiasi Produk:</strong>
+          <p class="text-slate-700 leading-relaxed">
+            Kebebasan wujud karya akhir: Siswa jalur 2D (${count2D} siswa) menghasilkan karya gambar/desain, dan jalur 3D (${count3D} siswa) membuat karya objek fisik/kriya dengan rubrik autentik setara.
           </p>
         </div>
       </div>
     </div>
 
-    <!-- IV. Skenario Pembelajaran (120 Menit) -->
+    <!-- IV. Skenario Pembelajaran Studio Berwaktu -->
     <div class="space-y-2">
-      <h3 class="font-serif font-bold text-base text-atelier-terracotta uppercase tracking-wide">IV. Skenario Pembelajaran Studio (3 x 40 Menit)</h3>
+      <h3 class="font-serif font-bold text-base text-[#6366F1] uppercase tracking-wide flex items-center gap-2">
+        <span>⏳</span>
+        <span>IV. Skenario Aktivitas Studio Berwaktu</span>
+      </h3>
       <div class="space-y-2 text-xs">
-        <div class="p-3 bg-atelier-warm/40 rounded-xl">
-          <strong>A. Kegiatan Awal (15 Menit):</strong>
-          <ul class="list-disc list-inside text-atelier-inkMuted mt-1 space-y-0.5">
+        <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
+          <strong class="text-slate-900 block font-semibold">A. Kegiatan Awal (15 Menit):</strong>
+          <ul class="list-disc list-inside text-slate-600 mt-1 space-y-0.5">
             <li>Apersepsi, salam, dan refleksi kesiapan emosional berkarya siswa.</li>
-            <li>Penyampaian tujuan pembelajaran dan instruksi alur kerja studio 3 fase berwaktu.</li>
+            <li>Penyampaian tujuan pembelajaran topik <em>"${escapeHtml(topic)}"</em> dan pengenalan alur studio 3 fase.</li>
           </ul>
         </div>
-        <div class="p-3 bg-atelier-warm/40 rounded-xl">
-          <strong>B. Kegiatan Inti Studio Berkarya (90 Menit):</strong>
-          <ul class="list-disc list-inside text-atelier-inkMuted mt-1 space-y-0.5">
-            <li><strong>Fase 1 (15 Menit - Eksplorasi Sketsa):</strong> Siswa merancang ide bentuk awal dengan bimbingan khusus pada ${topChallenge}.</li>
-            <li><strong>Fase 2 (60 Menit - Eksekusi Media):</strong> Siswa berkarya di zonasi masing-masing (Zona 2D atau Zona 3D) dengan teknik pilihan.</li>
-            <li><strong>Fase 3 (15 Menit - Apresiasi Sebaya):</strong> Siswa saling bertukar masukan konstruktif dengan teman kelompok heterogen.</li>
+        <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
+          <strong class="text-slate-900 block font-semibold">B. Kegiatan Inti Studio Berkarya (60–75 Menit):</strong>
+          <ul class="list-disc list-inside text-slate-600 mt-1 space-y-0.5">
+            <li><strong>Fase 1 (15 Menit - Eksplorasi & Sketsa):</strong> Siswa merancang gagasan bentuk dengan bimbingan terfokus pada ${topChallenge}.</li>
+            <li><strong>Fase 2 (45 Menit - Eksekusi Media):</strong> Siswa berkarya di zona media masing-masing (Zona 2D atau Zona 3D) sesuai preferensi diagnostik.</li>
+            <li><strong>Fase 3 (15 Menit - Apresiasi Sebaya):</strong> Siswa saling bertukar masukan konstruktif dengan rekan satu kelompok.</li>
           </ul>
         </div>
-        <div class="p-3 bg-atelier-warm/40 rounded-xl">
-          <strong>C. Kegiatan Penutup (15 Menit):</strong>
-          <ul class="list-disc list-inside text-atelier-inkMuted mt-1 space-y-0.5">
-            <li>Refleksi pengalaman berkarya dan pembersihan area studio.</li>
-            <li>Pengunggahan dokumentasi foto hasil karya untuk penilaian rubrik autentik.</li>
+        <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
+          <strong class="text-slate-900 block font-semibold">C. Kegiatan Penutup (15 Menit):</strong>
+          <ul class="list-disc list-inside text-slate-600 mt-1 space-y-0.5">
+            <li>Refleksi pengalaman proses berkarya dan pembersihan/penataan kembali area studio seni.</li>
+            <li>Dokumentasi foto proses/karya ke portofolio digital siswa untuk penilaian rubrik autentik.</li>
           </ul>
         </div>
+      </div>
+    </div>
+
+    <!-- V. Pengesahan Guru & Kepala Sekolah -->
+    <div class="pt-6 border-t border-slate-200 grid grid-cols-2 text-center text-xs text-slate-700">
+      <div class="space-y-12">
+        <p>Mengetahui,<br><span class="font-semibold text-slate-900">Kepala Sekolah SMP</span></p>
+        <p class="font-bold underline text-slate-900">......................................................<br><span class="font-normal font-mono text-[10px] text-slate-500 no-underline">NIP. ..........................................</span></p>
+      </div>
+      <div class="space-y-12">
+        <p>Guru Mata Pelajaran,<br><span class="font-semibold text-slate-900">Seni Rupa (Fase D)</span></p>
+        <p class="font-bold underline text-slate-900">......................................................<br><span class="font-normal font-mono text-[10px] text-slate-500 no-underline">NIP. ..........................................</span></p>
       </div>
     </div>
   `;

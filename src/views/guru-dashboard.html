@@ -38,7 +38,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="/css/style.css?v=2.6">
+  <link rel="stylesheet" href="/css/style.css?v=2.7">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
 </head>
 <body class="bg-atelier-bg text-atelier-ink min-h-screen flex flex-col paper-texture">
@@ -1008,36 +1008,65 @@
 
       <!-- ======================================================== -->
       <!-- VIEW: TAHAP 6 - LEARNING PLAN (RPP / MODUL AJAR DINAMIS) -->
+      <!-- 100% PERSIS TANGKAPAN LAYAR GOOGLE SITES PALLET          -->
       <!-- ======================================================== -->
       <div id="section-m6-rpp" class="tab-content-section hidden space-y-6">
-        <div class="atelier-card p-6 space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-atelier-border pb-4 no-print">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-atelier-terracottaLight text-atelier-terracotta border border-atelier-terracotta/30">
-                  Kurikulum Merdeka · Fase D SMP
-                </span>
-              </div>
-              <h3 class="font-serif font-bold text-2xl text-atelier-ink mt-1">Generator Modul Ajar / RPP Berdiferensiasi</h3>
-              <p class="text-xs text-atelier-inkMuted">Disusun secara dinamis berdasarkan data karakteristik aktual rombel <span id="modul-class-name" class="font-mono font-bold text-atelier-terracotta">VII-A</span>.</p>
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-6 md:p-8 shadow-xs space-y-6">
+          
+          <!-- Top Tag Pill -->
+          <div>
+            <span class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-mono font-semibold bg-[#EDE9FE] text-[#6D28D9] border border-[#DDD6FE]">
+              TAHAP 6: MODUL AJAR KURIKULUM MERDEKA
+            </span>
+          </div>
+
+          <!-- Section Title -->
+          <div>
+            <h2 class="font-serif font-bold text-2xl md:text-3xl text-slate-900 tracking-tight">
+              Generator Modul Ajar Seni Rupa Berdiferensiasi
+            </h2>
+          </div>
+
+          <!-- Input Row: Topik / Materi Utama & Target Kelas / Alokasi Waktu -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pt-1">
+            <!-- Col 1: Topik / Materi Utama -->
+            <div class="space-y-2">
+              <label for="rpp-topic-input" class="block font-mono text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                TOPIK / MATERI UTAMA
+              </label>
+              <input type="text" id="rpp-topic-input" 
+                value="Eksplorasi Ragam Hias Nusantara dalam Media 2D &amp; 3D" 
+                class="w-full px-4 py-3 rounded-2xl border border-slate-200/90 bg-white text-sm text-slate-800 focus:outline-none focus:border-purple-400 shadow-2xs font-sans transition">
             </div>
-            <div class="flex items-center gap-2">
-              <button onclick="window.print()" class="px-3.5 py-2 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-                </svg>
-                <span>Cetak RPP (PDF)</span>
-              </button>
-              <button onclick="copyModulAjarText()" class="px-3 py-2 border border-atelier-border hover:bg-atelier-warm text-atelier-ink text-xs font-medium rounded-xl transition cursor-pointer">
-                Salin Teks Lengkap
-              </button>
+
+            <!-- Col 2: Target Kelas & Alokasi Waktu -->
+            <div class="space-y-2">
+              <label for="rpp-target-time-input" class="block font-mono text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                TARGET KELAS &amp; ALOKASI WAKTU
+              </label>
+              <input type="text" id="rpp-target-time-input" 
+                value="Kelas VII (2 x 45 Menit / 1 Pertemuan)" 
+                class="w-full px-4 py-3 rounded-2xl border border-slate-200/90 bg-white text-sm text-slate-800 focus:outline-none focus:border-purple-400 shadow-2xs font-sans transition">
             </div>
           </div>
 
-          <!-- Rendered Modul Ajar Document Content -->
-          <div id="modul-ajar-document" class="p-6 md:p-8 bg-white border border-atelier-border rounded-xl space-y-6 text-sm font-sans leading-relaxed">
-            <!-- Filled dynamically by guru.js -->
+          <!-- Action Buttons -->
+          <div class="flex flex-wrap items-center gap-3 pt-1 no-print">
+            <button id="btn-generate-rpp" onclick="triggerGenerateModulAjar()" class="px-5 py-2.5 rounded-2xl bg-[#6366F1] hover:bg-[#4F46E5] text-white text-xs font-bold flex items-center gap-2 shadow-xs transition cursor-pointer">
+              <span class="text-amber-300">⚡</span>
+              <span>Generate Modul Ajar Otomatis</span>
+            </button>
+            <button id="btn-print-rpp" onclick="printModulAjar()" class="px-5 py-2.5 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-2 shadow-2xs transition cursor-pointer">
+              <span>🖨️</span>
+              <span>Cetak / Ekspor PDF</span>
+            </button>
           </div>
+
+          <!-- Rendered Modul Ajar Document Content -->
+          <div id="modul-ajar-document" class="p-6 md:p-8 bg-[#FDFCFE] border border-slate-200/90 rounded-2xl min-h-[140px] text-slate-400 font-mono text-sm italic transition-all duration-300">
+            // Klik "Generate Modul Ajar Otomatis" untuk menyusun modul RPP berdiferensiasi.
+          </div>
+
         </div>
       </div>
 
@@ -1433,7 +1462,7 @@
     </div>
   </div>
 
-  <script src="/js/api.js?v=2.6"></script>
-  <script src="/js/guru.js?v=2.6"></script>
+  <script src="/js/api.js?v=2.7"></script>
+  <script src="/js/guru.js?v=2.7"></script>
 </body>
 </html>
