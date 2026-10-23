@@ -38,7 +38,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="/css/style.css?v=2.4">
+  <link rel="stylesheet" href="/css/style.css?v=2.5">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
 </head>
 <body class="bg-atelier-bg text-atelier-ink min-h-screen flex flex-col paper-texture">
@@ -453,45 +453,260 @@
       </div>
 
       <!-- ======================================================== -->
-      <!-- VIEW: DASHBOARD KELAS AKTIF (📊) -->
+      <!-- VIEW: DASHBOARD KELAS AKTIF (📊) 100% SAMA PERSIS GOOGLE SITES -->
       <!-- ======================================================== -->
       <div id="section-class-dash" class="tab-content-section hidden space-y-6">
-        <div class="atelier-card p-5 space-y-4">
-          <div class="flex items-center justify-between border-b border-atelier-border pb-3">
-            <div>
-              <h3 class="font-serif font-bold text-xl text-atelier-ink">Status Kelas Aktif: <span id="dash-class-title" class="font-mono text-atelier-terracotta">VII-A</span></h3>
-              <p class="text-xs text-atelier-inkMuted">Ringkasan cepat progres asesmen diagnostik dan diferensiasi kelas yang dipilih.</p>
-            </div>
-            <button onclick="switchMainTab('tab-m9-tracking')" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition flex items-center gap-1.5 cursor-pointer">
-              <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-              <span>Buka Live Monitor</span>
+        
+        <!-- TOP BANNER CARD -->
+        <div class="bg-gradient-to-r from-purple-50/70 via-rose-50/40 to-white border border-slate-200/90 rounded-3xl p-6 md:p-8 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="space-y-2">
+            <span class="inline-flex items-center px-3 py-1 bg-[#EDE9FE] text-[#6D28D9] rounded-full text-xs font-mono font-semibold">
+              Dashboard Guru Seni Rupa
+            </span>
+            <h2 class="font-serif text-3xl md:text-4xl font-bold text-slate-900">
+              Dashboard Kelas <span id="dash-class-title" class="text-[#6366F1]">VII-A</span>
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-600">
+              Analisis ringkas modalitas, minat media 2D vs 3D, dan roster diagnostik siswa.
+            </p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="switchMainTab('tab-jenjang')" class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-2 shadow-xs transition cursor-pointer">
+              <span>📖</span>
+              <span>Switch Kelas (27 Kelas)</span>
+            </button>
+            <button onclick="switchMainTab('tab-m1-diagnostik')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white text-xs font-bold flex items-center gap-2 shadow-sm hover:opacity-95 transition cursor-pointer">
+              <span>✨</span>
+              <span>Buat Asesmen Baru</span>
             </button>
           </div>
+        </div>
 
-          <!-- 4 Quick Stats Cards -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-1">
-              <span class="block text-[11px] font-mono font-bold text-atelier-inkMuted uppercase">Total Siswa Terdata</span>
-              <p id="stat-total-students" class="font-serif font-bold text-2xl text-atelier-ink">0 Siswa</p>
-              <p class="text-[11px] text-atelier-inkMuted">Di rombel kelas aktif</p>
+        <!-- SECOND CARD: BAGIKAN LINK DIAGNOSTIK SISWA -->
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-6 md:p-8 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
+          <div class="space-y-3 flex-1">
+            <div class="flex items-center gap-2">
+              <span class="px-3 py-1 bg-[#FCE7F3] text-[#DB2777] rounded-full text-xs font-mono font-bold">
+                BAGIKAN KE SISWA
+              </span>
+              <span class="text-xs font-mono text-slate-600">
+                Kelas Aktif: <span id="dash-share-class-badge" class="font-bold text-[#6366F1]">VII-A</span>
+              </span>
             </div>
-            <div class="p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-1">
-              <span class="block text-[11px] font-mono font-bold text-atelier-inkMuted uppercase">Modalitas Dominan</span>
-              <p id="stat-dominant-style" class="font-serif font-bold text-2xl text-atelier-terracotta">-</p>
-              <p class="text-[11px] text-atelier-inkMuted">Karakter cara belajar kelas</p>
+            <h3 class="font-serif text-2xl md:text-3xl font-bold text-slate-900">
+              Bagikan Link Diagnostik Siswa
+            </h3>
+            <p class="text-xs sm:text-sm text-slate-600 max-w-xl leading-relaxed">
+              Berikan link langsung atau tunjukkan QR Code agar siswa dapat mengisi 10 soal diagnostik mandiri.
+            </p>
+            <div class="flex flex-wrap items-center gap-3 pt-2">
+              <button onclick="copyDashShareLink()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#EC4899] to-[#F43F5E] hover:opacity-95 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition cursor-pointer">
+                <span>🔗</span>
+                <span>Salin Link Diagnostik Siswa</span>
+              </button>
+              <button onclick="showDashQrModal()" class="px-5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-2 shadow-xs transition cursor-pointer">
+                <span>📱</span>
+                <span>Tampilkan QR Code Kelas</span>
+              </button>
             </div>
-            <div class="p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-1">
-              <span class="block text-[11px] font-mono font-bold text-atelier-inkMuted uppercase">Media Terfavorit</span>
-              <p id="stat-top-media" class="font-serif font-bold text-2xl text-atelier-ochre">-</p>
-              <p class="text-[11px] text-atelier-inkMuted">Minat media pilihan terbanyak</p>
+          </div>
+          
+          <!-- QR Code Preview Box -->
+          <div class="p-4 bg-slate-50/80 rounded-2xl border border-slate-200 text-center flex-shrink-0">
+            <img id="dash-qr-code-img" src="" alt="QR Code Kelas" class="w-32 h-32 mx-auto rounded-xl border border-slate-200 bg-white p-2">
+            <p class="text-[11px] font-mono text-slate-500 mt-2">
+              Kode Akses: <span id="dash-qr-access-code" class="font-bold text-[#6366F1]">PALLET-VIIA</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- THIRD ROW: KALENDER AKADEMIK SENI & 4 QUICK STATS -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <!-- Left: Kalender Akademik Seni (Col 5 / 12) -->
+          <div class="lg:col-span-5 bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-4">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 bg-[#CCFBF1] text-[#0F766E] rounded-full text-xs font-mono font-bold">
+                  Jadwal Studio
+                </span>
+                <button onclick="switchMainTab('tab-m7-studio')" class="px-2.5 py-1 bg-[#F3E8FF] text-[#6D28D9] hover:bg-purple-100 rounded-lg text-xs font-semibold flex items-center gap-1 transition cursor-pointer">
+                  <span>✏️</span>
+                  <span>Edit</span>
+                </button>
+              </div>
+              <select id="dash-cal-semester" class="text-xs border border-slate-200 rounded-lg px-2.5 py-1 bg-white font-medium text-slate-700 outline-none">
+                <option value="ganjil">Semester Ganjil</option>
+                <option value="genap">Semester Genap</option>
+              </select>
             </div>
-            <div class="p-4 bg-atelier-warm/40 rounded-xl border border-atelier-border space-y-1">
-              <span class="block text-[11px] font-mono font-bold text-atelier-inkMuted uppercase">Kesiapan Tim Heterogen</span>
-              <p id="stat-hetero-status" class="font-serif font-bold text-2xl text-atelier-sage">Siap Bentuk</p>
-              <p class="text-[11px] text-atelier-inkMuted">Berdasarkan diversitas rombel</p>
+
+            <h4 class="font-serif font-bold text-base text-slate-900">
+              Kalender Akademik Seni
+            </h4>
+
+            <!-- Month Calendar Matrix Grid -->
+            <div class="space-y-2">
+              <div class="grid grid-cols-7 gap-1 font-mono text-[10px] text-slate-400 font-bold text-center uppercase tracking-wider">
+                <span>MIN</span><span>SEN</span><span>SEL</span><span>RAB</span><span>KAM</span><span>JUM</span><span>SAB</span>
+              </div>
+              <div id="dash-mini-calendar-grid" class="grid grid-cols-7 gap-1 text-xs text-center font-mono font-medium">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+
+            <div class="border-t border-slate-100 pt-3 space-y-2">
+              <p class="font-mono text-[10px] text-slate-400 font-bold uppercase tracking-wider">AGENDA TERDEKAT:</p>
+              <div id="dash-agenda-list" class="space-y-1.5 text-xs text-slate-700">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-[#6366F1]"></span>
+                  <span><strong class="font-mono">Tgl 5:</strong> Sesi Diagnostik PALLET</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-[#EC4899]"></span>
+                  <span><strong class="font-mono">Tgl 18:</strong> Proyek Media 2D &amp; 3D</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-[#0D9488]"></span>
+                  <span><strong class="font-mono">Tgl 26:</strong> Pameran Mini Karya Rombel</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: 4 Quick Stat Cards (Col 7 / 12) -->
+          <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Stat 1: Total Siswa -->
+            <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs flex flex-col justify-between space-y-3">
+              <p class="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-wider">TOTAL SISWA TERDAFTAR</p>
+              <p id="dash-stat-total" class="font-serif font-black text-4xl sm:text-5xl text-slate-900">0</p>
+              <div class="flex items-center gap-2 text-xs text-emerald-600 font-medium pt-2 border-t border-slate-100">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Terhubung Google Sheets</span>
+              </div>
+              <span id="stat-total-students" class="hidden">0 Siswa</span>
+            </div>
+
+            <!-- Stat 2: Modalitas Dominan -->
+            <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs flex flex-col justify-between space-y-3">
+              <p class="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-wider">MODALITAS DOMINAN</p>
+              <p id="dash-stat-dominant" class="font-serif font-bold text-xl sm:text-2xl text-[#6366F1]">Visual Tutorial</p>
+              <p class="text-xs text-slate-400 pt-2 border-t border-slate-100">Gaya Belajar Kelas</p>
+              <span id="stat-dominant-style" class="hidden">Visual Tutorial</span>
+            </div>
+
+            <!-- Stat 3: Minat Media (2D vs 3D) -->
+            <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs flex flex-col justify-between space-y-3">
+              <p class="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-wider">MINAT MEDIA (2D VS 3D)</p>
+              <p id="dash-stat-media-ratio" class="font-serif font-bold text-base sm:text-lg text-[#EC4899]">2D (0%) vs 3D (100%)</p>
+              <p class="text-xs text-slate-400 pt-2 border-t border-slate-100">Preferensi Kategori Media</p>
+              <span id="stat-top-media" class="hidden">2D</span>
+            </div>
+
+            <!-- Stat 4: Kondisi Kerja Ideal -->
+            <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs flex flex-col justify-between space-y-3">
+              <p class="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-wider">KONDISI KERJA IDEAL</p>
+              <p id="dash-stat-work-condition" class="font-serif font-bold text-xl sm:text-2xl text-[#0D9488]">Kelompok Kecil</p>
+              <p class="text-xs text-slate-400 pt-2 border-t border-slate-100">3–4 Orang Heterogen</p>
+              <span id="stat-hetero-status" class="hidden">Siap Bentuk</span>
             </div>
           </div>
         </div>
+
+        <!-- FOURTH ROW: DISTRIBUSI & ROSTER TABLE -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <!-- Left: Distribusi Gaya Belajar & Minat Media (Col 5 / 12) -->
+          <div class="lg:col-span-5 bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-6">
+            <!-- Section 1: Gaya Belajar -->
+            <div class="space-y-3">
+              <h4 class="font-serif font-bold text-base text-slate-900">Distribusi Gaya Belajar</h4>
+              <div class="space-y-2.5 text-xs">
+                <!-- Visual -->
+                <div>
+                  <div class="flex items-center justify-between text-slate-700 font-medium mb-1">
+                    <span>Visual / Video Tutorial</span>
+                    <span id="dash-dist-visual-pct" class="font-mono font-bold text-[#6366F1]">60%</span>
+                  </div>
+                  <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="dash-dist-visual-bar" class="h-full bg-[#6366F1] rounded-full transition-all duration-500" style="width: 60%;"></div>
+                  </div>
+                </div>
+
+                <!-- Kinestetik -->
+                <div>
+                  <div class="flex items-center justify-between text-slate-700 font-medium mb-1">
+                    <span>Kinestetik / Hands-on</span>
+                    <span id="dash-dist-kinesthetic-pct" class="font-mono font-bold text-[#EC4899]">25%</span>
+                  </div>
+                  <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="dash-dist-kinesthetic-bar" class="h-full bg-[#EC4899] rounded-full transition-all duration-500" style="width: 25%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 2: Minat Media Seni -->
+            <div class="space-y-3 pt-4 border-t border-slate-100">
+              <h4 class="font-serif font-bold text-base text-slate-900">Minat Media Seni (2D vs 3D)</h4>
+              <div class="space-y-2.5 text-xs">
+                <!-- 2D -->
+                <div>
+                  <div class="flex items-center justify-between text-slate-700 font-medium mb-1">
+                    <span>2D Media (Drawing, Lukis, Grafis, Desain)</span>
+                    <span id="dash-dist-2d-pct" class="font-mono font-bold text-[#6366F1]">0%</span>
+                  </div>
+                  <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="dash-dist-2d-bar" class="h-full bg-[#6366F1] rounded-full transition-all duration-500" style="width: 0%;"></div>
+                  </div>
+                </div>
+
+                <!-- 3D -->
+                <div>
+                  <div class="flex items-center justify-between text-slate-700 font-medium mb-1">
+                    <span>3D Media (Patung, Keramik, Kriya)</span>
+                    <span id="dash-dist-3d-pct" class="font-mono font-bold text-[#EC4899]">100%</span>
+                  </div>
+                  <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="dash-dist-3d-bar" class="h-full bg-[#EC4899] rounded-full transition-all duration-500" style="width: 100%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Roster Siswa Kelas (Col 7 / 12) -->
+          <div class="lg:col-span-7 bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <h4 class="font-serif font-bold text-base text-slate-900">
+                Roster Siswa Kelas <span id="dash-roster-class-name" class="text-[#6366F1]">VII-A</span>
+              </h4>
+              <div class="relative">
+                <input type="text" id="dash-roster-search" oninput="filterDashRosterTable(this.value)" placeholder="Cari nama siswa..." 
+                  class="px-3.5 py-1.5 pl-8 rounded-full border border-slate-200 text-xs bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-500 transition w-full sm:w-56">
+                <svg class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="font-mono text-[10px] text-slate-400 font-bold uppercase border-b border-slate-100">
+                  <tr>
+                    <th class="py-2.5 px-3">SISWA</th>
+                    <th class="py-2.5 px-3">KATEGORI</th>
+                    <th class="py-2.5 px-3">SUB-MEDIA</th>
+                    <th class="py-2.5 px-3 text-right">AKSI</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-roster-table-body" class="divide-y divide-slate-100">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- ======================================================== -->
@@ -1215,7 +1430,7 @@
     </div>
   </div>
 
-  <script src="/js/api.js?v=2.4"></script>
-  <script src="/js/guru.js?v=2.4"></script>
+  <script src="/js/api.js?v=2.5"></script>
+  <script src="/js/guru.js?v=2.5"></script>
 </body>
 </html>

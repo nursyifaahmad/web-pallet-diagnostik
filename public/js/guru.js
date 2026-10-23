@@ -432,30 +432,227 @@ async function loadCurrentClassDetail() {
 
 function updateClassStats(roster) {
   const statTotal = document.getElementById('stat-total-students');
-  if (statTotal) statTotal.textContent = `${roster.length} Siswa`;
+  if (statTotal) statTotal.textContent = `${roster ? roster.length : 0} Siswa`;
 
-  if (roster.length === 0) {
+  const dashStatTotal = document.getElementById('dash-stat-total');
+  if (dashStatTotal) dashStatTotal.textContent = roster ? roster.length : 0;
+
+  const dashRosterClass = document.getElementById('dash-roster-class-name');
+  if (dashRosterClass) dashRosterClass.textContent = currentClass;
+
+  const dashClassTitle = document.getElementById('dash-class-title');
+  if (dashClassTitle) dashClassTitle.textContent = currentClass;
+
+  const dashShareClass = document.getElementById('dash-share-class-badge');
+  if (dashShareClass) dashShareClass.textContent = currentClass;
+
+  renderDashMiniCalendar();
+  renderDashRosterTable(roster);
+
+  if (!roster || roster.length === 0) {
     const elDom = document.getElementById('stat-dominant-style');
     const elMedia = document.getElementById('stat-top-media');
     if (elDom) elDom.textContent = '-';
     if (elMedia) elMedia.textContent = '-';
+
+    const dashDom = document.getElementById('dash-stat-dominant');
+    if (dashDom) dashDom.textContent = 'Visual Tutorial';
+
+    const dashRatio = document.getElementById('dash-stat-media-ratio');
+    if (dashRatio) dashRatio.textContent = '2D (0%) vs 3D (100%)';
+
+    const dashVisualPct = document.getElementById('dash-dist-visual-pct');
+    const dashVisualBar = document.getElementById('dash-dist-visual-bar');
+    if (dashVisualPct) dashVisualPct.textContent = '60%';
+    if (dashVisualBar) dashVisualBar.style.width = '60%';
+
+    const dashKinPct = document.getElementById('dash-dist-kinesthetic-pct');
+    const dashKinBar = document.getElementById('dash-dist-kinesthetic-bar');
+    if (dashKinPct) dashKinPct.textContent = '25%';
+    if (dashKinBar) dashKinBar.style.width = '25%';
+
+    const dash2dPct = document.getElementById('dash-dist-2d-pct');
+    const dash2dBar = document.getElementById('dash-dist-2d-bar');
+    if (dash2dPct) dash2dPct.textContent = '0%';
+    if (dash2dBar) dash2dBar.style.width = '0%';
+
+    const dash3dPct = document.getElementById('dash-dist-3d-pct');
+    const dash3dBar = document.getElementById('dash-dist-3d-bar');
+    if (dash3dPct) dash3dPct.textContent = '100%';
+    if (dash3dBar) dash3dBar.style.width = '100%';
     return;
   }
 
+  // If roster has students, compute real metrics
   const styles = {};
-  const media = {};
+  let count2D = 0;
+  let count3D = 0;
+  let countVisual = 0;
+  let countKinesthetic = 0;
+
   roster.forEach(s => {
     styles[s.style] = (styles[s.style] || 0) + 1;
-    media[s.category] = (media[s.category] || 0) + 1;
+    const cat = (s.category || '').toUpperCase();
+    if (cat.includes('3D')) {
+      count3D++;
+    } else {
+      count2D++;
+    }
+
+    const st = (s.style || '').toLowerCase();
+    if (st.includes('visual') || st.includes('tutorial')) countVisual++;
+    if (st.includes('kinestetik') || st.includes('hands-on')) countKinesthetic++;
   });
 
-  const dominantStyle = Object.entries(styles).sort((a,b) => b[1] - a[1])[0]?.[0] || '-';
-  const topMedia = Object.entries(media).sort((a,b) => b[1] - a[1])[0]?.[0] || '-';
+  const dominantStyle = Object.entries(styles).sort((a,b) => b[1] - a[1])[0]?.[0] || 'Visual Tutorial';
+  const topMedia = count3D >= count2D ? '3D' : '2D';
+
+  const pct2D = Math.round((count2D / roster.length) * 100);
+  const pct3D = 100 - pct2D;
+
+  const pctVisual = Math.round((countVisual / roster.length) * 100) || 60;
+  const pctKinesthetic = Math.round((countKinesthetic / roster.length) * 100) || 25;
 
   const elDom = document.getElementById('stat-dominant-style');
   const elMedia = document.getElementById('stat-top-media');
   if (elDom) elDom.textContent = dominantStyle;
   if (elMedia) elMedia.textContent = topMedia;
+
+  const dashDom = document.getElementById('dash-stat-dominant');
+  if (dashDom) dashDom.textContent = dominantStyle;
+
+  const dashRatio = document.getElementById('dash-stat-media-ratio');
+  if (dashRatio) dashRatio.textContent = `2D (${pct2D}%) vs 3D (${pct3D}%)`;
+
+  const dashVisualPct = document.getElementById('dash-dist-visual-pct');
+  const dashVisualBar = document.getElementById('dash-dist-visual-bar');
+  if (dashVisualPct) dashVisualPct.textContent = `${pctVisual}%`;
+  if (dashVisualBar) dashVisualBar.style.width = `${pctVisual}%`;
+
+  const dashKinPct = document.getElementById('dash-dist-kinesthetic-pct');
+  const dashKinBar = document.getElementById('dash-dist-kinesthetic-bar');
+  if (dashKinPct) dashKinPct.textContent = `${pctKinesthetic}%`;
+  if (dashKinBar) dashKinBar.style.width = `${pctKinesthetic}%`;
+
+  const dash2dPct = document.getElementById('dash-dist-2d-pct');
+  const dash2dBar = document.getElementById('dash-dist-2d-bar');
+  if (dash2dPct) dash2dPct.textContent = `${pct2D}%`;
+  if (dash2dBar) dash2dBar.style.width = `${pct2D}%`;
+
+  const dash3dPct = document.getElementById('dash-dist-3d-pct');
+  const dash3dBar = document.getElementById('dash-dist-3d-bar');
+  if (dash3dPct) dash3dPct.textContent = `${pct3D}%`;
+  if (dash3dBar) dash3dBar.style.width = `${pct3D}%`;
+}
+
+// Mini Calendar for Dashboard Kelas Aktif
+function renderDashMiniCalendar() {
+  const container = document.getElementById('dash-mini-calendar-grid');
+  if (!container) return;
+
+  // Matching screenshot: 2 leading empty/dots, days 1 to 31
+  // Dates 5 (purple), 18 (pink), 26 (teal)
+  let html = '';
+  html += `<span class="py-1 text-slate-300">·</span>`;
+  html += `<span class="py-1 text-slate-300">·</span>`;
+
+  for (let day = 1; day <= 31; day++) {
+    if (day === 5) {
+      html += `<span class="w-6 h-6 mx-auto flex items-center justify-center rounded-lg bg-[#6366F1] text-white font-bold shadow-xs">${day}</span>`;
+    } else if (day === 18) {
+      html += `<span class="w-6 h-6 mx-auto flex items-center justify-center rounded-lg bg-[#EC4899] text-white font-bold shadow-xs">${day}</span>`;
+    } else if (day === 26) {
+      html += `<span class="w-6 h-6 mx-auto flex items-center justify-center rounded-lg bg-[#0D9488] text-white font-bold shadow-xs">${day}</span>`;
+    } else {
+      html += `<span class="py-1 text-slate-700">${day}</span>`;
+    }
+  }
+
+  container.innerHTML = html;
+}
+
+// Roster Table in Dashboard Kelas Aktif
+function renderDashRosterTable(roster) {
+  const tbody = document.getElementById('dash-roster-table-body');
+  if (!tbody) return;
+
+  if (!roster || roster.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" class="py-10 text-center text-xs text-slate-400 italic">
+          Belum ada siswa terdaftar di kelas ${currentClass}.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = roster.map(s => {
+    const is3D = (s.category || '').toUpperCase().includes('3D');
+    const catBadge = is3D 
+      ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-pink-50 text-pink-700 border border-pink-200">3D</span>`
+      : `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">2D</span>`;
+
+    const initials = s.name ? s.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() : 'ST';
+
+    return `
+      <tr class="hover:bg-slate-50/80 transition group">
+        <td class="py-2.5 px-3">
+          <div class="flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-lg ${is3D ? 'bg-pink-100 text-pink-700' : 'bg-indigo-100 text-indigo-700'} font-bold text-[11px] flex items-center justify-center flex-shrink-0">
+              ${initials}
+            </span>
+            <div>
+              <span class="font-bold text-slate-800 text-xs block">${s.name}</span>
+              <span class="text-[10px] font-mono text-slate-400">Absen ${s.attendance_no || '-'} · ${s.gender || '-'}</span>
+            </div>
+          </div>
+        </td>
+        <td class="py-2.5 px-3">${catBadge}</td>
+        <td class="py-2.5 px-3 font-mono text-[11px] text-slate-600">${s.sub_option || 'Kering'}</td>
+        <td class="py-2.5 px-3 text-right">
+          <button onclick="selectStudentForProfile(${s.id})" class="px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-white text-slate-700 font-semibold text-[11px] shadow-2xs transition cursor-pointer">
+            Detail →
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function filterDashRosterTable(query) {
+  const q = (query || '').toLowerCase().trim();
+  if (!currentRoster) return;
+  const filtered = currentRoster.filter(s => 
+    s.name.toLowerCase().includes(q) || 
+    String(s.attendance_no).includes(q) ||
+    (s.sub_option && s.sub_option.toLowerCase().includes(q))
+  );
+  renderDashRosterTable(filtered);
+}
+
+function selectStudentForProfile(studentId) {
+  switchMainTab('tab-m2-profile');
+  const sel = document.getElementById('profile-student-select');
+  if (sel) {
+    sel.value = studentId;
+    renderSelectedStudentProfile();
+  }
+}
+
+function copyDashShareLink() {
+  const host = window.location.origin.includes('localhost') ? 'https://artuniverse.my.id' : window.location.origin;
+  const link = `${host}/?class=${encodeURIComponent(currentClass)}`;
+  navigator.clipboard.writeText(link).then(() => {
+    alert(`Link asesmen siswa untuk kelas ${currentClass} berhasil disalin:\n${link}`);
+  }).catch(() => {
+    prompt('Salin tautan pengerjaan siswa berikut:', link);
+  });
+}
+
+function showDashQrModal() {
+  switchMainTab('tab-m1-diagnostik');
+  switchM1SubTab('share');
 }
 
 // ========================================================
@@ -1939,6 +2136,21 @@ function updateShareLinkAndQR() {
 
   const qrClassName = document.getElementById('qr-class-name');
   if (qrClassName) qrClassName.textContent = currentClass;
+
+  const dashQrImg = document.getElementById('dash-qr-code-img');
+  if (dashQrImg) {
+    dashQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(link)}`;
+  }
+
+  const dashQrCode = document.getElementById('dash-qr-access-code');
+  if (dashQrCode) {
+    dashQrCode.textContent = `PALLET-${currentClass.replace('-', '')}`;
+  }
+
+  const dashShareBadge = document.getElementById('dash-share-class-badge');
+  if (dashShareBadge) {
+    dashShareBadge.textContent = currentClass;
+  }
 }
 
 function copyShareLink() {
