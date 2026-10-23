@@ -14,6 +14,18 @@ let liveMonitorInterval = null;
 let isLiveTabActive = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Client-side authentication guard
+  try {
+    const authCheck = await API.checkMe();
+    if (!authCheck || authCheck.status !== 'success' || !authCheck.user) {
+      window.location.href = '/login/guru';
+      return;
+    }
+  } catch (e) {
+    window.location.href = '/login/guru';
+    return;
+  }
+
   setupNavigation();
   setupClassSwitcher();
   await loadClassData();

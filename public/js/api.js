@@ -1,18 +1,31 @@
 // Unified API Client for PALLET
+function getAuthHeaders(customHeaders = {}) {
+  const headers = { ...customHeaders };
+  const token = localStorage.getItem('pallet_teacher_token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 const API = {
   // Questions
   async getActiveQuestions() {
-    const res = await fetch('/api/questions');
+    const res = await fetch('/api/questions', {
+      headers: getAuthHeaders()
+    });
     return await res.json();
   },
   async getAllQuestions() {
-    const res = await fetch('/api/questions/all');
+    const res = await fetch('/api/questions/all', {
+      headers: getAuthHeaders()
+    });
     return await res.json();
   },
   async createQuestion(data) {
     const res = await fetch('/api/questions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(data)
     });
     return await res.json();
@@ -20,36 +33,44 @@ const API = {
   async updateQuestion(id, data) {
     const res = await fetch(`/api/questions/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(data)
     });
     return await res.json();
   },
   async deleteQuestion(id) {
     const res = await fetch(`/api/questions/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: getAuthHeaders()
     });
     return await res.json();
   },
   async resetQuestions() {
     const res = await fetch('/api/questions/reset', {
-      method: 'POST'
+      method: 'POST',
+      headers: getAuthHeaders()
     });
     return await res.json();
   },
 
   // Classes & Students
   async getClasses() {
-    const res = await fetch('/api/classes');
+    const res = await fetch('/api/classes', {
+      headers: getAuthHeaders()
+    });
     return await res.json();
   },
   async getClassDetail(classId) {
-    const res = await fetch(`/api/classes/${encodeURIComponent(classId)}`);
+    const res = await fetch(`/api/classes/${encodeURIComponent(classId)}`, {
+      headers: getAuthHeaders()
+    });
     return await res.json();
   },
   async getStudents(classId) {
     const url = classId ? `/api/students?class=${encodeURIComponent(classId)}` : '/api/students';
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: getAuthHeaders()
+    });
     return await res.json();
   },
   async submitStudentAssessment(data) {
@@ -62,7 +83,8 @@ const API = {
   },
   async deleteStudent(id) {
     const res = await fetch(`/api/students/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: getAuthHeaders()
     });
     return await res.json();
   },
@@ -83,7 +105,9 @@ const API = {
   },
   async getLiveMonitor(classId) {
     const url = classId ? `/api/students/live-monitor?class=${encodeURIComponent(classId)}` : '/api/students/live-monitor';
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: getAuthHeaders()
+    });
     return await res.json();
   },
 
@@ -94,28 +118,41 @@ const API = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
     });
-    return await res.json();
+    const data = await res.json();
+    if (data && data.status === 'success' && data.token) {
+      localStorage.setItem('pallet_teacher_token', data.token);
+    }
+    return data;
   },
   async checkMe() {
-    const res = await fetch('/api/auth/me');
+    const res = await fetch('/api/auth/me', {
+      headers: getAuthHeaders()
+    });
     return await res.json();
   },
   async logout() {
-    const res = await fetch('/api/auth/logout', {
-      method: 'POST'
-    });
-    return await res.json();
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+    } finally {
+      localStorage.removeItem('pallet_teacher_token');
+    }
+    return { status: 'success' };
   },
 
   // Calendar
   async getCalendar() {
-    const res = await fetch('/api/calendar');
+    const res = await fetch('/api/calendar', {
+      headers: getAuthHeaders()
+    });
     return await res.json();
   },
   async addCalendarEvent(data) {
     const res = await fetch('/api/calendar', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(data)
     });
     return await res.json();
@@ -123,27 +160,30 @@ const API = {
   async toggleCalendarEvent(id, completed) {
     const res = await fetch(`/api/calendar/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ completed })
     });
     return await res.json();
   },
   async deleteCalendarEvent(id) {
     const res = await fetch(`/api/calendar/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: getAuthHeaders()
     });
     return await res.json();
   },
 
   // Rubric
   async getRubric(studentId) {
-    const res = await fetch(`/api/rubric/${studentId}`);
+    const res = await fetch(`/api/rubric/${studentId}`, {
+      headers: getAuthHeaders()
+    });
     return await res.json();
   },
   async saveRubric(data) {
     const res = await fetch('/api/rubric', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(data)
     });
     return await res.json();

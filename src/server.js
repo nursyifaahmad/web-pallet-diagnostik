@@ -7,7 +7,8 @@ require('dotenv').config();
 // Ensure DB is initialized
 require('./config/database');
 
-const { requireAuth } = require('./middleware/auth');
+const { requireAuth, JWT_SECRET } = require('./middleware/auth');
+const jwt = require('jsonwebtoken');
 
 const authRoutes = require('./routes/auth');
 const classRoutes = require('./routes/classes');
@@ -20,13 +21,16 @@ const exportRoutes = require('./routes/export');
 const app = express();
 const PORT = process.env.PORT || 3090;
 
+// Trust reverse proxy (Cloudflare Tunnel / Docker)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Static Assets
+// Static Assets (Strictly assets only; no HTML inside public/guru)
 app.use(express.static(path.join(__dirname, '../public')));
 
 // API Routes
@@ -39,6 +43,7 @@ app.use('/api/rubric', rubricRoutes);
 app.use('/api/export', exportRoutes);
 
 // Page Routes (Portal Separation)
+
 // 1. Root / -> Portal Siswa (Asesmen Diagnostik)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/student/index.html'));
@@ -46,23 +51,35 @@ app.get('/', (req, res) => {
 
 // 2. /login/guru -> Halaman Login Guru
 app.get('/login/guru', (req, res) => {
-  // If teacher already has valid token, redirect to /guru
-  if (req.cookies && req.cookies.pallet_token) {
-    const jwt = require('jsonwebtoken');
-    const { JWT_SECRET } = require('./middleware/auth');
+  // If teacher already has valid token (cookie or header), redirect directly to /guru
+  let token = req.cookies && req.cookies.pallet_token;
+  if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (token) {
     try {
-      jwt.verify(req.cookies.pallet_token, JWT_SECRET);
-      return res.redirect('/guru');
+      const decoded = jwt.verify(token, JWT_SECRET);
+      if (decoded && (decoded.role === 'teacher' || decoded.role === 'admin')) {
+        return res.redirect('/guru');
+      }
     } catch (e) {
-      // Invalid token, proceed to login page
+      // Invalid/expired token: clear cookie and stay on login
+      res.clearCookie('pallet_token');
     }
   }
-  res.sendFile(path.join(__dirname, '../public/guru/login.html'));
+
+  res.sendFile(path.join(__dirname, 'views/guru-login.html'));
 });
 
-// 3. /guru -> Dashboard Manajemen Guru (Diproteksi JWT)
-app.get('/guru', requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/guru/index.html'));
+// Legacy / shortcut redirect
+app.get(['/guru/login', '/guru/login.html'], (req, res) => {
+  res.redirect('/login/guru');
+});
+
+// 3. /guru & /guru/* -> Dashboard Manajemen Guru (Strictly diproteksi JWT)
+app.get(['/guru', '/guru/*'], requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'views/guru-dashboard.html'));
 });
 
 // Healthcheck endpoint for Cloudflare / Docker

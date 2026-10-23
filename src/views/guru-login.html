@@ -115,6 +115,9 @@
       try {
         const res = await API.login(username, password);
         if (res && res.status === 'success') {
+          if (res.token) {
+            localStorage.setItem('pallet_teacher_token', res.token);
+          }
           window.location.href = '/guru';
         } else {
           errMsg.textContent = res.message || 'Username atau password tidak sesuai.';

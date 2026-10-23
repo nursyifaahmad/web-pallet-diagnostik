@@ -31,9 +31,10 @@ router.post('/login', (req, res) => {
       { expiresIn: '7d' }
     );
 
+    const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
     res.cookie('pallet_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isHttps,
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
