@@ -136,7 +136,39 @@ function initSchema() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(student_id) REFERENCES students(id)
     );
+
+    -- Tabel Portofolio & Rekam Jejak Karya Siswa Sepanjang Semester (Tahap 9 CRUD)
+    CREATE TABLE IF NOT EXISTS portfolios (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      class_id TEXT NOT NULL,
+      student_id INTEGER,
+      student_name TEXT,
+      title TEXT NOT NULL,
+      category TEXT NOT NULL,
+      score REAL DEFAULT 85,
+      semester TEXT DEFAULT 'Semester Ganjil',
+      notes TEXT,
+      image_data TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
+
+  // Seed default portfolio items if empty
+  try {
+    const pCount = db.prepare('SELECT COUNT(*) as count FROM portfolios').get().count;
+    if (pCount === 0) {
+      const insertP = db.prepare(`
+        INSERT INTO portfolios (class_id, student_name, title, category, score, semester, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `);
+      insertP.run('VII-A', 'Linely', 'Eksplorasi Sketsa Karakter', 'KARYA 2D DRAWING', 88, 'Semester Ganjil', 'Gagasan proporsi karakter sangat matang.');
+      insertP.run('VII-A', 'Bima Satria', 'Miniatur Kerajinan Clay Fauna', 'KARYA 3D KRIYA', 85, 'Semester Ganjil', 'Tekstur clay rapi dan komposisi bentuk seimbang.');
+      console.log('[DB Seed] Initialized default portfolio items for VII-A');
+    }
+  } catch (pErr) {
+    console.warn('[DB Portfolio Init Warning]', pErr.message);
+  }
 
   // Migration: Add columns if table already existed without them
   try {

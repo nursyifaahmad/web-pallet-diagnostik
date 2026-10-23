@@ -150,6 +150,7 @@ function switchMainTab(tabId) {
     populateRubricStudentSelect(currentRoster);
   } else if (cleanTabId === 'tab-m9-tracking') {
     fetchLiveMonitorData();
+    loadClassPortfolios(currentClass);
   } else if (cleanTabId === 'tab-class-dash') {
     updateClassStats(currentRoster);
   }
@@ -438,6 +439,7 @@ async function loadCurrentClassDetail() {
       }
       populateRubricStudentSelect(currentRoster);
       updateHeroLivePreview(currentRoster);
+      loadClassPortfolios(currentClass);
     }
   } catch (err) {
     console.error('Failed to load class detail', err);
@@ -1634,42 +1636,277 @@ function setupCalendarHandlers() {
 }
 
 // ========================================================
-// 10. PORTOFOLIO & LOG PERKEMBANGAN (TAHAP 9)
+// 10. PORTOFOLIO & LOG PERKEMBANGAN (TAHAP 9 CRUD)
 // ========================================================
-function triggerPortfolioUpload() {
-  const fileInput = document.getElementById('portfolio-file-input');
-  if (fileInput) fileInput.click();
+let currentPortfolios = [];
+
+async function loadClassPortfolios(classId) {
+  try {
+    const cid = classId || currentClass;
+    const res = await API.getPortfolios(cid);
+    if (res && res.status === 'success') {
+      currentPortfolios = res.data || [];
+      renderPortfolioCards(currentPortfolios);
+    }
+  } catch (err) {
+    console.error('Failed to load portfolios:', err);
+  }
 }
 
-function handlePortfolioUpload(event) {
+function renderPortfolioCards(portfolios) {
+  const container = document.getElementById('portfolio-cards-container');
+  if (!container) return;
+
+  // If no items in database, display the default prototype cards
+  const items = (portfolios && portfolios.length > 0) ? portfolios : [
+    { id: 1, title: 'Eksplorasi Sketsa Karakter', category: 'KARYA 2D DRAWING', score: 88, semester: 'Semester Ganjil' },
+    { id: 2, title: 'Miniatur Kerajinan Clay Fauna', category: 'KARYA 3D KRIYA', score: 85, semester: 'Semester Ganjil' }
+  ];
+
+  let html = '';
+  items.forEach(item => {
+    const is3D = (item.category || '').includes('3D') || (item.category || '').includes('KRIYA') || (item.category || '').includes('PATUNG');
+    const tagColor = is3D ? 'text-[#EC4899]' : 'text-[#6366F1]';
+    const tagBg = is3D ? 'bg-[#FDF2F8]' : 'bg-[#F3EFFE]';
+
+    const mediaPreview = item.image_data
+      ? `<div class="relative h-40 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/80">
+           <img src="${item.image_data}" alt="${escapeHtml(item.title)}" class="w-full h-full object-cover">
+           <span class="absolute top-2 left-2 px-2.5 py-0.5 rounded-md font-mono text-[10px] font-bold ${tagBg} ${tagColor} shadow-2xs">[ ${escapeHtml(item.category)} ]</span>
+         </div>`
+      : `<div class="h-40 rounded-xl ${tagBg} flex items-center justify-center p-3 text-center">
+           <span class="font-mono text-xs font-bold ${tagColor} tracking-wider">[ ${escapeHtml(item.category)} ]</span>
+         </div>`;
+
+    html += `
+      <div class="portfolio-item-card bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3 hover:border-purple-300 transition flex flex-col justify-between">
+        <div class="space-y-3">
+          ${mediaPreview}
+          <div>
+            <h4 class="font-bold text-slate-900 text-sm sm:text-base leading-snug">${escapeHtml(item.title)}</h4>
+            <p class="text-xs text-slate-400 mt-1">Nilai: ${item.score || 85} · ${escapeHtml(item.semester || 'Semester Ganjil')}${item.student_name ? ' · ' + escapeHtml(item.student_name) : ''}</p>
+            ${item.notes ? `<p class="text-[11px] text-slate-500 italic mt-1.5 line-clamp-2">“${escapeHtml(item.notes)}”</p>` : ''}
+          </div>
+        </div>
+        <div class="flex items-center justify-between pt-2.5 border-t border-slate-100 text-xs">
+          <button onclick="openEditPortfolioModal(${item.id})" class="text-[#6366F1] hover:underline font-mono font-bold flex items-center gap-1 cursor-pointer">
+            <span>✏️</span><span>Ubah</span>
+          </button>
+          <button onclick="deletePortfolioItem(${item.id})" class="text-rose-500 hover:underline font-mono font-bold flex items-center gap-1 cursor-pointer">
+            <span>🗑️</span><span>Hapus</span>
+          </button>
+        </div>
+      </div>
+    `;
+  });
+
+  // Always append Card 3 (Unggah Dokumen Karya)
+  html += `
+    <div onclick="openAddPortfolioModal()" class="bg-[#FAFAFA] border border-slate-200/90 hover:border-purple-300 hover:bg-purple-50/20 rounded-2xl p-6 min-h-[200px] flex flex-col items-center justify-center text-center space-y-2.5 transition cursor-pointer shadow-2xs group">
+      <input type="file" id="portfolio-file-input" class="hidden" accept="image/png,image/jpeg,application/pdf" onchange="handlePortfolioUpload(event)">
+      <div class="w-12 h-12 rounded-full bg-[#EDE9FE] group-hover:bg-[#DDD6FE] text-[#6366F1] text-2xl font-bold flex items-center justify-center transition shadow-2xs">
+        +
+      </div>
+      <h4 class="text-sm font-bold text-[#6366F1] group-hover:underline">Unggah Dokumen Karya</h4>
+      <p class="text-xs text-slate-400 font-mono">JPG, PNG, atau PDF</p>
+    </div>
+  `;
+
+  container.innerHTML = html;
+}
+
+function openAddPortfolioModal() {
+  const form = document.getElementById('form-portfolio');
+  if (form) form.reset();
+
+  const idInput = document.getElementById('form-portfolio-id');
+  if (idInput) idInput.value = '';
+
+  const imgData = document.getElementById('form-p-image-data');
+  if (imgData) imgData.value = '';
+
+  const previewBox = document.getElementById('form-p-preview-box');
+  if (previewBox) previewBox.classList.add('hidden');
+
+  const btnDelete = document.getElementById('btn-delete-portfolio');
+  if (btnDelete) btnDelete.classList.add('hidden');
+
+  const title = document.getElementById('modal-portfolio-title');
+  if (title) title.textContent = 'Tambah Karya Portofolio Siswa';
+
+  const modal = document.getElementById('modal-portfolio');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function openEditPortfolioModal(id) {
+  const item = currentPortfolios.find(p => String(p.id) === String(id)) || {
+    id,
+    title: id === 1 ? 'Eksplorasi Sketsa Karakter' : 'Miniatur Kerajinan Clay Fauna',
+    category: id === 1 ? 'KARYA 2D DRAWING' : 'KARYA 3D KRIYA',
+    student_name: id === 1 ? 'Linely' : 'Bima Satria',
+    score: id === 1 ? 88 : 85,
+    semester: 'Semester Ganjil',
+    notes: ''
+  };
+
+  const idInput = document.getElementById('form-portfolio-id');
+  if (idInput) idInput.value = item.id || '';
+
+  const titleInput = document.getElementById('form-p-title');
+  if (titleInput) titleInput.value = item.title || '';
+
+  const catSelect = document.getElementById('form-p-category');
+  if (catSelect) catSelect.value = item.category || 'KARYA 2D DRAWING';
+
+  const studentInput = document.getElementById('form-p-student');
+  if (studentInput) studentInput.value = item.student_name || '';
+
+  const scoreInput = document.getElementById('form-p-score');
+  if (scoreInput) scoreInput.value = item.score !== undefined ? item.score : 85;
+
+  const semSelect = document.getElementById('form-p-semester');
+  if (semSelect) semSelect.value = item.semester || 'Semester Ganjil';
+
+  const notesText = document.getElementById('form-p-notes');
+  if (notesText) notesText.value = item.notes || '';
+
+  const imgData = document.getElementById('form-p-image-data');
+  const previewBox = document.getElementById('form-p-preview-box');
+  const previewImg = document.getElementById('form-p-preview-img');
+  const previewName = document.getElementById('form-p-preview-name');
+
+  if (item.image_data) {
+    if (imgData) imgData.value = item.image_data;
+    if (previewImg) previewImg.src = item.image_data;
+    if (previewName) previewName.textContent = 'Foto karya saat ini';
+    if (previewBox) previewBox.classList.remove('hidden');
+  } else {
+    if (imgData) imgData.value = '';
+    if (previewBox) previewBox.classList.add('hidden');
+  }
+
+  const btnDelete = document.getElementById('btn-delete-portfolio');
+  if (btnDelete) btnDelete.classList.remove('hidden');
+
+  const title = document.getElementById('modal-portfolio-title');
+  if (title) title.textContent = 'Ubah Karya Portofolio Siswa';
+
+  const modal = document.getElementById('modal-portfolio');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closePortfolioModal() {
+  const modal = document.getElementById('modal-portfolio');
+  if (modal) modal.classList.add('hidden');
+}
+
+function previewPortfolioFile(event) {
   const file = event.target.files?.[0];
   if (!file) return;
 
-  const fileName = file.name;
-  const isImage = file.type.startsWith('image/');
-  const categoryTag = isImage ? '[ KARYA 2D / 3D ]' : '[ DOKUMEN PDF ]';
-  const tagColor = isImage ? 'text-[#6366F1]' : 'text-[#0D9488]';
-  const tagBg = isImage ? 'bg-[#F3EFFE]' : 'bg-[#F0FDFA]';
+  const previewBox = document.getElementById('form-p-preview-box');
+  const previewImg = document.getElementById('form-p-preview-img');
+  const previewName = document.getElementById('form-p-preview-name');
+  const imgData = document.getElementById('form-p-image-data');
 
-  const container = document.getElementById('portfolio-cards-container');
-  if (container) {
-    const uploadCard = container.lastElementChild;
-    const newCard = document.createElement('div');
-    newCard.className = 'bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4 hover:border-purple-300 transition animate-fade-in';
-    newCard.innerHTML = `
-      <div class="h-40 rounded-xl ${tagBg} flex items-center justify-center text-center p-3">
-        <span class="font-mono text-xs font-bold ${tagColor} tracking-wider">${categoryTag}</span>
-      </div>
-      <div>
-        <h4 class="font-bold text-slate-900 text-sm sm:text-base truncate" title="${escapeHtml(fileName)}">${escapeHtml(fileName)}</h4>
-        <p class="text-xs text-slate-400 mt-1">Nilai: Menunggu Review · Semester Ganjil</p>
-      </div>
-    `;
-    container.insertBefore(newCard, uploadCard);
+  if (previewName) previewName.textContent = file.name;
+
+  if (file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      if (imgData) imgData.value = dataUrl;
+      if (previewImg) previewImg.src = dataUrl;
+      if (previewBox) previewBox.classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+  } else {
+    // PDF file
+    if (imgData) imgData.value = '';
+    if (previewImg) previewImg.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%236366F1"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+    if (previewBox) previewBox.classList.remove('hidden');
+  }
+}
+
+async function submitPortfolioForm(event) {
+  event.preventDefault();
+
+  const id = document.getElementById('form-portfolio-id')?.value;
+  const title = document.getElementById('form-p-title')?.value.trim();
+  const category = document.getElementById('form-p-category')?.value;
+  const student_name = document.getElementById('form-p-student')?.value.trim();
+  const score = Number(document.getElementById('form-p-score')?.value) || 85;
+  const semester = document.getElementById('form-p-semester')?.value;
+  const notes = document.getElementById('form-p-notes')?.value.trim();
+  const image_data = document.getElementById('form-p-image-data')?.value || '';
+
+  if (!title || !category) {
+    alert('Judul karya dan kategori media wajib diisi!');
+    return;
   }
 
-  alert(`Dokumen karya "${fileName}" berhasil diunggah ke Portofolio Siswa!`);
-  event.target.value = '';
+  const payload = {
+    class_id: currentClass,
+    title,
+    category,
+    student_name,
+    score,
+    semester,
+    notes,
+    image_data
+  };
+
+  try {
+    if (id) {
+      // Update (PUT)
+      const res = await API.updatePortfolio(id, payload);
+      if (res && res.status === 'success') {
+        alert('Karya portofolio berhasil diperbarui!');
+      }
+    } else {
+      // Create (POST)
+      const res = await API.createPortfolio(payload);
+      if (res && res.status === 'success') {
+        alert('Karya portofolio baru berhasil ditambahkan!');
+      }
+    }
+
+    closePortfolioModal();
+    await loadClassPortfolios(currentClass);
+  } catch (err) {
+    console.error('Error saving portfolio:', err);
+    alert('Gagal menyimpan karya portofolio: ' + err.message);
+  }
+}
+
+async function deletePortfolioItem(id) {
+  if (!confirm('Apakah Anda yakin ingin menghapus karya ini dari portofolio siswa?')) return;
+
+  try {
+    const res = await API.deletePortfolio(id);
+    if (res && res.status === 'success') {
+      await loadClassPortfolios(currentClass);
+    }
+  } catch (err) {
+    console.error('Error deleting portfolio:', err);
+    alert('Gagal menghapus karya portofolio: ' + err.message);
+  }
+}
+
+async function deleteCurrentPortfolioModal() {
+  const id = document.getElementById('form-portfolio-id')?.value;
+  if (!id) return;
+  closePortfolioModal();
+  await deletePortfolioItem(id);
+}
+
+function triggerPortfolioUpload() {
+  openAddPortfolioModal();
+}
+
+function handlePortfolioUpload(event) {
+  openAddPortfolioModal();
+  previewPortfolioFile(event);
 }
 
 // ========================================================

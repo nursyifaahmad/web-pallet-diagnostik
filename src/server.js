@@ -17,6 +17,7 @@ const questionRoutes = require('./routes/questions');
 const calendarRoutes = require('./routes/calendar');
 const rubricRoutes = require('./routes/rubric');
 const exportRoutes = require('./routes/export');
+const portfolioRoutes = require('./routes/portfolio');
 
 const app = express();
 const PORT = process.env.PORT || 3090;
@@ -50,6 +51,7 @@ app.use('/api/questions', questionRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/rubric', rubricRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api/portfolio', portfolioRoutes);
 
 // Page Routes (Portal Separation)
 

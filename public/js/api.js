@@ -193,5 +193,42 @@ const API = {
       body: JSON.stringify(data)
     });
     return await res.json();
+  },
+
+  // Portfolios (Tahap 9 CRUD)
+  async getPortfolios(classId) {
+    const res = await fetch(`/api/portfolio/${encodeURIComponent(classId)}`, {
+      headers: getAuthHeaders()
+    });
+    return await res.json();
+  },
+  async getPortfolioItem(id) {
+    const res = await fetch(`/api/portfolio/item/${id}`, {
+      headers: getAuthHeaders()
+    });
+    return await res.json();
+  },
+  async createPortfolio(data) {
+    const res = await fetch('/api/portfolio', {
+      method: 'POST',
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(data)
+    });
+    return await res.json();
+  },
+  async updatePortfolio(id, data) {
+    const res = await fetch(`/api/portfolio/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(data)
+    });
+    return await res.json();
+  },
+  async deletePortfolio(id) {
+    const res = await fetch(`/api/portfolio/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    return await res.json();
   }
 };
