@@ -63,7 +63,38 @@ setTimeout(async () => {
       throw new Error(`Expected attendance 17 and gender L, got: ${liveStudent.attendanceNo}, ${liveStudent.gender}`);
     }
 
-    // 6. Submit Student Assessment Permanently
+    // 6. Test Required Question Validation & Submit Student Assessment Permanently
+    const activeQuestionsRes = await fetchJson('/api/questions');
+    const allQuestions = activeQuestionsRes.data;
+
+    // Test rejection of incomplete submission
+    const rejectedRes = await fetchJson('/api/students', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: testSessionId,
+        attendance_no: 17,
+        name: 'Rian Pratama',
+        gender: 'L',
+        class_id: 'VII-A',
+        answers: { [allQuestions[0].id]: { selected: 'Sangat senang' } }
+      })
+    });
+    if (rejectedRes.httpStatus !== 400) {
+      throw new Error(`Expected HTTP 400 for incomplete answers, got: ${rejectedRes.httpStatus}`);
+    }
+    console.log('✓ Incomplete answers correctly rejected by backend validation (All questions required)');
+
+    // Build complete answers for all questions
+    const completeAnswers = {};
+    allQuestions.forEach(q => {
+      if (q.isMediaSelector) {
+        completeAnswers[q.id] = { category: '3D', subOption: 'Lempung & Plastisin', reason: 'Suka membuat patung' };
+      } else {
+        completeAnswers[q.id] = { selected: q.options[0] || 'Sangat senang', reason: 'Alasan belajar' };
+      }
+    });
+
     const studentRes = await fetchJson('/api/students', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -78,9 +109,7 @@ setTimeout(async () => {
         style: 'Kinestetik Eksploratif',
         challenge: 'Sketsa Proporsi',
         feeling: 'Sangat senang',
-        answers: {
-          1: { selected: 'Sangat senang' }
-        }
+        answers: completeAnswers
       })
     });
     console.log('✓ Student assessment submitted permanently:', studentRes.data.name, 'No. Absen:', studentRes.data.attendance_no, 'Gender:', studentRes.data.gender);

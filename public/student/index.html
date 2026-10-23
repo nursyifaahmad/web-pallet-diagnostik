@@ -177,10 +177,15 @@
     <div id="step-question" class="hidden atelier-card p-6 md:p-8 space-y-6">
       <!-- Category Badge -->
       <div>
-        <div class="flex items-center justify-between">
-          <span id="question-category" class="inline-block px-3 py-1 bg-atelier-warm text-atelier-ink text-xs font-mono font-bold rounded-lg border border-atelier-border">
-            Aspek 1: Perasaan & Sikap Belajar
-          </span>
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span id="question-category" class="inline-block px-3 py-1 bg-atelier-warm text-atelier-ink text-xs font-mono font-bold rounded-lg border border-atelier-border">
+              Aspek 1: Perasaan & Sikap Belajar
+            </span>
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-atelier-terracottaLight text-atelier-terracotta text-[11px] font-mono font-bold rounded-md border border-atelier-terracotta/20">
+              <span class="text-xs leading-none">*</span> Wajib Dijawab
+            </span>
+          </div>
           <span class="text-[11px] font-mono text-emerald-600 flex items-center gap-1">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             Auto-saved
@@ -206,6 +211,14 @@
         </label>
         <textarea id="question-reason" rows="2" placeholder="Ceritakan alasan atau pengalamanmu..."
           class="w-full px-4 py-2.5 rounded-xl border border-atelier-border focus:border-atelier-terracotta focus:ring-2 focus:ring-atelier-terracottaLight outline-none transition text-sm"></textarea>
+      </div>
+
+      <!-- Validation Alert Banner -->
+      <div id="question-validation-alert" class="hidden p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-center gap-2.5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-atelier-terracotta flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span id="question-validation-msg" class="font-medium">Pertanyaan ini wajib dijawab sebelum kamu dapat melanjutkan.</span>
       </div>
 
       <!-- Navigation Buttons -->

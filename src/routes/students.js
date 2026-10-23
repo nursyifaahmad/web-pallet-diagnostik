@@ -163,6 +163,45 @@ router.post('/', (req, res) => {
     return res.status(400).json({ status: 'error', message: 'Nama siswa dan kelas wajib diisi.' });
   }
 
+  // Validasi: Jika submit berasal dari pengerjaan murid (ada sessionId atau answers), semua pertanyaan aktif harus dijawab (required)
+  const hasAnswers = answers && typeof answers === 'object' && Object.keys(answers).length > 0;
+  if (sessionId || hasAnswers) {
+    const activeQuestions = db.prepare(`
+      SELECT id, order_num, title, is_media_selector 
+      FROM diagnostic_questions 
+      WHERE is_active = 1 
+      ORDER BY order_num ASC
+    `).all();
+
+    if (activeQuestions.length > 0) {
+      const studentAnswers = answers || {};
+      for (const q of activeQuestions) {
+        const ans = studentAnswers[q.id];
+        if (!ans) {
+          return res.status(400).json({
+            status: 'error',
+            message: `Soal #${q.order_num} (${q.title}) wajib dijawab oleh murid.`
+          });
+        }
+        if (q.is_media_selector) {
+          if (!ans.category || !ans.subOption) {
+            return res.status(400).json({
+              status: 'error',
+              message: `Pilihan dimensi dan spesifikasi media pada Soal #${q.order_num} wajib dipilih.`
+            });
+          }
+        } else {
+          if (!ans.selected || typeof ans.selected !== 'string' || ans.selected.trim() === '') {
+            return res.status(400).json({
+              status: 'error',
+              message: `Pilihan jawaban pada Soal #${q.order_num} wajib dipilih.`
+            });
+          }
+        }
+      }
+    }
+  }
+
   try {
     const classRow = db.prepare('SELECT id FROM classes WHERE id = ?').get(targetClass);
     if (!classRow) {

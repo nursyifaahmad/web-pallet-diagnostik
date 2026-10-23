@@ -22,9 +22,9 @@ const MEDIA_SUB_OPTIONS = {
   ]
 };
 
-// Selected media state for Question 2
-let selectedMediaCategory = '2D';
-let selectedMediaSubOption = 'Media Kering';
+// Selected media state for Question 2 (null until explicitly chosen by student)
+let selectedMediaCategory = null;
+let selectedMediaSubOption = null;
 
 // Debounce timer for server live progress sync
 let liveSyncTimeout = null;
@@ -208,8 +208,8 @@ function setupEventListeners() {
       studentGender = draft.studentGender || '';
       studentClass = draft.studentClass;
       currentStepIndex = draft.currentStepIndex || 0;
-      selectedMediaCategory = draft.selectedMediaCategory || '2D';
-      selectedMediaSubOption = draft.selectedMediaSubOption || 'Media Kering';
+      selectedMediaCategory = draft.selectedMediaCategory || null;
+      selectedMediaSubOption = draft.selectedMediaSubOption || null;
       answers = draft.answers || {};
 
       document.getElementById('draft-resume-banner').classList.add('hidden');
@@ -338,8 +338,29 @@ function setupEventListeners() {
   });
 }
 
+// Helper to display & hide inline validation warning
+function showValidationAlert(message) {
+  const alertEl = document.getElementById('question-validation-alert');
+  const msgEl = document.getElementById('question-validation-msg');
+  if (alertEl && msgEl) {
+    msgEl.textContent = message || 'Pertanyaan ini wajib dijawab sebelum kamu dapat melanjutkan.';
+    alertEl.classList.remove('hidden');
+    alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } else {
+    alert(message);
+  }
+}
+
+function hideValidationAlert() {
+  const alertEl = document.getElementById('question-validation-alert');
+  if (alertEl) {
+    alertEl.classList.add('hidden');
+  }
+}
+
 // 6. Render Question Card
 function renderCurrentQuestion() {
+  hideValidationAlert();
   const q = questions[currentStepIndex];
   if (!q) return;
 
@@ -380,8 +401,8 @@ function renderCurrentQuestion() {
 
 // Render Media Selector (2D vs 3D and sub-options)
 function renderMediaSelector(container, existingAns) {
-  selectedMediaCategory = existingAns.category || selectedMediaCategory || '2D';
-  selectedMediaSubOption = existingAns.subOption || selectedMediaSubOption || 'Media Kering';
+  selectedMediaCategory = existingAns.category || selectedMediaCategory || null;
+  selectedMediaSubOption = existingAns.subOption || selectedMediaSubOption || null;
 
   const wrapper = document.createElement('div');
   wrapper.className = 'space-y-4';
@@ -402,7 +423,8 @@ function renderMediaSelector(container, existingAns) {
     `;
     catBtn.onclick = () => {
       selectedMediaCategory = cat;
-      selectedMediaSubOption = MEDIA_SUB_OPTIONS[cat][0].label;
+      selectedMediaSubOption = null; // Do NOT auto-pick sub-option; require student to choose!
+      hideValidationAlert();
       saveCurrentQuestionAnswer();
       saveDraft();
       renderCurrentQuestion();
@@ -411,38 +433,46 @@ function renderMediaSelector(container, existingAns) {
   });
   wrapper.appendChild(catGrid);
 
-  const subTitle = document.createElement('p');
-  subTitle.className = 'text-xs font-mono font-semibold text-atelier-inkMuted uppercase tracking-wider pt-2';
-  subTitle.textContent = `Pilih Spesifikasi Media ${selectedMediaCategory}:`;
-  wrapper.appendChild(subTitle);
+  if (selectedMediaCategory) {
+    const subTitle = document.createElement('p');
+    subTitle.className = 'text-xs font-mono font-semibold text-atelier-inkMuted uppercase tracking-wider pt-2';
+    subTitle.textContent = `Pilih Spesifikasi Media ${selectedMediaCategory} (Wajib) * :`;
+    wrapper.appendChild(subTitle);
 
-  const subList = document.createElement('div');
-  subList.className = 'space-y-2';
+    const subList = document.createElement('div');
+    subList.className = 'space-y-2';
 
-  MEDIA_SUB_OPTIONS[selectedMediaCategory].forEach(item => {
-    const isSubSelected = selectedMediaSubOption === item.label;
-    const pill = document.createElement('div');
-    pill.className = `option-pill ${isSubSelected ? 'selected' : ''}`;
-    pill.innerHTML = `
-      <div>
-        <span class="block font-medium text-sm text-atelier-ink">${item.label}</span>
-        <span class="text-xs text-atelier-inkMuted">${item.desc}</span>
-      </div>
-      <div class="w-5 h-5 rounded-full border flex items-center justify-center ${
-        isSubSelected ? 'border-atelier-terracotta bg-atelier-terracotta text-white' : 'border-atelier-border'
-      }">
-        ${isSubSelected ? '✓' : ''}
-      </div>
-    `;
-    pill.onclick = () => {
-      selectedMediaSubOption = item.label;
-      saveCurrentQuestionAnswer();
-      saveDraft();
-      renderCurrentQuestion();
-    };
-    subList.appendChild(pill);
-  });
-  wrapper.appendChild(subList);
+    MEDIA_SUB_OPTIONS[selectedMediaCategory].forEach(item => {
+      const isSubSelected = selectedMediaSubOption === item.label;
+      const pill = document.createElement('div');
+      pill.className = `option-pill ${isSubSelected ? 'selected' : ''}`;
+      pill.innerHTML = `
+        <div>
+          <span class="block font-medium text-sm text-atelier-ink">${item.label}</span>
+          <span class="text-xs text-atelier-inkMuted">${item.desc}</span>
+        </div>
+        <div class="w-5 h-5 rounded-full border flex items-center justify-center ${
+          isSubSelected ? 'border-atelier-terracotta bg-atelier-terracotta text-white' : 'border-atelier-border'
+        }">
+          ${isSubSelected ? '✓' : ''}
+        </div>
+      `;
+      pill.onclick = () => {
+        selectedMediaSubOption = item.label;
+        hideValidationAlert();
+        saveCurrentQuestionAnswer();
+        saveDraft();
+        renderCurrentQuestion();
+      };
+      subList.appendChild(pill);
+    });
+    wrapper.appendChild(subList);
+  } else {
+    const hint = document.createElement('p');
+    hint.className = 'text-xs text-atelier-inkMuted italic p-3 bg-atelier-warm rounded-xl border border-atelier-border text-center';
+    hint.textContent = 'Pilih salah satu dimensi (2D atau 3D) di atas terlebih dahulu untuk menentukan spesifikasi media.';
+    wrapper.appendChild(hint);
+  }
 
   container.appendChild(wrapper);
 }
@@ -465,6 +495,7 @@ function renderStandardChoices(container, optionsList, existingAns) {
     `;
     pill.onclick = () => {
       currentSelected = optText;
+      hideValidationAlert();
       container.querySelectorAll('.option-pill').forEach(p => {
         p.classList.remove('selected');
         p.querySelector('div').className = 'w-5 h-5 rounded-full border flex items-center justify-center text-xs font-bold border-atelier-border';
@@ -485,23 +516,28 @@ function renderStandardChoices(container, optionsList, existingAns) {
   });
 }
 
-// 7. Validation & Answer Storing
+// 7. Validation & Answer Storing (All Questions Are Required)
 function validateCurrentAnswer() {
   const q = questions[currentStepIndex];
   if (!q) return false;
 
   if (q.isMediaSelector) {
-    if (!selectedMediaCategory || !selectedMediaSubOption) {
-      alert('Silakan tentukan pilihan media yang kamu sukai.');
+    if (!selectedMediaCategory) {
+      showValidationAlert('Pertanyaan ini wajib dijawab: Silakan pilih salah satu dimensi karya (2D atau 3D) terlebih dahulu.');
+      return false;
+    }
+    if (!selectedMediaSubOption) {
+      showValidationAlert(`Pertanyaan ini wajib dijawab: Silakan tentukan spesifikasi media ${selectedMediaCategory} yang kamu sukai.`);
       return false;
     }
   } else {
     const ans = answers[q.id];
-    if (!ans || !ans.selected) {
-      alert('Silakan pilih salah satu opsi jawaban sebelum melanjutkan.');
+    if (!ans || !ans.selected || typeof ans.selected !== 'string' || ans.selected.trim() === '') {
+      showValidationAlert('Pertanyaan ini wajib dijawab: Silakan pilih salah satu opsi jawaban sebelum melanjutkan.');
       return false;
     }
   }
+  hideValidationAlert();
   return true;
 }
 
@@ -512,23 +548,54 @@ function saveCurrentQuestionAnswer() {
   const reason = document.getElementById('question-reason')?.value?.trim() || '';
 
   if (q.isMediaSelector) {
-    answers[q.id] = {
-      category: selectedMediaCategory,
-      subOption: selectedMediaSubOption,
-      reason: reason
-    };
+    if (selectedMediaCategory && selectedMediaSubOption) {
+      answers[q.id] = {
+        category: selectedMediaCategory,
+        subOption: selectedMediaSubOption,
+        reason: reason
+      };
+    } else if (answers[q.id]) {
+      answers[q.id].reason = reason;
+    }
   } else {
-    answers[q.id] = {
-      ...answers[q.id],
-      reason: reason
-    };
+    if (answers[q.id]) {
+      answers[q.id] = {
+        ...answers[q.id],
+        reason: reason
+      };
+    }
   }
 }
 
-// 8. Final Quiz Submission
+// 8. Final Quiz Submission with Comprehensive Required Check
 async function submitQuiz() {
   const btnNext = document.getElementById('btn-next-question');
   btnNext.disabled = true;
+  btnNext.innerHTML = '<span>Memverifikasi Kelengkapan Jawaban...</span>';
+
+  // 1. Double check that ALL active questions are answered
+  for (let i = 0; i < questions.length; i++) {
+    const qItem = questions[i];
+    const aItem = answers[qItem.id];
+    let isAnswered = false;
+
+    if (qItem.isMediaSelector) {
+      isAnswered = Boolean(aItem && aItem.category && aItem.subOption);
+    } else {
+      isAnswered = Boolean(aItem && aItem.selected && typeof aItem.selected === 'string' && aItem.selected.trim() !== '');
+    }
+
+    if (!isAnswered) {
+      currentStepIndex = i;
+      saveDraft();
+      renderCurrentQuestion();
+      showValidationAlert(`Soal #${i + 1} (${qItem.title}) belum dijawab! Semua pertanyaan asesmen diagnostik wajib dijawab sebelum dikirim.`);
+      btnNext.disabled = false;
+      btnNext.innerHTML = '<span>Kirim Jawaban Asesmen</span>';
+      return;
+    }
+  }
+
   btnNext.innerHTML = '<span>Menyimpan Hasil Asesmen...</span>';
 
   const q1Ans = (answers[questions[0]?.id]?.selected) || 'Sangat senang';
