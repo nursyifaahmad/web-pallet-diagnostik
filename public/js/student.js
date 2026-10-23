@@ -715,6 +715,23 @@ function renderProfileCard(data) {
   const genderLabel = (data.gender === 'L' || data.gender === 'Laki-laki') ? 'Laki-laki' : 'Perempuan';
   document.getElementById('card-meta').textContent = `No. Absen: ${data.attendance_no || '-'} · ${genderLabel} · Fase D (SMP)`;
 
+  // Populate Printable Header & Signature Info
+  const now = new Date();
+  const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  const formattedDate = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+  
+  const elPrintDate = document.getElementById('print-date');
+  if (elPrintDate) elPrintDate.textContent = `Tanggal: ${formattedDate}`;
+
+  const elSigName1 = document.getElementById('print-student-name-sig');
+  if (elSigName1) elSigName1.textContent = data.name;
+
+  const elSigName2 = document.getElementById('print-sig-name');
+  if (elSigName2) elSigName2.textContent = data.name;
+
+  const elSigClass = document.getElementById('print-sig-class');
+  if (elSigClass) elSigClass.textContent = `Kelas ${data.class_id} · No. Absen: ${data.attendance_no || '-'}`;
+
   document.getElementById('card-style').textContent = data.style;
   document.getElementById('card-media').textContent = `${data.category} (${data.sub_option})`;
   document.getElementById('card-challenge').textContent = data.challenge;

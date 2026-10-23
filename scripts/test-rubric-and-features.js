@@ -1,5 +1,12 @@
-try { require('../src/server'); } catch(e) {}
 const http = require('http');
+
+async function isPortOpen(port) {
+  return new Promise((resolve) => {
+    const req = http.get(`http://localhost:${port}/health`, (res) => resolve(true));
+    req.on('error', () => resolve(false));
+    req.setTimeout(1000, () => { req.destroy(); resolve(false); });
+  });
+}
 
 function request(options, data) {
   return new Promise((resolve, reject) => {
@@ -21,6 +28,11 @@ function request(options, data) {
 }
 
 async function runTests() {
+  const open = await isPortOpen(3090);
+  if (!open) {
+    require('../src/server');
+    await new Promise(r => setTimeout(r, 1000));
+  }
   console.log('--- STARTING RUBRIC & NAVIGATION FEATURES TEST ---');
   let passed = 0;
   let failed = 0;

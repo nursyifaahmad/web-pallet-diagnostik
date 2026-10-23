@@ -481,7 +481,7 @@ function renderSelectedStudentProfile() {
           </div>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 no-print">
           <button onclick="window.print()" class="px-3 py-1.5 border border-atelier-border hover:bg-white rounded-xl text-xs font-medium transition cursor-pointer">
             🖨️ Cetak Kartu Profil
           </button>

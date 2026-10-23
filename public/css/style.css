@@ -111,20 +111,160 @@ body {
   background: var(--ink-muted);
 }
 
-/* Print Styles for Modul Ajar Kurikulum Merdeka */
+/* ======================================================== */
+/* Print Styles for Kartu Seni PALLET & Modul Ajar Kurikulum Merdeka */
+/* ======================================================== */
 @media print {
-  body {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm 10mm 12mm;
+  }
+
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
     background: #FFFFFF !important;
-    color: #000000 !important;
+    color: #1C1917 !important;
+    font-size: 10pt !important;
+    line-height: 1.35 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
   }
-  .no-print {
+
+  .paper-texture {
+    background-image: none !important;
+  }
+
+  /* Completely suppress all navigation, headers, footers and interactive buttons */
+  .no-print,
+  header,
+  footer,
+  nav,
+  aside,
+  button,
+  #draft-resume-banner,
+  #quiz-progress-bar,
+  #step-identity,
+  #step-question,
+  #sidebar-container,
+  #section-buttons-container,
+  #btn-export-excel,
+  #btn-logout {
     display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
   }
+
+  /* Absolutely disarm any sticky/fixed element from floating or repeating across pages */
+  header, [class*="sticky"], [class*="fixed"] {
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+    box-shadow: none !important;
+  }
+
+  /* Reveal dedicated print elements */
   .print-only {
     display: block !important;
+    visibility: visible !important;
   }
+
+  /* Expand main containers to full A4 page width */
+  main {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #step-profile {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Printable Art Card styling */
+  #printable-art-card,
   .atelier-card {
-    border: 1px solid #CCCCCC !important;
+    border: 1.5px solid #D1C9BC !important;
+    border-radius: 10px !important;
     box-shadow: none !important;
+    padding: 14px 18px !important;
+    margin: 0 !important;
+    width: 100% !important;
+    background: #FFFFFF !important;
+  }
+
+  /* Force 3 highlight badges into 3 neat side-by-side columns */
+  #step-profile .grid.grid-cols-1.sm\:grid-cols-3 {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  #step-profile .p-3.5.bg-atelier-warm {
+    background-color: #FAF8F5 !important;
+    border: 1px solid #E7E2DA !important;
+    border-radius: 8px !important;
+    padding: 8px 10px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* 10 Diagnostic Aspects Matrix (Force clean 2 columns, prevent cut-in-half cards) */
+  #card-matrix-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  #card-matrix-grid > div {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    border: 1px solid #E2DCD3 !important;
+    background-color: #FAF8F5 !important;
+    border-radius: 7px !important;
+    padding: 6px 9px !important;
+    margin-bottom: 2px !important;
+  }
+
+  /* Encouraging Studio Note */
+  .p-4.bg-atelier-terracottaLight\/60 {
+    background-color: #FFF7ED !important;
+    border: 1px solid #FDBA74 !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Signature Block */
+  .signature-block {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    margin-top: 14px !important;
+    padding-top: 12px !important;
+  }
+
+  /* Modul Ajar document print styling */
+  #modul-ajar-document {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  #modul-ajar-document > div {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 }
