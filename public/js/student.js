@@ -335,6 +335,19 @@ function setupEventListeners() {
   document.getElementById('question-reason').addEventListener('input', () => {
     saveCurrentQuestionAnswer();
     saveDraft();
+    const reasonVal = document.getElementById('question-reason').value.trim();
+    if (reasonVal) {
+      const q = questions[currentStepIndex];
+      if (q) {
+        const ans = answers[q.id];
+        const isChoiceSelected = q.isMediaSelector
+          ? Boolean(selectedMediaCategory && selectedMediaSubOption)
+          : Boolean(ans && ans.selected && ans.selected.trim() !== '');
+        if (isChoiceSelected) {
+          hideValidationAlert();
+        }
+      }
+    }
   });
 }
 
@@ -516,11 +529,12 @@ function renderStandardChoices(container, optionsList, existingAns) {
   });
 }
 
-// 7. Validation & Answer Storing (All Questions Are Required)
+// 7. Validation & Answer Storing (All Questions & Essay Fields Are Required)
 function validateCurrentAnswer() {
   const q = questions[currentStepIndex];
   if (!q) return false;
 
+  // 1. Validasi Pilihan Opsi / Media
   if (q.isMediaSelector) {
     if (!selectedMediaCategory) {
       showValidationAlert('Pertanyaan ini wajib dijawab: Silakan pilih salah satu dimensi karya (2D atau 3D) terlebih dahulu.');
@@ -537,6 +551,22 @@ function validateCurrentAnswer() {
       return false;
     }
   }
+
+  // 2. Validasi Pertanyaan Esai / Isian Singkat
+  const reasonVal = document.getElementById('question-reason')?.value?.trim() || '';
+  if (!reasonVal) {
+    showValidationAlert('Pertanyaan esai/alasan refleksi ini wajib diisi sebelum kamu dapat melanjutkan ke soal berikutnya.');
+    const reasonEl = document.getElementById('question-reason');
+    if (reasonEl) {
+      reasonEl.focus();
+      reasonEl.classList.add('ring-2', 'ring-atelier-terracotta', 'border-atelier-terracotta');
+      setTimeout(() => {
+        reasonEl.classList.remove('ring-2', 'ring-atelier-terracotta', 'border-atelier-terracotta');
+      }, 2000);
+    }
+    return false;
+  }
+
   hideValidationAlert();
   return true;
 }
@@ -563,33 +593,49 @@ function saveCurrentQuestionAnswer() {
         ...answers[q.id],
         reason: reason
       };
+    } else if (reason) {
+      answers[q.id] = {
+        reason: reason
+      };
     }
   }
 }
 
-// 8. Final Quiz Submission with Comprehensive Required Check
+// 8. Final Quiz Submission with Comprehensive Required Check (Choices & Essay)
 async function submitQuiz() {
   const btnNext = document.getElementById('btn-next-question');
   btnNext.disabled = true;
   btnNext.innerHTML = '<span>Memverifikasi Kelengkapan Jawaban...</span>';
 
-  // 1. Double check that ALL active questions are answered
+  // 1. Double check that ALL active questions and their essay fields are answered
   for (let i = 0; i < questions.length; i++) {
     const qItem = questions[i];
     const aItem = answers[qItem.id];
-    let isAnswered = false;
+    let isChoiceAnswered = false;
 
     if (qItem.isMediaSelector) {
-      isAnswered = Boolean(aItem && aItem.category && aItem.subOption);
+      isChoiceAnswered = Boolean(aItem && aItem.category && aItem.subOption);
     } else {
-      isAnswered = Boolean(aItem && aItem.selected && typeof aItem.selected === 'string' && aItem.selected.trim() !== '');
+      isChoiceAnswered = Boolean(aItem && aItem.selected && typeof aItem.selected === 'string' && aItem.selected.trim() !== '');
     }
 
-    if (!isAnswered) {
+    if (!isChoiceAnswered) {
       currentStepIndex = i;
       saveDraft();
       renderCurrentQuestion();
-      showValidationAlert(`Soal #${i + 1} (${qItem.title}) belum dijawab! Semua pertanyaan asesmen diagnostik wajib dijawab sebelum dikirim.`);
+      showValidationAlert(`Pilihan opsi pada Soal #${i + 1} (${qItem.title}) belum dijawab! Semua pertanyaan asesmen wajib dijawab.`);
+      btnNext.disabled = false;
+      btnNext.innerHTML = '<span>Kirim Jawaban Asesmen</span>';
+      return;
+    }
+
+    const hasReason = Boolean(aItem && aItem.reason && typeof aItem.reason === 'string' && aItem.reason.trim() !== '');
+    if (!hasReason) {
+      currentStepIndex = i;
+      saveDraft();
+      renderCurrentQuestion();
+      showValidationAlert(`Pertanyaan esai/alasan pada Soal #${i + 1} belum diisi! Pertanyaan esai wajib diisi sebelum mengirim hasil asesmen.`);
+      document.getElementById('question-reason')?.focus();
       btnNext.disabled = false;
       btnNext.innerHTML = '<span>Kirim Jawaban Asesmen</span>';
       return;

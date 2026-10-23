@@ -198,6 +198,14 @@ router.post('/', (req, res) => {
             });
           }
         }
+
+        // Validasi pertanyaan esai / isian singkat (reason) wajib diisi
+        if (!ans.reason || typeof ans.reason !== 'string' || ans.reason.trim() === '') {
+          return res.status(400).json({
+            status: 'error',
+            message: `Pertanyaan esai/alasan pada Soal #${q.order_num} (${q.title}) wajib diisi oleh murid.`
+          });
+        }
       }
     }
   }

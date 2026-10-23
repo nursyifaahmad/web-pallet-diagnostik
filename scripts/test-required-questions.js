@@ -102,9 +102,9 @@ setTimeout(async () => {
       const answersMissingMediaSub = {};
       questions.forEach(q => {
         if (q.id === mediaQ.id) {
-          answersMissingMediaSub[q.id] = { category: '2D' }; // missing subOption!
+          answersMissingMediaSub[q.id] = { category: '2D', reason: 'Alasan media' }; // missing subOption!
         } else {
-          answersMissingMediaSub[q.id] = { selected: q.options[0] || 'Opsi 1' };
+          answersMissingMediaSub[q.id] = { selected: q.options[0] || 'Opsi 1', reason: 'Alasan belajar' };
         }
       });
       const mediaMissingSub = await makeRequest('/api/students', {
@@ -124,14 +124,42 @@ setTimeout(async () => {
       assert(mediaJson.message.includes('spesifikasi media'), `Error message mentions media specification: "${mediaJson.message}"`);
     }
 
-    // 5. Test complete submission with all questions answered
-    console.log('\n5. Testing complete student submission with ALL questions answered...');
+    // 5. Test submitting with choices answered but missing essay/reason field
+    console.log('\n5. Testing submission where choices are answered but essay/reason is empty...');
+    const answersMissingReason = {};
+    questions.forEach((q, idx) => {
+      if (q.isMediaSelector) {
+        answersMissingReason[q.id] = { category: '2D', subOption: 'Media Kering', reason: idx === 0 ? '' : 'Alasan' };
+      } else {
+        // Leave the first question reason empty
+        answersMissingReason[q.id] = { selected: q.options[0] || 'Opsi 1', reason: idx === 0 ? '' : 'Alasan belajar' };
+      }
+    });
+
+    const missingReasonSub = await makeRequest('/api/students', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: {
+        sessionId: 'sess_req_test_no_reason',
+        name: 'Rudi Hartono',
+        attendance_no: 19,
+        gender: 'L',
+        class_id: 'VII-B',
+        answers: answersMissingReason
+      }
+    });
+    assert(missingReasonSub.statusCode === 400, `Empty essay/reason field rejected with HTTP ${missingReasonSub.statusCode} (Expected 400)`);
+    const reasonJson = JSON.parse(missingReasonSub.body);
+    assert(reasonJson.status === 'error' && reasonJson.message.includes('esai'), `Error message mentions required essay: "${reasonJson.message}"`);
+
+    // 6. Test complete submission with all questions and essay fields answered
+    console.log('\n6. Testing complete student submission with ALL questions and essay fields answered...');
     const completeAnswers = {};
     questions.forEach(q => {
       if (q.isMediaSelector) {
         completeAnswers[q.id] = { category: '2D', subOption: 'Media Basah', reason: 'Suka melukis cat air' };
       } else {
-        completeAnswers[q.id] = { selected: q.options[0] || 'Opsi 1', reason: 'Alasan belajar' };
+        completeAnswers[q.id] = { selected: q.options[0] || 'Opsi 1', reason: 'Alasan belajar seni rupa' };
       }
     });
 
@@ -156,10 +184,11 @@ setTimeout(async () => {
     const completeJson = JSON.parse(completeSub.body);
     assert(completeJson.status === 'success' && completeJson.data.name === 'Zahra Putri', 'Student assessment successfully stored permanently');
 
-    // 6. Check student HTML includes "Wajib Dijawab" badge and validation alert
-    console.log('\n6. Checking Student Portal UI contains Required Badge & Alert banner...');
+    // 7. Check student HTML includes "Wajib Dijawab" and "Wajib Diisi" on essay
+    console.log('\n7. Checking Student Portal UI contains Required Badges & Alert banner...');
     const rootRes = await makeRequest('/');
     assert(rootRes.body.includes('Wajib Dijawab'), 'UI contains "* Wajib Dijawab" badge');
+    assert(rootRes.body.includes('Wajib Diisi'), 'UI contains "* Wajib Diisi" badge on essay section');
     assert(rootRes.body.includes('question-validation-alert'), 'UI contains question-validation-alert container');
 
     console.log(`\n========================================`);
