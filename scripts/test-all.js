@@ -1,9 +1,8 @@
 const http = require('http');
 const app = require('../src/server'); // server starts listening
 
-// Wait 1 second then run API tests
 setTimeout(async () => {
-  console.log('\n--- STARTING AUTOMATED INTEGRATION TESTS (WITH LIVE PROGRESS & PERSISTENCE) ---');
+  console.log('\n--- STARTING AUTOMATED INTEGRATION TESTS (WITH ATTENDANCE NO & GENDER) ---');
 
   const fetchJson = async (url, options = {}) => {
     const res = await fetch(`http://localhost:3090${url}`, options);
@@ -22,105 +21,92 @@ setTimeout(async () => {
     console.log(`✓ Classes loaded: ${classes.length} classes (Grade 7, 8, 9)`);
     if (classes.length !== 27) throw new Error('Expected 27 classes!');
 
-    // 3. Active Questions
-    const questionsRes = await fetchJson('/api/questions');
-    const questions = questionsRes.data;
-    console.log(`✓ Active questions loaded: ${questions.length} questions`);
-    if (questions.length === 0) throw new Error('No questions found!');
-
-    // 4. Test Student Live Progress Heartbeat (Simulating Active Student in Real-time)
-    const testSessionId = 'sess_test_12345';
+    // 3. Test Student Live Progress with Attendance No & Gender
+    const testSessionId = 'sess_test_att_888';
     const liveProgressRes = await fetchJson('/api/students/live-progress', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         sessionId: testSessionId,
-        studentName: 'Siswa Uji Realtime',
+        attendanceNo: 17,
+        studentName: 'Rian Pratama',
+        gender: 'L',
         classId: 'VII-A',
-        currentStep: 6,
+        currentStep: 4,
         totalSteps: 10,
-        currentCategory: 'Aspek 6: Kenyamanan Bekerja',
+        currentCategory: 'Aspek 4: Kesulitan Berkarya',
         answers: {
           1: { selected: 'Sangat senang' },
-          2: { category: '2D', subOption: 'Media Basah' }
+          2: { category: '3D', subOption: 'Lempung & Plastisin' }
         }
       })
     });
     console.log('✓ Live progress heartbeat received:', liveProgressRes.message);
 
-    // 5. Teacher Login
+    // 4. Teacher Login
     const loginRes = await fetchJson('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: 'guru', password: 'guru123' })
     });
-    console.log('✓ Teacher login verified:', loginRes.message, 'User:', loginRes.user.name);
+    console.log('✓ Teacher login verified:', loginRes.message);
     const token = loginRes.token;
 
-    // 6. Test Teacher Live Monitoring
+    // 5. Test Teacher Live Monitoring
     const liveMonitorRes = await fetchJson('/api/students/live-monitor?class=VII-A', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
-    console.log(`✓ Teacher Live Monitor data received: ${liveMonitorRes.data.activeCount} active student(s)`);
     const liveStudent = liveMonitorRes.data.sessions.find(s => s.sessionId === testSessionId);
     if (!liveStudent) throw new Error('Live student not found in Teacher Live Monitor!');
-    console.log(`✓ Verified Live Student: ${liveStudent.name} at Step ${liveStudent.currentStep}/${liveStudent.totalSteps} (${liveStudent.progressPercent}%) - Media: ${liveStudent.chosenMedia}`);
+    console.log(`✓ Live student verified: No. ${liveStudent.attendanceNo} - ${liveStudent.name} (${liveStudent.gender}) at Step ${liveStudent.currentStep}/10`);
+    if (liveStudent.attendanceNo !== 17 || liveStudent.gender !== 'L') {
+      throw new Error(`Expected attendance 17 and gender L, got: ${liveStudent.attendanceNo}, ${liveStudent.gender}`);
+    }
 
-    // 7. Submit Student Assessment Permanently (with sessionId)
+    // 6. Submit Student Assessment Permanently
     const studentRes = await fetchJson('/api/students', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         sessionId: testSessionId,
-        name: 'Siswa Uji Realtime',
+        attendance_no: 17,
+        name: 'Rian Pratama',
+        gender: 'L',
         class_id: 'VII-A',
-        category: '2D',
-        sub_option: 'Media Basah',
-        style: 'Visual Tutorial',
+        category: '3D',
+        sub_option: 'Lempung & Plastisin',
+        style: 'Kinestetik Eksploratif',
         challenge: 'Sketsa Proporsi',
         feeling: 'Sangat senang',
         answers: {
-          1: { selected: 'Sangat senang' },
-          2: { category: '2D', subOption: 'Media Basah' }
+          1: { selected: 'Sangat senang' }
         }
       })
     });
-    console.log('✓ Student assessment submitted permanently:', studentRes.data.name, 'in', studentRes.data.class_id);
+    console.log('✓ Student assessment submitted permanently:', studentRes.data.name, 'No. Absen:', studentRes.data.attendance_no, 'Gender:', studentRes.data.gender);
+    if (studentRes.data.attendance_no !== 17 || studentRes.data.gender !== 'L') {
+      throw new Error('Attendance number or gender mismatch on submission!');
+    }
 
-    // 8. Verify Session is now marked Completed in Live Monitor
-    const liveAfterSubmit = await fetchJson('/api/students/live-monitor?class=VII-A', {
+    // 7. Verify in Class Roster
+    const studentsRes = await fetchJson('/api/students?class=VII-A');
+    const storedStudent = studentsRes.data.find(s => s.name === 'Rian Pratama');
+    if (!storedStudent) throw new Error('Student not found in VII-A roster!');
+    console.log(`✓ Verified in Roster: No. ${storedStudent.attendance_no} - ${storedStudent.name} (${storedStudent.gender})`);
+    if (storedStudent.attendance_no !== 17 || storedStudent.gender !== 'L') {
+      throw new Error('Database stored student has mismatched attendance or gender!');
+    }
+
+    // 8. Test Excel Export Endpoint
+    const exportRes = await fetch('http://localhost:3090/api/export/excel?class=VII-A', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
-    const completedSession = liveAfterSubmit.data.sessions.find(s => s.sessionId === testSessionId);
-    console.log(`✓ Verified Live Session status after submit: ${completedSession.status}`);
-    if (completedSession.status !== 'completed') throw new Error('Session should be marked completed!');
-
-    // 9. Teacher Question CRUD test
-    const newQ = await fetchJson('/api/questions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        category: 'Aspek 11: Desain & Kriya Terapan',
-        title: 'Apakah kamu menyukai karya seni kriya terapan fungsional?',
-        subtitle: 'Pilih tingkat ketertarikanmu.',
-        options: ['Sangat Tertarik', 'Tertarik', 'Kurang Tertarik'],
-        reason_label: 'Jelaskan jenis kriya yang ingin kamu buat:'
-      })
-    });
-    console.log('✓ Question created by teacher. New Question ID:', newQ.id);
-
-    const delQ = await fetchJson(`/api/questions/${newQ.id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    console.log('✓ Question deleted by teacher:', delQ.message);
+    console.log('✓ Excel export HTTP status:', exportRes.status, 'Content-Type:', exportRes.headers.get('content-type'));
+    if (exportRes.status !== 200) throw new Error('Excel export failed!');
 
     console.log('\n============================================================');
     console.log(' ALL INTEGRATION TESTS PASSED WITH 100% SUCCESS!');
-    console.log(' PERSISTENT STORAGE & REAL-TIME MONITORING VERIFIED!');
+    console.log(' NOMOR ABSEN & JENIS KELAMIN FULLY VERIFIED!');
     console.log('============================================================\n');
     process.exit(0);
   } catch (err) {

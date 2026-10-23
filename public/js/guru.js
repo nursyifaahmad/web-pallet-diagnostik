@@ -1,4 +1,4 @@
-// Teacher Dashboard Controller for PALLET Studio with Live Monitor
+// Teacher Dashboard Controller for PALLET Studio with Attendance No, Gender & Live Monitor
 let allClassSummaries = [];
 let currentGrade = 7;
 let currentClass = 'VII-A';
@@ -195,15 +195,12 @@ async function fetchLiveMonitorData() {
     if (res && res.status === 'success') {
       const { sessions, activeCount, completedCount } = res.data;
 
-      // Update Nav Badge
       const navBadge = document.getElementById('live-active-badge-nav');
       if (navBadge) navBadge.textContent = activeCount;
 
-      // Update Metric Cards
       document.getElementById('live-active-count').textContent = `${activeCount} Siswa`;
       document.getElementById('live-completed-count').textContent = `${completedCount} Siswa`;
 
-      // Average progress
       let avg = 0;
       if (sessions.length > 0) {
         const sum = sessions.reduce((acc, s) => acc + (s.progressPercent || 0), 0);
@@ -211,7 +208,6 @@ async function fetchLiveMonitorData() {
       }
       document.getElementById('live-avg-progress').textContent = `${avg}%`;
 
-      // Render table
       renderLiveMonitorTable(sessions);
     }
   } catch (err) {
@@ -227,7 +223,7 @@ function renderLiveMonitorTable(sessions) {
   if (sessions.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="py-8 text-center text-atelier-inkMuted italic">
+        <td colspan="8" class="py-8 text-center text-atelier-inkMuted italic">
           Belum ada siswa yang sedang membuka asesmen di kelas ${currentClass} saat ini. Bagikan tautan kelas kepada siswa.
         </td>
       </tr>
@@ -240,14 +236,16 @@ function renderLiveMonitorTable(sessions) {
     const tr = document.createElement('tr');
     tr.className = 'hover:bg-atelier-warm/40 transition';
 
-    // Format relative time (e.g. 5 detik lalu)
     const timeAgo = formatTimeAgo(s.lastActive);
+    const genderBadge = s.gender === 'L' ? '<span class="text-blue-600 font-bold">L</span>' : s.gender === 'P' ? '<span class="text-pink-600 font-bold">P</span>' : '-';
 
     tr.innerHTML = `
+      <td class="py-3 px-4 font-mono font-bold text-center text-atelier-terracotta">${s.attendanceNo || '-'}</td>
       <td class="py-3 px-4 font-semibold text-atelier-ink flex items-center gap-2">
         <span class="w-2 h-2 rounded-full ${isCompleted ? 'bg-blue-500' : 'bg-emerald-500 animate-pulse'}"></span>
         <span>${s.name}</span>
       </td>
+      <td class="py-3 px-4 font-mono text-center">${genderBadge}</td>
       <td class="py-3 px-4">
         <span class="font-mono text-[11px] font-bold text-atelier-terracotta">Soal ${s.currentStep}/${s.totalSteps}</span>
         <span class="block text-[10px] text-atelier-inkMuted">${s.currentCategory}</span>
@@ -290,7 +288,7 @@ function formatTimeAgo(dateStr) {
   return `${Math.floor(diffMin / 60)} jam lalu`;
 }
 
-// 5. Roster Table Management
+// 5. Roster Table Management (With Attendance No & Gender)
 function renderRosterTable(students) {
   const tbody = document.getElementById('roster-table-body');
   tbody.innerHTML = '';
@@ -298,7 +296,7 @@ function renderRosterTable(students) {
   if (students.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="py-8 text-center text-atelier-inkMuted italic">
+        <td colspan="7" class="py-8 text-center text-atelier-inkMuted italic">
           Belum ada data siswa di kelas ${currentClass}. Bagikan tautan kelas atau gunakan form input kilat di atas.
         </td>
       </tr>
@@ -306,12 +304,16 @@ function renderRosterTable(students) {
     return;
   }
 
-  students.forEach((s, idx) => {
+  students.forEach((s) => {
     const tr = document.createElement('tr');
     tr.className = 'hover:bg-atelier-warm/40 transition';
+
+    const genderBadge = s.gender === 'L' ? '<span class="text-blue-600 font-bold">L</span>' : s.gender === 'P' ? '<span class="text-pink-600 font-bold">P</span>' : '-';
+
     tr.innerHTML = `
-      <td class="py-3 px-4 font-mono text-atelier-inkMuted">${idx + 1}</td>
+      <td class="py-3 px-4 font-mono font-bold text-center text-atelier-terracotta">${s.attendance_no || '-'}</td>
       <td class="py-3 px-4 font-semibold text-atelier-ink">${s.name}</td>
+      <td class="py-3 px-4 font-mono text-center">${genderBadge}</td>
       <td class="py-3 px-4">
         <span class="px-2 py-0.5 rounded-md font-mono text-[11px] font-bold bg-atelier-terracottaLight text-atelier-terracotta">
           ${s.style || 'Visual Tutorial'}
@@ -336,19 +338,22 @@ function renderRosterTable(students) {
 function setupRosterHandlers() {
   document.getElementById('quick-add-student-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const attNo = document.getElementById('quick-att').value;
     const name = document.getElementById('quick-name').value.trim();
+    const gender = document.getElementById('quick-gender').value;
     const category = document.getElementById('quick-category').value;
-    const subOption = document.getElementById('quick-sub').value.trim() || 'Kering';
     const style = document.getElementById('quick-style').value;
 
-    if (!name) return;
+    if (!name || !attNo || !gender) return;
 
     try {
       const res = await API.submitStudentAssessment({
+        attendance_no: attNo,
         name,
+        gender,
         class_id: currentClass,
         category,
-        sub_option: subOption,
+        sub_option: 'Kering',
         style,
         challenge: 'Pencarian Ide Awal',
         feeling: 'Senang'
@@ -356,6 +361,8 @@ function setupRosterHandlers() {
 
       if (res && res.status === 'success') {
         document.getElementById('quick-name').value = '';
+        document.getElementById('quick-att').value = '';
+        document.getElementById('quick-gender').value = '';
         await loadCurrentClassDetail();
       }
     } catch (err) {
@@ -365,7 +372,10 @@ function setupRosterHandlers() {
 
   document.getElementById('filter-roster-search').addEventListener('input', (e) => {
     const q = e.target.value.toLowerCase();
-    const filtered = currentRoster.filter(s => s.name.toLowerCase().includes(q));
+    const filtered = currentRoster.filter(s => 
+      s.name.toLowerCase().includes(q) || 
+      (s.attendance_no && s.attendance_no.toString().includes(q))
+    );
     renderRosterTable(filtered);
   });
 }
@@ -829,7 +839,7 @@ function generateHeteroGroups() {
       <div class="space-y-1">
         ${grp.map(m => `
           <div class="flex justify-between items-center text-xs">
-            <span class="font-medium text-atelier-ink">${m.name}</span>
+            <span class="font-medium text-atelier-ink">No. ${m.attendance_no || '-'} ${m.name}</span>
             <span class="text-[10px] font-mono text-atelier-inkMuted">${m.style} · ${m.category}</span>
           </div>
         `).join('')}
@@ -846,7 +856,7 @@ function populateRubricStudentSelect(roster) {
   roster.forEach(s => {
     const opt = document.createElement('option');
     opt.value = s.id;
-    opt.textContent = `${s.name} (${s.category} - ${s.style})`;
+    opt.textContent = `No. ${s.attendance_no || '-'} · ${s.name} (${s.gender || '-'}) - ${s.category}`;
     select.appendChild(opt);
   });
   calculateRubricScore();

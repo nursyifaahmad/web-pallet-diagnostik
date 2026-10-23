@@ -1,7 +1,9 @@
-// Student Portal Quiz Controller for PALLET with Persistent Storage & Live Heartbeat
+// Student Portal Quiz Controller for PALLET with Attendance No, Gender, Persistent Storage & Live Heartbeat
 let questions = [];
 let currentStepIndex = 0;
 let studentName = '';
+let studentAttendanceNo = '';
+let studentGender = '';
 let studentClass = '';
 let sessionId = null;
 let answers = {};
@@ -62,6 +64,8 @@ function saveDraft() {
     const draftData = {
       sessionId,
       studentName,
+      studentAttendanceNo,
+      studentGender,
       studentClass,
       currentStepIndex,
       selectedMediaCategory,
@@ -102,12 +106,15 @@ function checkAndPromptDraft() {
   if (draft && draft.studentName && draft.studentClass && Object.keys(draft.answers || {}).length > 0) {
     const banner = document.getElementById('draft-resume-banner');
     document.getElementById('draft-student-name').textContent = draft.studentName;
+    document.getElementById('draft-student-att').textContent = draft.studentAttendanceNo || '-';
     document.getElementById('draft-student-class').textContent = `Kelas ${draft.studentClass}`;
     document.getElementById('draft-student-step').textContent = `Soal #${(draft.currentStepIndex || 0) + 1}`;
     banner.classList.remove('hidden');
 
     // Fill inputs ahead of time
     document.getElementById('student-name').value = draft.studentName;
+    if (draft.studentAttendanceNo) document.getElementById('student-attendance').value = draft.studentAttendanceNo;
+    if (draft.studentGender) document.getElementById('student-gender').value = draft.studentGender;
     document.getElementById('student-class').value = draft.studentClass;
   }
 }
@@ -121,7 +128,9 @@ function triggerServerLiveSync() {
     const q = questions[currentStepIndex];
     await API.sendLiveProgress({
       sessionId,
+      attendanceNo: studentAttendanceNo,
       studentName,
+      gender: studentGender,
       classId: studentClass,
       currentStep: currentStepIndex + 1,
       totalSteps: questions.length || 10,
@@ -195,6 +204,8 @@ function setupEventListeners() {
       if (!draft) return;
 
       studentName = draft.studentName;
+      studentAttendanceNo = draft.studentAttendanceNo || '';
+      studentGender = draft.studentGender || '';
       studentClass = draft.studentClass;
       currentStepIndex = draft.currentStepIndex || 0;
       selectedMediaCategory = draft.selectedMediaCategory || '2D';
@@ -216,12 +227,22 @@ function setupEventListeners() {
       clearDraft();
       document.getElementById('draft-resume-banner').classList.add('hidden');
       document.getElementById('student-name').value = '';
+      document.getElementById('student-attendance').value = '';
+      document.getElementById('student-gender').value = '';
     });
   }
 
   // Realtime autosave for identity fields
   document.getElementById('student-name').addEventListener('input', (e) => {
     studentName = e.target.value.trim();
+    saveDraft();
+  });
+  document.getElementById('student-attendance').addEventListener('input', (e) => {
+    studentAttendanceNo = e.target.value.trim();
+    saveDraft();
+  });
+  document.getElementById('student-gender').addEventListener('change', (e) => {
+    studentGender = e.target.value;
     saveDraft();
   });
   document.getElementById('student-class').addEventListener('change', (e) => {
@@ -232,14 +253,28 @@ function setupEventListeners() {
   // Start Quiz Handler
   btnStart.addEventListener('click', () => {
     const nameInput = document.getElementById('student-name');
+    const attInput = document.getElementById('student-attendance');
+    const genderInput = document.getElementById('student-gender');
     const classInput = document.getElementById('student-class');
 
     studentName = nameInput.value.trim();
+    studentAttendanceNo = attInput.value.trim();
+    studentGender = genderInput.value;
     studentClass = classInput.value;
 
     if (!studentName) {
       alert('Silakan tuliskan nama lengkapmu terlebih dahulu.');
       nameInput.focus();
+      return;
+    }
+    if (!studentAttendanceNo) {
+      alert('Silakan isi nomor absenmu.');
+      attInput.focus();
+      return;
+    }
+    if (!studentGender) {
+      alert('Silakan pilih jenis kelamin.');
+      genderInput.focus();
       return;
     }
     if (!studentClass) {
@@ -308,7 +343,6 @@ function renderCurrentQuestion() {
   const q = questions[currentStepIndex];
   if (!q) return;
 
-  // Update Progress
   const total = questions.length;
   const currentNum = currentStepIndex + 1;
   const percent = Math.round((currentNum / total) * 100);
@@ -317,17 +351,14 @@ function renderCurrentQuestion() {
   document.getElementById('progress-percent-text').textContent = `${percent}% Selesai`;
   document.getElementById('progress-fill').style.width = `${percent}%`;
 
-  // Update Headers
   document.getElementById('question-category').textContent = q.category || `Aspek ${currentNum}`;
   document.getElementById('question-title').textContent = q.title;
   document.getElementById('question-subtitle').textContent = q.subtitle || '';
   document.getElementById('reason-label').textContent = q.reason_label || 'Tuliskan alasan atau keterangan tambahan:';
 
-  // Restore previous reason if any
   const existingAns = answers[q.id] || {};
   document.getElementById('question-reason').value = existingAns.reason || '';
 
-  // Render Options
   const container = document.getElementById('question-options-container');
   container.innerHTML = '';
 
@@ -337,7 +368,6 @@ function renderCurrentQuestion() {
     renderStandardChoices(container, q.options || [], existingAns);
   }
 
-  // Update Next Button Label
   const nextLabel = document.getElementById('btn-next-label');
   if (currentStepIndex === questions.length - 1) {
     nextLabel.textContent = 'Kirim Jawaban Asesmen';
@@ -356,7 +386,6 @@ function renderMediaSelector(container, existingAns) {
   const wrapper = document.createElement('div');
   wrapper.className = 'space-y-4';
 
-  // Category Switcher (2D vs 3D)
   const catGrid = document.createElement('div');
   catGrid.className = 'grid grid-cols-2 gap-3';
 
@@ -382,7 +411,6 @@ function renderMediaSelector(container, existingAns) {
   });
   wrapper.appendChild(catGrid);
 
-  // Sub-options list
   const subTitle = document.createElement('p');
   subTitle.className = 'text-xs font-mono font-semibold text-atelier-inkMuted uppercase tracking-wider pt-2';
   subTitle.textContent = `Pilih Spesifikasi Media ${selectedMediaCategory}:`;
@@ -503,7 +531,6 @@ async function submitQuiz() {
   btnNext.disabled = true;
   btnNext.innerHTML = '<span>Menyimpan Hasil Asesmen...</span>';
 
-  // Synthesize Key Profiling Dimensions
   const q1Ans = (answers[questions[0]?.id]?.selected) || 'Sangat senang';
   const q2Ans = answers[questions[1]?.id] || {};
   const category = q2Ans.category || '2D';
@@ -524,7 +551,9 @@ async function submitQuiz() {
 
   const payload = {
     sessionId,
+    attendance_no: studentAttendanceNo,
     name: studentName,
+    gender: studentGender,
     class_id: studentClass,
     category: category,
     sub_option: subOption,
@@ -537,7 +566,6 @@ async function submitQuiz() {
   try {
     const res = await API.submitStudentAssessment(payload);
     if (res && res.status === 'success') {
-      // Clear draft since it is successfully submitted to permanent storage
       clearDraft();
       renderProfileCard(payload);
     } else {
@@ -562,6 +590,9 @@ function renderProfileCard(data) {
   document.getElementById('card-avatar').textContent = initials;
   document.getElementById('card-name').textContent = data.name;
   document.getElementById('card-class').textContent = `Kelas ${data.class_id} · Rombel Seni`;
+
+  const genderLabel = (data.gender === 'L' || data.gender === 'Laki-laki') ? 'Laki-laki' : 'Perempuan';
+  document.getElementById('card-meta').textContent = `No. Absen: ${data.attendance_no || '-'} · ${genderLabel} · Fase D (SMP)`;
 
   document.getElementById('card-style').textContent = data.style;
   document.getElementById('card-media').textContent = `${data.category} (${data.sub_option})`;

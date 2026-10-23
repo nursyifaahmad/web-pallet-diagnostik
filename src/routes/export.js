@@ -12,22 +12,24 @@ router.get('/excel', requireAuth, (req, res) => {
     let students;
     if (classId) {
       students = db.prepare(`
-        SELECT name, class_id, category, sub_option, style, challenge, feeling, created_at
+        SELECT attendance_no, name, gender, class_id, category, sub_option, style, challenge, feeling, created_at
         FROM students
         WHERE class_id = ?
-        ORDER BY name ASC
+        ORDER BY (CASE WHEN attendance_no IS NULL THEN 999 ELSE attendance_no END) ASC, name ASC
       `).all(classId);
     } else {
       students = db.prepare(`
-        SELECT name, class_id, category, sub_option, style, challenge, feeling, created_at
+        SELECT attendance_no, name, gender, class_id, category, sub_option, style, challenge, feeling, created_at
         FROM students
-        ORDER BY class_id ASC, name ASC
+        ORDER BY class_id ASC, (CASE WHEN attendance_no IS NULL THEN 999 ELSE attendance_no END) ASC, name ASC
       `).all();
     }
 
     const rows = students.map((s, idx) => ({
       'No': idx + 1,
+      'No. Absen': s.attendance_no || '-',
       'Nama Siswa': s.name,
+      'L/P': s.gender || '-',
       'Kelas': s.class_id,
       'Kategori Media': s.category,
       'Sub-Pilihan Media': s.sub_option,

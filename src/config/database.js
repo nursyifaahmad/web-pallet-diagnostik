@@ -81,7 +81,9 @@ function initSchema() {
     -- Tabel Siswa & Data Asesmen Permanen
     CREATE TABLE IF NOT EXISTS students (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      attendance_no INTEGER,
       name TEXT NOT NULL,
+      gender TEXT,
       class_id TEXT NOT NULL,
       category TEXT NOT NULL,
       sub_option TEXT,
@@ -96,7 +98,9 @@ function initSchema() {
     -- Tabel Live Sesi Pemantauan Real-Time Siswa
     CREATE TABLE IF NOT EXISTS student_live_sessions (
       session_id TEXT PRIMARY KEY,
+      attendance_no INTEGER,
       student_name TEXT NOT NULL,
+      gender TEXT,
       class_id TEXT NOT NULL,
       current_step INTEGER DEFAULT 1,
       total_steps INTEGER DEFAULT 10,
@@ -130,6 +134,32 @@ function initSchema() {
       FOREIGN KEY(student_id) REFERENCES students(id)
     );
   `);
+
+  // Migration: Add columns if table already existed without them
+  try {
+    const studentCols = db.prepare('PRAGMA table_info(students)').all().map(c => c.name);
+    if (!studentCols.includes('attendance_no')) {
+      db.exec('ALTER TABLE students ADD COLUMN attendance_no INTEGER;');
+      console.log('[DB Migration] Added column attendance_no to students');
+    }
+    if (!studentCols.includes('gender')) {
+      db.exec('ALTER TABLE students ADD COLUMN gender TEXT;');
+      console.log('[DB Migration] Added column gender to students');
+    }
+
+    const sessionCols = db.prepare('PRAGMA table_info(student_live_sessions)').all().map(c => c.name);
+    if (!sessionCols.includes('attendance_no')) {
+      db.exec('ALTER TABLE student_live_sessions ADD COLUMN attendance_no INTEGER;');
+      console.log('[DB Migration] Added column attendance_no to student_live_sessions');
+    }
+    if (!sessionCols.includes('gender')) {
+      db.exec('ALTER TABLE student_live_sessions ADD COLUMN gender TEXT;');
+      console.log('[DB Migration] Added column gender to student_live_sessions');
+    }
+  } catch (err) {
+    console.warn('[DB Migration Warning]', err.message);
+  }
+
   console.log('[DB] Database schema verified & ready.');
 }
 

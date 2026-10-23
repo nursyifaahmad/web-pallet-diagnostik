@@ -81,7 +81,7 @@
         <div class="space-y-1 flex-1">
           <h3 class="font-serif font-bold text-sm text-atelier-ink">Draf Pengerjaan Sebelumnya Ditemukan!</h3>
           <p class="text-xs text-atelier-inkMuted leading-relaxed">
-            Hai <strong id="draft-student-name" class="text-atelier-ink">Siswa</strong>, sistem mendeteksi pengerjaan asesmen untuk <strong id="draft-student-class" class="text-atelier-ink">Kelas VII-A</strong> yang terhenti di <strong id="draft-student-step" class="text-atelier-terracotta">Soal #1</strong>. Jawabanmu aman dan tidak hilang.
+            Hai <strong id="draft-student-name" class="text-atelier-ink">Siswa</strong> (No. Absen: <span id="draft-student-att" class="font-mono font-bold">-</span>), sistem mendeteksi pengerjaan asesmen untuk <strong id="draft-student-class" class="text-atelier-ink">Kelas VII-A</strong> yang terhenti di <strong id="draft-student-step" class="text-atelier-terracotta">Soal #1</strong>. Jawabanmu aman dan tidak hilang.
           </p>
         </div>
       </div>
@@ -122,6 +122,7 @@
       </div>
 
       <div class="space-y-4 pt-4 border-t border-atelier-border">
+        <!-- Nama Lengkap -->
         <div>
           <label for="student-name" class="block text-xs font-mono font-semibold text-atelier-ink uppercase tracking-wider mb-2">
             Nama Lengkap Siswa <span class="text-red-500">*</span>
@@ -130,6 +131,29 @@
             class="w-full px-4 py-3 rounded-xl border border-atelier-border focus:border-atelier-terracotta focus:ring-2 focus:ring-atelier-terracottaLight outline-none transition text-sm">
         </div>
 
+        <!-- Grid: Nomor Absen & Jenis Kelamin -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="student-attendance" class="block text-xs font-mono font-semibold text-atelier-ink uppercase tracking-wider mb-2">
+              Nomor Absen <span class="text-red-500">*</span>
+            </label>
+            <input type="number" id="student-attendance" min="1" max="60" placeholder="Contoh: 15" required
+              class="w-full px-4 py-3 rounded-xl border border-atelier-border focus:border-atelier-terracotta focus:ring-2 focus:ring-atelier-terracottaLight outline-none transition text-sm">
+          </div>
+
+          <div>
+            <label for="student-gender" class="block text-xs font-mono font-semibold text-atelier-ink uppercase tracking-wider mb-2">
+              Jenis Kelamin <span class="text-red-500">*</span>
+            </label>
+            <select id="student-gender" required class="w-full px-4 py-3 rounded-xl border border-atelier-border focus:border-atelier-terracotta focus:ring-2 focus:ring-atelier-terracottaLight outline-none transition text-sm bg-white">
+              <option value="" disabled selected>Pilih jenis kelamin...</option>
+              <option value="L">Laki-laki (L)</option>
+              <option value="P">Perempuan (P)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Kelas Rombel -->
         <div>
           <label for="student-class" class="block text-xs font-mono font-semibold text-atelier-ink uppercase tracking-wider mb-2">
             Pilih Kelas Rombel <span class="text-red-500">*</span>
@@ -219,7 +243,7 @@
                 <span id="card-class" class="text-xs font-mono text-atelier-inkMuted">Kelas VII-A</span>
               </div>
               <h2 id="card-name" class="font-serif font-bold text-2xl text-atelier-ink mt-1">Nama Siswa</h2>
-              <p class="text-xs text-atelier-inkMuted">Profil Pembelajaran Seni Rupa · Fase D (SMP)</p>
+              <p id="card-meta" class="text-xs font-mono text-atelier-inkMuted">No. Absen: 15 · Laki-laki · Fase D (SMP)</p>
             </div>
           </div>
         </div>

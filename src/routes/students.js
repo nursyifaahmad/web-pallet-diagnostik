@@ -11,16 +11,16 @@ router.get('/', (req, res) => {
     let rows;
     if (classId) {
       rows = db.prepare(`
-        SELECT id, name, class_id, category, sub_option, style, challenge, feeling, answers_json, created_at
+        SELECT id, attendance_no, name, gender, class_id, category, sub_option, style, challenge, feeling, answers_json, created_at
         FROM students
         WHERE class_id = ?
-        ORDER BY name ASC
+        ORDER BY (CASE WHEN attendance_no IS NULL THEN 999 ELSE attendance_no END) ASC, name ASC
       `).all(classId);
     } else {
       rows = db.prepare(`
-        SELECT id, name, class_id, category, sub_option, style, challenge, feeling, answers_json, created_at
+        SELECT id, attendance_no, name, gender, class_id, category, sub_option, style, challenge, feeling, answers_json, created_at
         FROM students
-        ORDER BY class_id ASC, name ASC
+        ORDER BY class_id ASC, (CASE WHEN attendance_no IS NULL THEN 999 ELSE attendance_no END) ASC, name ASC
       `).all();
     }
 
@@ -44,14 +44,14 @@ router.get('/live-monitor', requireAuth, (req, res) => {
     let rows;
     if (classId) {
       rows = db.prepare(`
-        SELECT session_id, student_name, class_id, current_step, total_steps, current_category, status, last_active, answers_json
+        SELECT session_id, attendance_no, student_name, gender, class_id, current_step, total_steps, current_category, status, last_active, answers_json
         FROM student_live_sessions
         WHERE class_id = ?
         ORDER BY last_active DESC
       `).all(classId);
     } else {
       rows = db.prepare(`
-        SELECT session_id, student_name, class_id, current_step, total_steps, current_category, status, last_active, answers_json
+        SELECT session_id, attendance_no, student_name, gender, class_id, current_step, total_steps, current_category, status, last_active, answers_json
         FROM student_live_sessions
         ORDER BY last_active DESC
       `).all();
@@ -61,13 +61,14 @@ router.get('/live-monitor', requireAuth, (req, res) => {
       const answers = JSON.parse(r.answers_json || '{}');
       const progressPercent = Math.min(100, Math.round((r.current_step / (r.total_steps || 10)) * 100));
 
-      // Extract temporary media preference if chosen
       const mediaAns = Object.values(answers).find(a => a && a.category);
       const chosenMedia = mediaAns ? `${mediaAns.category} (${mediaAns.subOption || 'Kering'})` : '-';
 
       return {
         sessionId: r.session_id,
+        attendanceNo: r.attendance_no || '-',
         name: r.student_name,
+        gender: r.gender || '-',
         classId: r.class_id,
         currentStep: r.current_step,
         totalSteps: r.total_steps || 10,
@@ -99,21 +100,24 @@ router.get('/live-monitor', requireAuth, (req, res) => {
 
 // POST /api/students/live-progress - Menerima heartbeat progres pengerjaan siswa
 router.post('/live-progress', (req, res) => {
-  const { sessionId, studentName, classId, currentStep, totalSteps, currentCategory, answers } = req.body;
+  const { sessionId, attendance_no, attendanceNo, studentName, gender, classId, currentStep, totalSteps, currentCategory, answers } = req.body;
 
   if (!sessionId || !studentName || !classId) {
     return res.status(400).json({ status: 'error', message: 'Data sesi tidak lengkap.' });
   }
 
+  const attNo = attendance_no !== undefined ? attendance_no : attendanceNo;
+
   try {
     const answersJson = JSON.stringify(answers || {});
     
-    // SQLite UPSERT
     db.prepare(`
-      INSERT INTO student_live_sessions (session_id, student_name, class_id, current_step, total_steps, current_category, status, last_active, answers_json)
-      VALUES (?, ?, ?, ?, ?, ?, 'in_progress', CURRENT_TIMESTAMP, ?)
+      INSERT INTO student_live_sessions (session_id, attendance_no, student_name, gender, class_id, current_step, total_steps, current_category, status, last_active, answers_json)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'in_progress', CURRENT_TIMESTAMP, ?)
       ON CONFLICT(session_id) DO UPDATE SET
+        attendance_no = COALESCE(excluded.attendance_no, student_live_sessions.attendance_no),
         student_name = excluded.student_name,
+        gender = COALESCE(excluded.gender, student_live_sessions.gender),
         class_id = excluded.class_id,
         current_step = excluded.current_step,
         total_steps = excluded.total_steps,
@@ -121,7 +125,7 @@ router.post('/live-progress', (req, res) => {
         status = 'in_progress',
         last_active = CURRENT_TIMESTAMP,
         answers_json = excluded.answers_json
-    `).run(sessionId, studentName.trim(), classId, currentStep || 1, totalSteps || 10, currentCategory || '', answersJson);
+    `).run(sessionId, attNo ? parseInt(attNo) : null, studentName.trim(), gender || null, classId, currentStep || 1, totalSteps || 10, currentCategory || '', answersJson);
 
     res.json({ status: 'success', message: 'Live progress tersinkronisasi.' });
   } catch (err) {
@@ -149,29 +153,33 @@ router.get('/:id', (req, res) => {
 
 // POST /api/students - Simpan hasil asesmen permanen siswa atau quick-add oleh guru
 router.post('/', (req, res) => {
-  const { sessionId, name, class_id, gradeClass, category, sub_option, subOption, style, challenge, feeling, answers } = req.body;
+  const { sessionId, attendance_no, attendanceNo, name, gender, class_id, gradeClass, category, sub_option, subOption, style, challenge, feeling, answers } = req.body;
 
   const targetClass = class_id || gradeClass;
   const targetSubOption = sub_option || subOption;
+  const targetAttendanceNo = attendance_no !== undefined ? attendance_no : attendanceNo;
 
   if (!name || !targetClass) {
     return res.status(400).json({ status: 'error', message: 'Nama siswa dan kelas wajib diisi.' });
   }
 
   try {
-    // Validate class exists
     const classRow = db.prepare('SELECT id FROM classes WHERE id = ?').get(targetClass);
     if (!classRow) {
       return res.status(400).json({ status: 'error', message: `Kelas ${targetClass} tidak valid.` });
     }
 
     const answersJson = JSON.stringify(answers || {});
+    const parsedAttNo = targetAttendanceNo ? parseInt(targetAttendanceNo) : null;
+    const formattedGender = (gender === 'L' || gender === 'Laki-laki') ? 'L' : (gender === 'P' || gender === 'Perempuan') ? 'P' : (gender || null);
 
     const result = db.prepare(`
-      INSERT INTO students (name, class_id, category, sub_option, style, challenge, feeling, answers_json)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO students (attendance_no, name, gender, class_id, category, sub_option, style, challenge, feeling, answers_json)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
+      parsedAttNo,
       name.trim(),
+      formattedGender,
       targetClass,
       category || '2D',
       targetSubOption || 'Kering',
@@ -181,7 +189,6 @@ router.post('/', (req, res) => {
       answersJson
     );
 
-    // Update live session status to completed if sessionId provided
     if (sessionId) {
       db.prepare(`
         UPDATE student_live_sessions
@@ -195,7 +202,9 @@ router.post('/', (req, res) => {
       message: 'Data siswa dan hasil asesmen berhasil disimpan permanen.',
       data: {
         id: result.lastInsertRowid,
+        attendance_no: parsedAttNo,
         name: name.trim(),
+        gender: formattedGender,
         class_id: targetClass,
         category: category || '2D',
         sub_option: targetSubOption || 'Kering',
@@ -213,7 +222,7 @@ router.post('/', (req, res) => {
 // PUT /api/students/:id - Update data siswa (khusus guru)
 router.put('/:id', requireAuth, (req, res) => {
   const { id } = req.params;
-  const { name, class_id, category, sub_option, style, challenge, feeling } = req.body;
+  const { attendance_no, name, gender, class_id, category, sub_option, style, challenge, feeling } = req.body;
 
   try {
     const existing = db.prepare('SELECT id FROM students WHERE id = ?').get(id);
@@ -223,7 +232,9 @@ router.put('/:id', requireAuth, (req, res) => {
 
     db.prepare(`
       UPDATE students
-      SET name = COALESCE(?, name),
+      SET attendance_no = COALESCE(?, attendance_no),
+          name = COALESCE(?, name),
+          gender = COALESCE(?, gender),
           class_id = COALESCE(?, class_id),
           category = COALESCE(?, category),
           sub_option = COALESCE(?, sub_option),
@@ -231,7 +242,7 @@ router.put('/:id', requireAuth, (req, res) => {
           challenge = COALESCE(?, challenge),
           feeling = COALESCE(?, feeling)
       WHERE id = ?
-    `).run(name, class_id, category, sub_option, style, challenge, feeling, id);
+    `).run(attendance_no ? parseInt(attendance_no) : null, name, gender, class_id, category, sub_option, style, challenge, feeling, id);
 
     res.json({ status: 'success', message: 'Data siswa berhasil diperbarui.' });
   } catch (err) {
