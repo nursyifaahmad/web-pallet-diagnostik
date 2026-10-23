@@ -26,7 +26,8 @@ const MEDIA_SUB_OPTIONS = {
 let selectedMediaCategory = null;
 let selectedMediaSubOption = null;
 
-// Debounce timer for server live progress sync
+// Submission & Debounce timer state
+let isQuizSubmitted = false;
 let liveSyncTimeout = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -60,6 +61,7 @@ function getDraft() {
 }
 
 function saveDraft() {
+  if (isQuizSubmitted) return;
   try {
     const draftData = {
       sessionId,
@@ -121,10 +123,11 @@ function checkAndPromptDraft() {
 
 // Trigger Debounced Sync to Server (Live Monitor)
 function triggerServerLiveSync() {
-  if (!studentName || !studentClass) return;
+  if (isQuizSubmitted || !studentName || !studentClass) return;
 
   clearTimeout(liveSyncTimeout);
   liveSyncTimeout = setTimeout(async () => {
+    if (isQuizSubmitted) return;
     const q = questions[currentStepIndex];
     await API.sendLiveProgress({
       sessionId,
@@ -683,6 +686,11 @@ async function submitQuiz() {
     feeling: q1Ans,
     answers: answers
   };
+
+  // Lock submission state to prevent any late heartbeats from reverting status
+  isQuizSubmitted = true;
+  clearTimeout(liveSyncTimeout);
+  liveSyncTimeout = null;
 
   try {
     const res = await API.submitStudentAssessment(payload);

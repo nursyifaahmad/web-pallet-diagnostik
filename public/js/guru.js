@@ -1319,13 +1319,14 @@ function renderLiveMonitorTable(sessions) {
         </div>
         <span class="block text-[10px] font-mono text-atelier-inkMuted ml-3">${lastClock} WIB</span>
       </td>
-      <td class="py-3 px-3 text-center">
-        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+      <td class="py-3 px-3 text-center whitespace-nowrap">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold whitespace-nowrap shadow-xs ${
           isCompleted 
-            ? 'bg-blue-100 text-blue-800 border border-blue-200' 
-            : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+            ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+            : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
         }">
-          ${isCompleted ? 'Selesai ✓' : 'Sedang Menjawab'}
+          <span class="w-1.5 h-1.5 rounded-full ${isCompleted ? 'bg-blue-500' : 'bg-emerald-500 animate-pulse'}"></span>
+          <span>${isCompleted ? 'Selesai ✓' : 'Sedang Menjawab'}</span>
         </span>
       </td>
     `;

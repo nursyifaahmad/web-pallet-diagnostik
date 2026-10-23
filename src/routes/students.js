@@ -44,22 +44,69 @@ router.get('/live-monitor', requireAuth, (req, res) => {
     let rows;
     if (classId) {
       rows = db.prepare(`
-        SELECT session_id, attendance_no, student_name, gender, class_id, current_step, total_steps, current_category, status, last_active, created_at, updated_at, answers_json
-        FROM student_live_sessions
-        WHERE class_id = ?
-        ORDER BY COALESCE(updated_at, last_active) DESC
+        SELECT 
+          ls.session_id, 
+          ls.attendance_no, 
+          ls.student_name, 
+          ls.gender, 
+          ls.class_id, 
+          ls.current_step, 
+          ls.total_steps, 
+          ls.current_category, 
+          CASE 
+            WHEN s.id IS NOT NULL OR ls.status = 'completed' THEN 'completed' 
+            ELSE ls.status 
+          END as status, 
+          ls.last_active, 
+          ls.created_at, 
+          ls.updated_at, 
+          ls.answers_json
+        FROM student_live_sessions ls
+        LEFT JOIN students s ON (
+          s.class_id = ls.class_id AND (
+            (ls.attendance_no IS NOT NULL AND s.attendance_no = ls.attendance_no) OR 
+            (LOWER(TRIM(s.name)) = LOWER(TRIM(ls.student_name)))
+          )
+        )
+        WHERE ls.class_id = ?
+        ORDER BY COALESCE(ls.updated_at, ls.last_active) DESC
       `).all(classId);
     } else {
       rows = db.prepare(`
-        SELECT session_id, attendance_no, student_name, gender, class_id, current_step, total_steps, current_category, status, last_active, created_at, updated_at, answers_json
-        FROM student_live_sessions
-        ORDER BY COALESCE(updated_at, last_active) DESC
+        SELECT 
+          ls.session_id, 
+          ls.attendance_no, 
+          ls.student_name, 
+          ls.gender, 
+          ls.class_id, 
+          ls.current_step, 
+          ls.total_steps, 
+          ls.current_category, 
+          CASE 
+            WHEN s.id IS NOT NULL OR ls.status = 'completed' THEN 'completed' 
+            ELSE ls.status 
+          END as status, 
+          ls.last_active, 
+          ls.created_at, 
+          ls.updated_at, 
+          ls.answers_json
+        FROM student_live_sessions ls
+        LEFT JOIN students s ON (
+          s.class_id = ls.class_id AND (
+            (ls.attendance_no IS NOT NULL AND s.attendance_no = ls.attendance_no) OR 
+            (LOWER(TRIM(s.name)) = LOWER(TRIM(ls.student_name)))
+          )
+        )
+        ORDER BY COALESCE(ls.updated_at, ls.last_active) DESC
       `).all();
     }
 
     const sessions = rows.map(r => {
       const answers = JSON.parse(r.answers_json || '{}');
-      const progressPercent = Math.min(100, Math.round((r.current_step / (r.total_steps || 10)) * 100));
+      const isCompleted = r.status === 'completed';
+      const progressPercent = isCompleted ? 100 : Math.min(100, Math.round((r.current_step / (r.total_steps || 10)) * 100));
+      const currentStep = isCompleted ? (r.total_steps || 10) : r.current_step;
+      const currentCategory = isCompleted ? 'Asesmen Selesai (Diserahkan)' : (r.current_category || 'Memulai Asesmen');
 
       const mediaAns = Object.values(answers).find(a => a && a.category);
       const chosenMedia = mediaAns ? `${mediaAns.category} (${mediaAns.subOption || 'Kering'})` : '-';
@@ -73,10 +120,10 @@ router.get('/live-monitor', requireAuth, (req, res) => {
         name: r.student_name,
         gender: r.gender || '-',
         classId: r.class_id,
-        currentStep: r.current_step,
+        currentStep,
         totalSteps: r.total_steps || 10,
         progressPercent,
-        currentCategory: r.current_category || 'Memulai Asesmen',
+        currentCategory,
         status: r.status,
         lastActive: lastActiveTs,
         createdAt: createdAtTs,
@@ -128,7 +175,7 @@ router.post('/live-progress', (req, res) => {
         current_step = excluded.current_step,
         total_steps = excluded.total_steps,
         current_category = excluded.current_category,
-        status = 'in_progress',
+        status = CASE WHEN student_live_sessions.status = 'completed' THEN 'completed' ELSE 'in_progress' END,
         last_active = excluded.last_active,
         updated_at = excluded.updated_at,
         answers_json = excluded.answers_json
@@ -247,11 +294,25 @@ router.post('/', (req, res) => {
     );
 
     if (sessionId) {
-      db.prepare(`
+      const updateRes = db.prepare(`
         UPDATE student_live_sessions
-        SET status = 'completed', last_active = ?, updated_at = ?
+        SET status = 'completed', current_step = total_steps, current_category = 'Asesmen Selesai (Diserahkan)', last_active = ?, updated_at = ?
         WHERE session_id = ?
       `).run(nowIso, nowIso, sessionId);
+
+      if (updateRes.changes === 0 && targetClass && name) {
+        db.prepare(`
+          UPDATE student_live_sessions
+          SET status = 'completed', current_step = total_steps, current_category = 'Asesmen Selesai (Diserahkan)', last_active = ?, updated_at = ?
+          WHERE class_id = ? AND LOWER(TRIM(student_name)) = LOWER(TRIM(?))
+        `).run(nowIso, nowIso, targetClass, name.trim());
+      }
+    } else if (targetClass && name) {
+      db.prepare(`
+        UPDATE student_live_sessions
+        SET status = 'completed', current_step = total_steps, current_category = 'Asesmen Selesai (Diserahkan)', last_active = ?, updated_at = ?
+        WHERE class_id = ? AND LOWER(TRIM(student_name)) = LOWER(TRIM(?))
+      `).run(nowIso, nowIso, targetClass, name.trim());
     }
 
     res.json({
