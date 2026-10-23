@@ -38,7 +38,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="/css/style.css?v=2.7">
+  <link rel="stylesheet" href="/css/style.css?v=2.8">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
 </head>
 <body class="bg-atelier-bg text-atelier-ink min-h-screen flex flex-col paper-texture">
@@ -1324,27 +1324,82 @@
       </div>
 
       <!-- ======================================================== -->
-      <!-- VIEW: TAHAP 9 - STUDENT TRACKING (LIVE MONITOR & REKAP) -->
+      <!-- VIEW: TAHAP 9 - PORTOFOLIO & LOG PERKEMBANGAN            -->
+      <!-- 100% PERSIS TANGKAPAN LAYAR GOOGLE SITES PALLET          -->
       <!-- ======================================================== -->
       <div id="section-m9-tracking" class="tab-content-section hidden space-y-6">
-        <div class="atelier-card p-6 space-y-6">
-          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-atelier-border pb-4">
+        
+        <!-- CARD 1: REKAM JEJAK KARYA SISWA SEPANJANG SEMESTER (GOOGLE SITES 100% PERSIS) -->
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-6 md:p-8 shadow-xs space-y-6">
+          <!-- Top Tag Pill -->
+          <div>
+            <span class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-mono font-semibold bg-[#FDF2F8] text-[#DB2777] border border-[#FBCFE8]">
+              TAHAP 9: PORTOFOLIO &amp; LOG PERKEMBANGAN
+            </span>
+          </div>
+
+          <!-- Section Title -->
+          <div>
+            <h2 class="font-serif font-bold text-2xl md:text-3xl text-slate-900 tracking-tight">
+              Rekam Jejak Karya Siswa Sepanjang Semester
+            </h2>
+          </div>
+
+          <!-- 3-Card Portfolio Showcase Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-1" id="portfolio-cards-container">
+            <!-- Card 1: Karya 2D Drawing -->
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4 hover:border-purple-300 transition">
+              <div class="h-40 rounded-xl bg-[#F3EFFE] flex items-center justify-center">
+                <span class="font-mono text-xs font-bold text-[#6366F1] tracking-wider">[ KARYA 2D DRAWING ]</span>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-900 text-sm sm:text-base">Eksplorasi Sketsa Karakter</h4>
+                <p class="text-xs text-slate-400 mt-1">Nilai: 88 · Semester Ganjil</p>
+              </div>
+            </div>
+
+            <!-- Card 2: Karya 3D Kriya -->
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4 hover:border-pink-300 transition">
+              <div class="h-40 rounded-xl bg-[#FDF2F8] flex items-center justify-center">
+                <span class="font-mono text-xs font-bold text-[#EC4899] tracking-wider">[ KARYA 3D KRIYA ]</span>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-900 text-sm sm:text-base">Miniatur Kerajinan Clay Fauna</h4>
+                <p class="text-xs text-slate-400 mt-1">Nilai: 85 · Semester Ganjil</p>
+              </div>
+            </div>
+
+            <!-- Card 3: Unggah Dokumen Karya -->
+            <div onclick="triggerPortfolioUpload()" class="bg-[#FAFAFA] border border-slate-200/90 hover:border-purple-300 hover:bg-purple-50/20 rounded-2xl p-6 min-h-[200px] flex flex-col items-center justify-center text-center space-y-2.5 transition cursor-pointer shadow-2xs group">
+              <input type="file" id="portfolio-file-input" class="hidden" accept="image/png,image/jpeg,application/pdf" onchange="handlePortfolioUpload(event)">
+              <div class="w-12 h-12 rounded-full bg-[#EDE9FE] group-hover:bg-[#DDD6FE] text-[#6366F1] text-2xl font-bold flex items-center justify-center transition shadow-2xs">
+                +
+              </div>
+              <h4 class="text-sm font-bold text-[#6366F1] group-hover:underline">Unggah Dokumen Karya</h4>
+              <p class="text-xs text-slate-400 font-mono">JPG, PNG, atau PDF</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 2: LIVE MONITOR PENGERJAAN ASESMEN SISWA -->
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-6 md:p-8 shadow-xs space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div class="space-y-1">
               <div class="flex items-center gap-2">
                 <span class="relative flex h-2.5 w-2.5">
                   <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                 </span>
-                <h3 class="font-serif font-bold text-xl text-atelier-ink">Live Monitor Pengerjaan Asesmen Siswa</h3>
+                <h3 class="font-serif font-bold text-xl text-slate-900">Live Monitor Pengerjaan Asesmen Siswa</h3>
               </div>
-              <p class="text-xs text-atelier-inkMuted">Pantau langsung siswa kelas <span id="live-class-label" class="font-mono font-bold text-atelier-terracotta">VII-A</span> yang sedang aktif menjawab kuesioner saat jam pelajaran.</p>
+              <p class="text-xs text-slate-500">Pantau langsung siswa kelas <span id="live-class-label" class="font-mono font-bold text-[#6366F1]">VII-A</span> yang sedang aktif menjawab kuesioner saat jam pelajaran.</p>
             </div>
             <div class="flex items-center gap-3">
-              <span class="text-[11px] font-mono text-atelier-inkMuted flex items-center gap-1.5">
+              <span class="text-[11px] font-mono text-slate-500 flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 Sinkronisasi aktif (3.5 detik)
               </span>
-              <button onclick="fetchLiveMonitorData()" class="px-3 py-1.5 border border-atelier-border hover:bg-atelier-warm rounded-lg text-xs font-mono font-medium transition cursor-pointer">
+              <button onclick="fetchLiveMonitorData()" class="px-3 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-mono font-medium transition cursor-pointer">
                 ↻ Refresh
               </button>
             </div>
@@ -1352,32 +1407,32 @@
 
           <!-- 3 Live Summary Metrics -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="p-4 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-1">
+            <div class="p-5 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl space-y-1">
               <span class="block text-[11px] font-mono font-bold text-emerald-800 uppercase">Sedang Aktif Mengerjakan</span>
               <p id="live-active-count" class="font-serif font-black text-3xl text-emerald-700">0 Siswa</p>
               <p class="text-[11px] text-emerald-600">Siswa berinteraksi dalam 15 menit terakhir</p>
             </div>
-            <div class="p-4 bg-atelier-terracottaLight border border-atelier-terracotta/30 rounded-xl space-y-1">
-              <span class="block text-[11px] font-mono font-bold text-atelier-terracotta uppercase">Telah Selesai (Submit)</span>
-              <p id="live-completed-count" class="font-serif font-black text-3xl text-atelier-terracotta">0 Siswa</p>
-              <p class="text-[11px] text-atelier-inkMuted">Jawaban tersimpan permanen</p>
+            <div class="p-5 bg-[#FDF2F8] border border-[#FBCFE8] rounded-2xl space-y-1">
+              <span class="block text-[11px] font-mono font-bold text-[#BE185D] uppercase">Telah Selesai (Submit)</span>
+              <p id="live-completed-count" class="font-serif font-black text-3xl text-[#BE185D]">0 Siswa</p>
+              <p class="text-[11px] text-slate-500">Jawaban tersimpan permanen di database</p>
             </div>
-            <div class="p-4 bg-atelier-warm border border-atelier-border rounded-xl space-y-1">
-              <span class="block text-[11px] font-mono font-bold text-atelier-inkMuted uppercase">Rata-rata Kemajuan Kelas</span>
-              <p id="live-avg-progress" class="font-serif font-black text-3xl text-atelier-ink">0%</p>
-              <p class="text-[11px] text-atelier-inkMuted">Berdasarkan nomor soal berjalan</p>
+            <div class="p-5 bg-[#F5F3FF] border border-[#DDD6FE] rounded-2xl space-y-1">
+              <span class="block text-[11px] font-mono font-bold text-[#6D28D9] uppercase">Rata-rata Kemajuan Kelas</span>
+              <p id="live-avg-progress" class="font-serif font-black text-3xl text-[#6D28D9]">0%</p>
+              <p class="text-[11px] text-slate-500">Berdasarkan nomor soal berjalan</p>
             </div>
           </div>
 
           <!-- Live Students Table -->
-          <div class="border border-atelier-border rounded-xl overflow-hidden bg-white">
-            <div class="p-3.5 bg-atelier-warm/50 border-b border-atelier-border font-serif font-bold text-sm text-atelier-ink">
-              Daftar Aktivitas Siswa di Kelas <span id="live-table-class-title" class="font-mono text-atelier-terracotta">VII-A</span>
+          <div class="border border-slate-200/90 rounded-2xl overflow-hidden bg-white shadow-2xs">
+            <div class="p-3.5 bg-slate-50 border-b border-slate-200/80 font-serif font-bold text-sm text-slate-900">
+              Daftar Aktivitas Siswa di Kelas <span id="live-table-class-title" class="font-mono text-[#6366F1]">VII-A</span>
             </div>
 
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs">
-                <thead class="bg-atelier-warm/80 font-mono text-[11px] text-atelier-inkMuted uppercase border-b border-atelier-border">
+                <thead class="bg-slate-50 font-mono text-[11px] text-slate-500 uppercase border-b border-slate-200/80">
                   <tr>
                     <th class="py-3 px-3 text-center whitespace-nowrap" style="width: 50px;">Absen</th>
                     <th class="py-3 px-3 whitespace-nowrap">Nama Siswa</th>
@@ -1390,13 +1445,14 @@
                     <th class="py-3 px-3 text-center whitespace-nowrap" style="min-width: 150px; width: 150px;">Status</th>
                   </tr>
                 </thead>
-                <tbody id="live-table-body" class="divide-y divide-atelier-border">
+                <tbody id="live-table-body" class="divide-y divide-slate-100">
                   <!-- Rendered by guru.js -->
                 </tbody>
               </table>
             </div>
           </div>
         </div>
+
       </div>
 
     </main>
@@ -1462,7 +1518,7 @@
     </div>
   </div>
 
-  <script src="/js/api.js?v=2.7"></script>
-  <script src="/js/guru.js?v=2.7"></script>
+  <script src="/js/api.js?v=2.8"></script>
+  <script src="/js/guru.js?v=2.8"></script>
 </body>
 </html>

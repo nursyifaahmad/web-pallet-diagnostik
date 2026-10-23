@@ -1634,6 +1634,45 @@ function setupCalendarHandlers() {
 }
 
 // ========================================================
+// 10. PORTOFOLIO & LOG PERKEMBANGAN (TAHAP 9)
+// ========================================================
+function triggerPortfolioUpload() {
+  const fileInput = document.getElementById('portfolio-file-input');
+  if (fileInput) fileInput.click();
+}
+
+function handlePortfolioUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const fileName = file.name;
+  const isImage = file.type.startsWith('image/');
+  const categoryTag = isImage ? '[ KARYA 2D / 3D ]' : '[ DOKUMEN PDF ]';
+  const tagColor = isImage ? 'text-[#6366F1]' : 'text-[#0D9488]';
+  const tagBg = isImage ? 'bg-[#F3EFFE]' : 'bg-[#F0FDFA]';
+
+  const container = document.getElementById('portfolio-cards-container');
+  if (container) {
+    const uploadCard = container.lastElementChild;
+    const newCard = document.createElement('div');
+    newCard.className = 'bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4 hover:border-purple-300 transition animate-fade-in';
+    newCard.innerHTML = `
+      <div class="h-40 rounded-xl ${tagBg} flex items-center justify-center text-center p-3">
+        <span class="font-mono text-xs font-bold ${tagColor} tracking-wider">${categoryTag}</span>
+      </div>
+      <div>
+        <h4 class="font-bold text-slate-900 text-sm sm:text-base truncate" title="${escapeHtml(fileName)}">${escapeHtml(fileName)}</h4>
+        <p class="text-xs text-slate-400 mt-1">Nilai: Menunggu Review · Semester Ganjil</p>
+      </div>
+    `;
+    container.insertBefore(newCard, uploadCard);
+  }
+
+  alert(`Dokumen karya "${fileName}" berhasil diunggah ke Portofolio Siswa!`);
+  event.target.value = '';
+}
+
+// ========================================================
 // 11. LIVE MONITOR ENGINE (TAHAP 9)
 // ========================================================
 function startLiveMonitorPolling() {
