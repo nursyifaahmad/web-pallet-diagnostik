@@ -114,12 +114,22 @@
         <button onclick="switchMainTab('tab-roster')" id="nav-tab-roster" class="main-nav-btn px-3.5 py-2 rounded-lg transition border-b-2 border-atelier-terracotta text-atelier-terracotta">
           Roster & Profil Kelas
         </button>
+
+        <!-- LIVE MONITOR TAB -->
+        <button onclick="switchMainTab('tab-live')" id="nav-tab-live" class="main-nav-btn px-3.5 py-2 rounded-lg transition border-b-2 border-transparent text-atelier-inkMuted hover:text-atelier-ink flex items-center gap-2">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span>Live Monitor Asesmen</span>
+          <span id="live-active-badge-nav" class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-emerald-100 text-emerald-800 font-bold">0</span>
+        </button>
+
         <button onclick="switchMainTab('tab-heatmap')" id="nav-tab-heatmap" class="main-nav-btn px-3.5 py-2 rounded-lg transition border-b-2 border-transparent text-atelier-inkMuted hover:text-atelier-ink">
           Heatmap Analisis Rombel
         </button>
         <button onclick="switchMainTab('tab-questions')" id="nav-tab-questions" class="main-nav-btn px-3.5 py-2 rounded-lg transition border-b-2 border-transparent text-atelier-inkMuted hover:text-atelier-ink flex items-center gap-1.5">
           <span>Kelola Soal Diagnostik (CRUD)</span>
-          <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-atelier-terracottaLight text-atelier-terracotta">Fitur Guru</span>
         </button>
         <button onclick="switchMainTab('tab-modul')" id="nav-tab-modul" class="main-nav-btn px-3.5 py-2 rounded-lg transition border-b-2 border-transparent text-atelier-inkMuted hover:text-atelier-ink">
           Generator Modul Ajar
@@ -200,8 +210,8 @@
       <div class="atelier-card overflow-hidden">
         <div class="p-4 border-b border-atelier-border flex flex-wrap items-center justify-between gap-3 bg-atelier-warm/40">
           <div>
-            <h3 class="font-serif font-bold text-base text-atelier-ink">Daftar Siswa Kelas <span id="roster-class-title" class="font-mono text-atelier-terracotta">VII-A</span></h3>
-            <p class="text-xs text-atelier-inkMuted">Hasil pemetaan mandiri siswa atau input manual guru</p>
+            <h3 class="font-serif font-bold text-base text-atelier-ink">Daftar Siswa Selesai Asesmen Kelas <span id="roster-class-title" class="font-mono text-atelier-terracotta">VII-A</span></h3>
+            <p class="text-xs text-atelier-inkMuted">Hasil pemetaan permanen tersimpan di database</p>
           </div>
           <div class="flex items-center gap-2">
             <input type="text" id="filter-roster-search" placeholder="Cari nama siswa..." 
@@ -225,6 +235,79 @@
               <!-- Rendered via JS -->
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB: LIVE MONITOR ASESMEN REAL-TIME -->
+    <!-- ========================================== -->
+    <div id="section-live" class="tab-content-section hidden space-y-6">
+      <div class="atelier-card p-6 space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-atelier-border pb-4">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="relative flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <h3 class="font-serif font-bold text-xl text-atelier-ink">Live Monitor Pengerjaan Asesmen Siswa</h3>
+            </div>
+            <p class="text-xs text-atelier-inkMuted">Pantau langsung siswa kelas <span id="live-class-label" class="font-mono font-bold text-atelier-terracotta">VII-A</span> yang sedang aktif menjawab kuesioner saat jam pelajaran.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-[11px] font-mono text-atelier-inkMuted flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Sinkronisasi aktif (3 detik)
+            </span>
+            <button onclick="fetchLiveMonitorData()" class="px-3 py-1.5 border border-atelier-border hover:bg-atelier-warm rounded-lg text-xs font-mono font-medium transition cursor-pointer">
+              ↻ Refresh
+            </button>
+          </div>
+        </div>
+
+        <!-- 3 Live Summary Metrics -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="p-4 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-1">
+            <span class="block text-[11px] font-mono font-bold text-emerald-800 uppercase">Sedang Aktif Mengerjakan</span>
+            <p id="live-active-count" class="font-serif font-black text-3xl text-emerald-700">0 Siswa</p>
+            <p class="text-[11px] text-emerald-600">Siswa berinteraksi dalam 15 menit terakhir</p>
+          </div>
+          <div class="p-4 bg-atelier-terracottaLight border border-atelier-terracotta/30 rounded-xl space-y-1">
+            <span class="block text-[11px] font-mono font-bold text-atelier-terracotta uppercase">Telah Selesai (Submit)</span>
+            <p id="live-completed-count" class="font-serif font-black text-3xl text-atelier-terracotta">0 Siswa</p>
+            <p class="text-[11px] text-atelier-inkMuted">Jawaban tersimpan permanen</p>
+          </div>
+          <div class="p-4 bg-atelier-warm border border-atelier-border rounded-xl space-y-1">
+            <span class="block text-[11px] font-mono font-bold text-atelier-inkMuted uppercase">Rata-rata Kemajuan Kelas</span>
+            <p id="live-avg-progress" class="font-serif font-black text-3xl text-atelier-ink">0%</p>
+            <p class="text-[11px] text-atelier-inkMuted">Berdasarkan nomor soal berjalan</p>
+          </div>
+        </div>
+
+        <!-- Live Students Table -->
+        <div class="border border-atelier-border rounded-xl overflow-hidden bg-white">
+          <div class="p-3.5 bg-atelier-warm/50 border-b border-atelier-border font-serif font-bold text-sm text-atelier-ink">
+            Daftar Aktivitas Siswa di Kelas <span id="live-table-class-title" class="font-mono text-atelier-terracotta">VII-A</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-atelier-warm/80 font-mono text-[11px] text-atelier-inkMuted uppercase border-b border-atelier-border">
+                <tr>
+                  <th class="py-3 px-4">Nama Siswa</th>
+                  <th class="py-3 px-4">Posisi Soal Terakhir</th>
+                  <th class="py-3 px-4" style="width: 28%;">Progres Pengerjaan</th>
+                  <th class="py-3 px-4">Pilihan Media Sementara</th>
+                  <th class="py-3 px-4">Waktu Aktivitas</th>
+                  <th class="py-3 px-4 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody id="live-table-body" class="divide-y divide-atelier-border">
+                <!-- Rendered by guru.js -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

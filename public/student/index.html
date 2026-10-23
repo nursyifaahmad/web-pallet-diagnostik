@@ -58,6 +58,10 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
+        <div id="autosave-indicator" class="hidden items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Tersimpan Otomatis</span>
+        </div>
         <span id="header-class-badge" class="hidden px-2.5 py-1 rounded-full text-xs font-mono font-semibold bg-atelier-terracottaLight text-atelier-terracotta border border-atelier-terracotta/20">
           Kelas: -
         </span>
@@ -67,6 +71,32 @@
 
   <!-- Main Content Container -->
   <main class="flex-1 max-w-2xl w-full mx-auto px-4 py-8">
+
+    <!-- RESUMPTION NOTIFICATION BANNER (Jika ada draft tersimpan) -->
+    <div id="draft-resume-banner" class="hidden atelier-card p-5 mb-6 border-2 border-atelier-terracotta/30 bg-atelier-terracottaLight/40 space-y-3">
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 rounded-full bg-atelier-terracotta text-white flex items-center justify-center font-bold text-sm flex-shrink-0 mt-0.5">
+          ↺
+        </div>
+        <div class="space-y-1 flex-1">
+          <h3 class="font-serif font-bold text-sm text-atelier-ink">Draf Pengerjaan Sebelumnya Ditemukan!</h3>
+          <p class="text-xs text-atelier-inkMuted leading-relaxed">
+            Hai <strong id="draft-student-name" class="text-atelier-ink">Siswa</strong>, sistem mendeteksi pengerjaan asesmen untuk <strong id="draft-student-class" class="text-atelier-ink">Kelas VII-A</strong> yang terhenti di <strong id="draft-student-step" class="text-atelier-terracotta">Soal #1</strong>. Jawabanmu aman dan tidak hilang.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 pt-1 justify-end">
+        <button id="btn-discard-draft" class="px-3.5 py-2 border border-atelier-border hover:bg-white text-atelier-ink rounded-xl text-xs font-medium transition cursor-pointer">
+          Mulai dari Awal
+        </button>
+        <button id="btn-resume-draft" class="px-4 py-2 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white font-semibold rounded-xl text-xs transition shadow-sm cursor-pointer flex items-center gap-1.5">
+          <span>Lanjutkan Pengerjaan</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
 
     <!-- Progress Indicator (Hidden on Welcome and Success) -->
     <div id="quiz-progress-bar" class="hidden mb-6">
@@ -123,9 +153,15 @@
     <div id="step-question" class="hidden atelier-card p-6 md:p-8 space-y-6">
       <!-- Category Badge -->
       <div>
-        <span id="question-category" class="inline-block px-3 py-1 bg-atelier-warm text-atelier-ink text-xs font-mono font-bold rounded-lg border border-atelier-border">
-          Aspek 1: Perasaan & Sikap Belajar
-        </span>
+        <div class="flex items-center justify-between">
+          <span id="question-category" class="inline-block px-3 py-1 bg-atelier-warm text-atelier-ink text-xs font-mono font-bold rounded-lg border border-atelier-border">
+            Aspek 1: Perasaan & Sikap Belajar
+          </span>
+          <span class="text-[11px] font-mono text-emerald-600 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            Auto-saved
+          </span>
+        </div>
         <h3 id="question-title" class="font-serif font-bold text-xl md:text-2xl text-atelier-ink mt-3 leading-snug">
           Judul Pertanyaan
         </h3>
@@ -230,7 +266,7 @@
             </svg>
             <span>Cetak / Simpan Kartu Seni (PDF)</span>
           </button>
-          <button onclick="location.reload()" class="px-5 py-3 border border-atelier-border hover:bg-atelier-warm text-atelier-ink rounded-xl font-medium text-xs transition cursor-pointer">
+          <button onclick="clearDraftAndRestart()" class="px-5 py-3 border border-atelier-border hover:bg-atelier-warm text-atelier-ink rounded-xl font-medium text-xs transition cursor-pointer">
             Mulai Pengisian Baru
           </button>
         </div>

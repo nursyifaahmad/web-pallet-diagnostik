@@ -1,9 +1,10 @@
-// Student Portal Quiz Controller for PALLET
+// Student Portal Quiz Controller for PALLET with Persistent Storage & Live Heartbeat
 let questions = [];
 let currentStepIndex = 0;
 let studentName = '';
 let studentClass = '';
-const answers = {};
+let sessionId = null;
+let answers = {};
 
 // Media sub-options mapping
 const MEDIA_SUB_OPTIONS = {
@@ -23,19 +24,119 @@ const MEDIA_SUB_OPTIONS = {
 let selectedMediaCategory = '2D';
 let selectedMediaSubOption = 'Media Kering';
 
+// Debounce timer for server live progress sync
+let liveSyncTimeout = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
+  initSessionId();
   await initClasses();
   await loadQuestions();
   setupEventListeners();
+  checkAndPromptDraft();
 });
 
-// 1. Initialize 27 Classes
+// 1. Session ID Generator
+function initSessionId() {
+  const existingDraft = getDraft();
+  if (existingDraft && existingDraft.sessionId) {
+    sessionId = existingDraft.sessionId;
+  } else {
+    sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+  }
+}
+
+// 2. Persistent Storage (localStorage) Helpers
+const DRAFT_KEY = 'pallet_student_draft';
+
+function getDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function saveDraft() {
+  try {
+    const draftData = {
+      sessionId,
+      studentName,
+      studentClass,
+      currentStepIndex,
+      selectedMediaCategory,
+      selectedMediaSubOption,
+      answers,
+      lastUpdated: new Date().toISOString()
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
+
+    // Show subtle auto-save badge
+    const badge = document.getElementById('autosave-indicator');
+    if (badge) {
+      badge.classList.remove('hidden');
+      badge.classList.add('flex');
+    }
+
+    // Trigger debounced live progress sync to server
+    triggerServerLiveSync();
+  } catch (e) {
+    console.warn('Failed to save draft to localStorage', e);
+  }
+}
+
+function clearDraft() {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch (e) {}
+}
+
+function clearDraftAndRestart() {
+  clearDraft();
+  location.reload();
+}
+
+// Check if draft exists and prompt user
+function checkAndPromptDraft() {
+  const draft = getDraft();
+  if (draft && draft.studentName && draft.studentClass && Object.keys(draft.answers || {}).length > 0) {
+    const banner = document.getElementById('draft-resume-banner');
+    document.getElementById('draft-student-name').textContent = draft.studentName;
+    document.getElementById('draft-student-class').textContent = `Kelas ${draft.studentClass}`;
+    document.getElementById('draft-student-step').textContent = `Soal #${(draft.currentStepIndex || 0) + 1}`;
+    banner.classList.remove('hidden');
+
+    // Fill inputs ahead of time
+    document.getElementById('student-name').value = draft.studentName;
+    document.getElementById('student-class').value = draft.studentClass;
+  }
+}
+
+// Trigger Debounced Sync to Server (Live Monitor)
+function triggerServerLiveSync() {
+  if (!studentName || !studentClass) return;
+
+  clearTimeout(liveSyncTimeout);
+  liveSyncTimeout = setTimeout(async () => {
+    const q = questions[currentStepIndex];
+    await API.sendLiveProgress({
+      sessionId,
+      studentName,
+      classId: studentClass,
+      currentStep: currentStepIndex + 1,
+      totalSteps: questions.length || 10,
+      currentCategory: q ? q.category : 'Pengisian Asesmen',
+      answers
+    });
+  }, 1000);
+}
+
+// 3. Initialize 27 Classes
 async function initClasses() {
   const select = document.getElementById('student-class');
   try {
     const res = await API.getClasses();
     if (res && res.status === 'success' && Array.isArray(res.data)) {
-      // Group by grade
       const grades = [7, 8, 9];
       grades.forEach(g => {
         const roman = g === 7 ? 'VII' : g === 8 ? 'VIII' : 'IX';
@@ -67,7 +168,7 @@ async function initClasses() {
   }
 }
 
-// 2. Load Questions Dynamically from API
+// 4. Load Questions Dynamically from API
 async function loadQuestions() {
   try {
     const res = await API.getActiveQuestions();
@@ -79,12 +180,56 @@ async function loadQuestions() {
   }
 }
 
-// 3. Setup Events
+// 5. Setup Events & Resume Handlers
 function setupEventListeners() {
   const btnStart = document.getElementById('btn-start-quiz');
   const btnPrev = document.getElementById('btn-prev-question');
   const btnNext = document.getElementById('btn-next-question');
+  const btnResume = document.getElementById('btn-resume-draft');
+  const btnDiscard = document.getElementById('btn-discard-draft');
 
+  // Resume Draft Handler
+  if (btnResume) {
+    btnResume.addEventListener('click', () => {
+      const draft = getDraft();
+      if (!draft) return;
+
+      studentName = draft.studentName;
+      studentClass = draft.studentClass;
+      currentStepIndex = draft.currentStepIndex || 0;
+      selectedMediaCategory = draft.selectedMediaCategory || '2D';
+      selectedMediaSubOption = draft.selectedMediaSubOption || 'Media Kering';
+      answers = draft.answers || {};
+
+      document.getElementById('draft-resume-banner').classList.add('hidden');
+      document.getElementById('step-identity').classList.add('hidden');
+      document.getElementById('step-question').classList.remove('hidden');
+      document.getElementById('quiz-progress-bar').classList.remove('hidden');
+
+      renderCurrentQuestion();
+    });
+  }
+
+  // Discard Draft Handler
+  if (btnDiscard) {
+    btnDiscard.addEventListener('click', () => {
+      clearDraft();
+      document.getElementById('draft-resume-banner').classList.add('hidden');
+      document.getElementById('student-name').value = '';
+    });
+  }
+
+  // Realtime autosave for identity fields
+  document.getElementById('student-name').addEventListener('input', (e) => {
+    studentName = e.target.value.trim();
+    saveDraft();
+  });
+  document.getElementById('student-class').addEventListener('change', (e) => {
+    studentClass = e.target.value;
+    saveDraft();
+  });
+
+  // Start Quiz Handler
   btnStart.addEventListener('click', () => {
     const nameInput = document.getElementById('student-name');
     const classInput = document.getElementById('student-class');
@@ -109,45 +254,56 @@ function setupEventListeners() {
     }
 
     // Switch to quiz view
+    document.getElementById('draft-resume-banner').classList.add('hidden');
     document.getElementById('step-identity').classList.add('hidden');
     document.getElementById('step-question').classList.remove('hidden');
     document.getElementById('quiz-progress-bar').classList.remove('hidden');
 
     currentStepIndex = 0;
+    saveDraft();
     renderCurrentQuestion();
   });
 
+  // Previous Question
   btnPrev.addEventListener('click', () => {
     if (currentStepIndex > 0) {
       saveCurrentQuestionAnswer();
       currentStepIndex--;
+      saveDraft();
       renderCurrentQuestion();
     } else {
-      // Back to identity
       document.getElementById('step-question').classList.add('hidden');
       document.getElementById('quiz-progress-bar').classList.add('hidden');
       document.getElementById('step-identity').classList.remove('hidden');
     }
   });
 
+  // Next / Submit Question
   btnNext.addEventListener('click', async () => {
     if (!validateCurrentAnswer()) {
       return;
     }
 
     saveCurrentQuestionAnswer();
+    saveDraft();
 
     if (currentStepIndex < questions.length - 1) {
       currentStepIndex++;
+      saveDraft();
       renderCurrentQuestion();
     } else {
-      // Final submission
       await submitQuiz();
     }
   });
+
+  // Realtime autosave for reason textarea
+  document.getElementById('question-reason').addEventListener('input', () => {
+    saveCurrentQuestionAnswer();
+    saveDraft();
+  });
 }
 
-// 4. Render Question Card
+// 6. Render Question Card
 function renderCurrentQuestion() {
   const q = questions[currentStepIndex];
   if (!q) return;
@@ -189,14 +345,13 @@ function renderCurrentQuestion() {
     nextLabel.textContent = 'Lanjutkan';
   }
 
-  // Scroll to top of card smoothly
   window.scrollTo({ top: 80, behavior: 'smooth' });
 }
 
 // Render Media Selector (2D vs 3D and sub-options)
 function renderMediaSelector(container, existingAns) {
-  selectedMediaCategory = existingAns.category || '2D';
-  selectedMediaSubOption = existingAns.subOption || 'Media Kering';
+  selectedMediaCategory = existingAns.category || selectedMediaCategory || '2D';
+  selectedMediaSubOption = existingAns.subOption || selectedMediaSubOption || 'Media Kering';
 
   const wrapper = document.createElement('div');
   wrapper.className = 'space-y-4';
@@ -219,6 +374,8 @@ function renderMediaSelector(container, existingAns) {
     catBtn.onclick = () => {
       selectedMediaCategory = cat;
       selectedMediaSubOption = MEDIA_SUB_OPTIONS[cat][0].label;
+      saveCurrentQuestionAnswer();
+      saveDraft();
       renderCurrentQuestion();
     };
     catGrid.appendChild(catBtn);
@@ -251,6 +408,8 @@ function renderMediaSelector(container, existingAns) {
     `;
     pill.onclick = () => {
       selectedMediaSubOption = item.label;
+      saveCurrentQuestionAnswer();
+      saveDraft();
       renderCurrentQuestion();
     };
     subList.appendChild(pill);
@@ -286,16 +445,19 @@ function renderStandardChoices(container, optionsList, existingAns) {
       pill.classList.add('selected');
       pill.querySelector('div').className = 'w-5 h-5 rounded-full border flex items-center justify-center text-xs font-bold border-atelier-terracotta bg-atelier-terracotta text-white';
       pill.querySelector('div').textContent = '✓';
+      
       answers[questions[currentStepIndex].id] = {
         ...answers[questions[currentStepIndex].id],
         selected: optText
       };
+      saveCurrentQuestionAnswer();
+      saveDraft();
     };
     container.appendChild(pill);
   });
 }
 
-// 5. Validation & Saving Current Answer
+// 7. Validation & Answer Storing
 function validateCurrentAnswer() {
   const q = questions[currentStepIndex];
   if (!q) return false;
@@ -319,7 +481,7 @@ function saveCurrentQuestionAnswer() {
   const q = questions[currentStepIndex];
   if (!q) return;
 
-  const reason = document.getElementById('question-reason').value.trim();
+  const reason = document.getElementById('question-reason')?.value?.trim() || '';
 
   if (q.isMediaSelector) {
     answers[q.id] = {
@@ -335,25 +497,19 @@ function saveCurrentQuestionAnswer() {
   }
 }
 
-// 6. Final Quiz Submission
+// 8. Final Quiz Submission
 async function submitQuiz() {
   const btnNext = document.getElementById('btn-next-question');
   btnNext.disabled = true;
   btnNext.innerHTML = '<span>Menyimpan Hasil Asesmen...</span>';
 
   // Synthesize Key Profiling Dimensions
-  // Question 1: Feeling
   const q1Ans = (answers[questions[0]?.id]?.selected) || 'Sangat senang';
-  
-  // Question 2: Media
   const q2Ans = answers[questions[1]?.id] || {};
   const category = q2Ans.category || '2D';
   const subOption = q2Ans.subOption || 'Media Kering';
-
-  // Question 4: Challenge
   const q4Ans = (answers[questions[3]?.id]?.selected) || 'Pencarian Ide Awal';
 
-  // Question 5: Learning Style
   let style = 'Visual Tutorial';
   const q5Text = answers[questions[4]?.id]?.selected || '';
   if (q5Text.includes('Visual') || q5Text.includes('gambar')) {
@@ -367,6 +523,7 @@ async function submitQuiz() {
   }
 
   const payload = {
+    sessionId,
     name: studentName,
     class_id: studentClass,
     category: category,
@@ -380,6 +537,8 @@ async function submitQuiz() {
   try {
     const res = await API.submitStudentAssessment(payload);
     if (res && res.status === 'success') {
+      // Clear draft since it is successfully submitted to permanent storage
+      clearDraft();
       renderProfileCard(payload);
     } else {
       alert('Terjadi kendala saat menyimpan asesmen: ' + (res.message || 'Silakan coba lagi.'));
@@ -388,29 +547,26 @@ async function submitQuiz() {
     }
   } catch (err) {
     console.error('Submission error', err);
-    // In case of offline/network glitch, still show the card
+    clearDraft();
     renderProfileCard(payload);
   }
 }
 
-// 7. Render Personalised Artist Profile Card
+// 9. Render Personalised Artist Profile Card
 function renderProfileCard(data) {
   document.getElementById('step-question').classList.add('hidden');
   document.getElementById('quiz-progress-bar').classList.add('hidden');
   document.getElementById('step-profile').classList.remove('hidden');
 
-  // Avatar initials
   const initials = data.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   document.getElementById('card-avatar').textContent = initials;
   document.getElementById('card-name').textContent = data.name;
   document.getElementById('card-class').textContent = `Kelas ${data.class_id} · Rombel Seni`;
 
-  // 3 Badges
   document.getElementById('card-style').textContent = data.style;
   document.getElementById('card-media').textContent = `${data.category} (${data.sub_option})`;
   document.getElementById('card-challenge').textContent = data.challenge;
 
-  // 10 Aspects Matrix Grid
   const matrixContainer = document.getElementById('card-matrix-grid');
   matrixContainer.innerHTML = '';
 

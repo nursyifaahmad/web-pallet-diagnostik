@@ -67,6 +67,26 @@ const API = {
     return await res.json();
   },
 
+  // Live Progress & Real-time Monitoring
+  async sendLiveProgress(data) {
+    try {
+      const res = await fetch('/api/students/live-progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      return await res.json();
+    } catch (e) {
+      // Non-blocking for offline
+      return null;
+    }
+  },
+  async getLiveMonitor(classId) {
+    const url = classId ? `/api/students/live-monitor?class=${encodeURIComponent(classId)}` : '/api/students/live-monitor';
+    const res = await fetch(url);
+    return await res.json();
+  },
+
   // Auth
   async login(username, password) {
     const res = await fetch('/api/auth/login', {

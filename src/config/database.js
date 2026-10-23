@@ -78,7 +78,7 @@ function initSchema() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
-    -- Tabel Siswa & Data Asesmen
+    -- Tabel Siswa & Data Asesmen Permanen
     CREATE TABLE IF NOT EXISTS students (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -91,6 +91,19 @@ function initSchema() {
       answers_json TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(class_id) REFERENCES classes(id)
+    );
+
+    -- Tabel Live Sesi Pemantauan Real-Time Siswa
+    CREATE TABLE IF NOT EXISTS student_live_sessions (
+      session_id TEXT PRIMARY KEY,
+      student_name TEXT NOT NULL,
+      class_id TEXT NOT NULL,
+      current_step INTEGER DEFAULT 1,
+      total_steps INTEGER DEFAULT 10,
+      current_category TEXT,
+      status TEXT DEFAULT 'in_progress',
+      last_active DATETIME DEFAULT CURRENT_TIMESTAMP,
+      answers_json TEXT
     );
 
     -- Tabel Kalender Akademik Seni

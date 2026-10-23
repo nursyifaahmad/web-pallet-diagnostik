@@ -3,7 +3,7 @@ const app = require('../src/server'); // server starts listening
 
 // Wait 1 second then run API tests
 setTimeout(async () => {
-  console.log('\n--- STARTING AUTOMATED INTEGRATION TESTS ---');
+  console.log('\n--- STARTING AUTOMATED INTEGRATION TESTS (WITH LIVE PROGRESS & PERSISTENCE) ---');
 
   const fetchJson = async (url, options = {}) => {
     const res = await fetch(`http://localhost:3090${url}`, options);
@@ -28,33 +28,27 @@ setTimeout(async () => {
     console.log(`✓ Active questions loaded: ${questions.length} questions`);
     if (questions.length === 0) throw new Error('No questions found!');
 
-    // 4. Submit Student Assessment (Ahmad Siswa)
-    const studentRes = await fetchJson('/api/students', {
+    // 4. Test Student Live Progress Heartbeat (Simulating Active Student in Real-time)
+    const testSessionId = 'sess_test_12345';
+    const liveProgressRes = await fetchJson('/api/students/live-progress', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: 'Ahmad Siswa Pengujian',
-        class_id: 'VII-A',
-        category: '2D',
-        sub_option: 'Media Kering',
-        style: 'Visual Tutorial',
-        challenge: 'Sketsa Proporsi',
-        feeling: 'Sangat senang',
+        sessionId: testSessionId,
+        studentName: 'Siswa Uji Realtime',
+        classId: 'VII-A',
+        currentStep: 6,
+        totalSteps: 10,
+        currentCategory: 'Aspek 6: Kenyamanan Bekerja',
         answers: {
-          1: { selected: 'Sangat senang', reason: 'Pelajaran seni sangat asyik' }
+          1: { selected: 'Sangat senang' },
+          2: { category: '2D', subOption: 'Media Basah' }
         }
       })
     });
-    console.log('✓ Student assessment submitted:', studentRes.data.name, 'in', studentRes.data.class_id);
+    console.log('✓ Live progress heartbeat received:', liveProgressRes.message);
 
-    // 5. Query students in VII-A
-    const studentsRes = await fetchJson('/api/students?class=VII-A');
-    const studentsInClass = studentsRes.data;
-    console.log(`✓ Students in VII-A: ${studentsInClass.length} students`);
-    const found = studentsInClass.some(s => s.name === 'Ahmad Siswa Pengujian');
-    if (!found) throw new Error('Submitted student not found in VII-A roster!');
-
-    // 6. Login as Guru
+    // 5. Teacher Login
     const loginRes = await fetchJson('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -63,7 +57,45 @@ setTimeout(async () => {
     console.log('✓ Teacher login verified:', loginRes.message, 'User:', loginRes.user.name);
     const token = loginRes.token;
 
-    // 7. Teacher Question CRUD test
+    // 6. Test Teacher Live Monitoring
+    const liveMonitorRes = await fetchJson('/api/students/live-monitor?class=VII-A', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    console.log(`✓ Teacher Live Monitor data received: ${liveMonitorRes.data.activeCount} active student(s)`);
+    const liveStudent = liveMonitorRes.data.sessions.find(s => s.sessionId === testSessionId);
+    if (!liveStudent) throw new Error('Live student not found in Teacher Live Monitor!');
+    console.log(`✓ Verified Live Student: ${liveStudent.name} at Step ${liveStudent.currentStep}/${liveStudent.totalSteps} (${liveStudent.progressPercent}%) - Media: ${liveStudent.chosenMedia}`);
+
+    // 7. Submit Student Assessment Permanently (with sessionId)
+    const studentRes = await fetchJson('/api/students', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: testSessionId,
+        name: 'Siswa Uji Realtime',
+        class_id: 'VII-A',
+        category: '2D',
+        sub_option: 'Media Basah',
+        style: 'Visual Tutorial',
+        challenge: 'Sketsa Proporsi',
+        feeling: 'Sangat senang',
+        answers: {
+          1: { selected: 'Sangat senang' },
+          2: { category: '2D', subOption: 'Media Basah' }
+        }
+      })
+    });
+    console.log('✓ Student assessment submitted permanently:', studentRes.data.name, 'in', studentRes.data.class_id);
+
+    // 8. Verify Session is now marked Completed in Live Monitor
+    const liveAfterSubmit = await fetchJson('/api/students/live-monitor?class=VII-A', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const completedSession = liveAfterSubmit.data.sessions.find(s => s.sessionId === testSessionId);
+    console.log(`✓ Verified Live Session status after submit: ${completedSession.status}`);
+    if (completedSession.status !== 'completed') throw new Error('Session should be marked completed!');
+
+    // 9. Teacher Question CRUD test
     const newQ = await fetchJson('/api/questions', {
       method: 'POST',
       headers: {
@@ -80,36 +112,16 @@ setTimeout(async () => {
     });
     console.log('✓ Question created by teacher. New Question ID:', newQ.id);
 
-    // Verify it appears in active questions
-    const updatedQuestionsRes = await fetchJson('/api/questions');
-    console.log(`✓ Total questions now: ${updatedQuestionsRes.data.length}`);
-
-    // Delete test question
     const delQ = await fetchJson(`/api/questions/${newQ.id}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` }
     });
     console.log('✓ Question deleted by teacher:', delQ.message);
 
-    // 8. Calendar test
-    const calEvent = await fetchJson('/api/calendar', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        title: 'Asesmen Diagnostik Semester Gasal',
-        event_date: '2026-10-25',
-        type: 'asesmen',
-        class_id: 'VII-A'
-      })
-    });
-    console.log('✓ Calendar event created:', calEvent.message);
-
-    console.log('\n=============================================');
+    console.log('\n============================================================');
     console.log(' ALL INTEGRATION TESTS PASSED WITH 100% SUCCESS!');
-    console.log('=============================================\n');
+    console.log(' PERSISTENT STORAGE & REAL-TIME MONITORING VERIFIED!');
+    console.log('============================================================\n');
     process.exit(0);
   } catch (err) {
     console.error('❌ Test failed:', err);

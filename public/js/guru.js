@@ -1,4 +1,4 @@
-// Teacher Dashboard Controller for PALLET Studio
+// Teacher Dashboard Controller for PALLET Studio with Live Monitor
 let allClassSummaries = [];
 let currentGrade = 7;
 let currentClass = 'VII-A';
@@ -8,6 +8,10 @@ let currentRoster = [];
 let timerInterval = null;
 let timerSeconds = 15 * 60;
 let timerIsRunning = false;
+
+// Live Monitor Polling State
+let liveMonitorInterval = null;
+let isLiveTabActive = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
   setupNavigation();
@@ -19,6 +23,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupQuestionModalHandlers();
   setupRubricHandlers();
   setupCalendarHandlers();
+
+  // Start background live polling for badge counts
+  startLiveMonitorPolling();
 });
 
 // 1. Navigation Tabs
@@ -39,7 +46,10 @@ function switchMainTab(tabId) {
     activeBtn.classList.add('border-atelier-terracotta', 'text-atelier-terracotta');
   }
 
-  // Refresh tab-specific content if needed
+  isLiveTabActive = (tabId === 'nav-tab-live');
+
+  // Tab-specific refreshes
+  if (tabId === 'nav-tab-live') fetchLiveMonitorData();
   if (tabId === 'nav-tab-questions') loadQuestionsList();
   if (tabId === 'nav-tab-modul') generateModulAjarText();
   if (tabId === 'nav-tab-share') updateShareLinkAndQR();
@@ -109,10 +119,13 @@ async function selectClass(classId) {
   document.getElementById('heatmap-class-title').textContent = currentClass;
   document.getElementById('modul-class-name').textContent = currentClass;
   document.getElementById('share-class-badge').textContent = currentClass;
+  document.getElementById('live-class-label').textContent = currentClass;
+  document.getElementById('live-table-class-title').textContent = currentClass;
 
   renderSectionButtons();
   await loadCurrentClassDetail();
   updateShareLinkAndQR();
+  fetchLiveMonitorData();
 }
 
 // 3. Load Classes & Roster Data
@@ -153,7 +166,6 @@ function updateClassStats(roster) {
     return;
   }
 
-  // Calculate style and media dominance
   const styles = {};
   const media = {};
   roster.forEach(s => {
@@ -168,7 +180,117 @@ function updateClassStats(roster) {
   document.getElementById('stat-top-media').textContent = topMedia;
 }
 
-// 4. Roster Table Management
+// 4. LIVE MONITOR ENGINE (REAL-TIME ASESMEN)
+function startLiveMonitorPolling() {
+  fetchLiveMonitorData();
+  clearInterval(liveMonitorInterval);
+  liveMonitorInterval = setInterval(() => {
+    fetchLiveMonitorData();
+  }, 3500);
+}
+
+async function fetchLiveMonitorData() {
+  try {
+    const res = await API.getLiveMonitor(currentClass);
+    if (res && res.status === 'success') {
+      const { sessions, activeCount, completedCount } = res.data;
+
+      // Update Nav Badge
+      const navBadge = document.getElementById('live-active-badge-nav');
+      if (navBadge) navBadge.textContent = activeCount;
+
+      // Update Metric Cards
+      document.getElementById('live-active-count').textContent = `${activeCount} Siswa`;
+      document.getElementById('live-completed-count').textContent = `${completedCount} Siswa`;
+
+      // Average progress
+      let avg = 0;
+      if (sessions.length > 0) {
+        const sum = sessions.reduce((acc, s) => acc + (s.progressPercent || 0), 0);
+        avg = Math.round(sum / sessions.length);
+      }
+      document.getElementById('live-avg-progress').textContent = `${avg}%`;
+
+      // Render table
+      renderLiveMonitorTable(sessions);
+    }
+  } catch (err) {
+    console.error('Failed to poll live monitor data', err);
+  }
+}
+
+function renderLiveMonitorTable(sessions) {
+  const tbody = document.getElementById('live-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (sessions.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="py-8 text-center text-atelier-inkMuted italic">
+          Belum ada siswa yang sedang membuka asesmen di kelas ${currentClass} saat ini. Bagikan tautan kelas kepada siswa.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  sessions.forEach(s => {
+    const isCompleted = s.status === 'completed';
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-atelier-warm/40 transition';
+
+    // Format relative time (e.g. 5 detik lalu)
+    const timeAgo = formatTimeAgo(s.lastActive);
+
+    tr.innerHTML = `
+      <td class="py-3 px-4 font-semibold text-atelier-ink flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full ${isCompleted ? 'bg-blue-500' : 'bg-emerald-500 animate-pulse'}"></span>
+        <span>${s.name}</span>
+      </td>
+      <td class="py-3 px-4">
+        <span class="font-mono text-[11px] font-bold text-atelier-terracotta">Soal ${s.currentStep}/${s.totalSteps}</span>
+        <span class="block text-[10px] text-atelier-inkMuted">${s.currentCategory}</span>
+      </td>
+      <td class="py-3 px-4">
+        <div class="flex items-center gap-2">
+          <div class="flex-1 bg-atelier-border h-2 rounded-full overflow-hidden">
+            <div class="${isCompleted ? 'bg-blue-600' : 'bg-emerald-600'} h-full rounded-full transition-all duration-300" style="width: ${s.progressPercent}%;"></div>
+          </div>
+          <span class="font-mono text-[11px] font-bold ${isCompleted ? 'text-blue-600' : 'text-emerald-700'}">${s.progressPercent}%</span>
+        </div>
+      </td>
+      <td class="py-3 px-4 font-mono text-[11px] text-atelier-ochre font-medium">
+        ${s.chosenMedia}
+      </td>
+      <td class="py-3 px-4 font-mono text-[11px] text-atelier-inkMuted">
+        ${timeAgo}
+      </td>
+      <td class="py-3 px-4 text-center">
+        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+          isCompleted 
+            ? 'bg-blue-100 text-blue-800 border border-blue-200' 
+            : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+        }">
+          ${isCompleted ? 'Selesai ✓' : 'Sedang Menjawab'}
+        </span>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function formatTimeAgo(dateStr) {
+  if (!dateStr) return 'Baru saja';
+  const diffSec = Math.floor((new Date() - new Date(dateStr)) / 1000);
+  if (diffSec < 10) return 'Baru saja';
+  if (diffSec < 60) return `${diffSec} detik lalu`;
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin} menit lalu`;
+  return `${Math.floor(diffMin / 60)} jam lalu`;
+}
+
+// 5. Roster Table Management
 function renderRosterTable(students) {
   const tbody = document.getElementById('roster-table-body');
   tbody.innerHTML = '';
@@ -212,7 +334,6 @@ function renderRosterTable(students) {
 }
 
 function setupRosterHandlers() {
-  // Quick Add
   document.getElementById('quick-add-student-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('quick-name').value.trim();
@@ -242,7 +363,6 @@ function setupRosterHandlers() {
     }
   });
 
-  // Filter search
   document.getElementById('filter-roster-search').addEventListener('input', (e) => {
     const q = e.target.value.toLowerCase();
     const filtered = currentRoster.filter(s => s.name.toLowerCase().includes(q));
@@ -263,7 +383,7 @@ async function handleDeleteStudent(id, name) {
   }
 }
 
-// 5. Heatmap & Analisis Kelas
+// 6. Heatmap & Analisis Kelas
 function renderHeatmap(roster) {
   const stylesContainer = document.getElementById('heatmap-styles-list');
   const mediaContainer = document.getElementById('heatmap-media-list');
@@ -314,7 +434,7 @@ function renderHeatmap(roster) {
   renderBarList(challengesContainer, countBy('challenge'), 'bg-atelier-ultramarine');
 }
 
-// 6. CRUD Soal Diagnostik
+// 7. CRUD Soal Diagnostik
 let loadedQuestions = [];
 
 async function loadQuestionsList() {
@@ -346,7 +466,6 @@ function renderQuestionsList(questions) {
     const card = document.createElement('div');
     card.className = 'p-4 bg-white rounded-xl border border-atelier-border hover:border-atelier-borderMedium transition space-y-3';
     
-    // Options badge list
     let optionsPillHtml = '';
     if (q.isMediaSelector) {
       optionsPillHtml = '<span class="px-2 py-0.5 bg-atelier-ochreLight text-atelier-ochre text-[10px] font-mono font-bold rounded">Selektor Interaktif 2D vs 3D (Sub-Pilihan Media Lengkap)</span>';
@@ -530,7 +649,7 @@ function setupQuestionModalHandlers() {
   });
 }
 
-// 7. Modul Ajar Generator (Kurikulum Merdeka)
+// 8. Modul Ajar Generator (Kurikulum Merdeka)
 function generateModulAjarText() {
   const container = document.getElementById('modul-ajar-document');
   if (!container) return;
@@ -627,7 +746,7 @@ function copyModulAjarText() {
   });
 }
 
-// 8. Studio Timer
+// 9. Studio Timer
 function setTimerPhase(phase, minutes) {
   document.querySelectorAll('.timer-phase-btn').forEach(btn => {
     btn.className = 'timer-phase-btn p-2 rounded-lg border border-atelier-border bg-white text-atelier-ink';
@@ -681,7 +800,7 @@ function resetStudioTimer() {
   updateTimerDisplay();
 }
 
-// 9. Heterogeneous Group Generator
+// 10. Heterogeneous Group Generator
 function generateHeteroGroups() {
   const container = document.getElementById('hetero-groups-output');
   if (currentRoster.length === 0) {
@@ -720,7 +839,7 @@ function generateHeteroGroups() {
   });
 }
 
-// 10. Rubrik Penilaian Autentik
+// 11. Rubrik Penilaian Autentik
 function populateRubricStudentSelect(roster) {
   const select = document.getElementById('rubric-student-select');
   select.innerHTML = '<option value="" disabled selected>Pilih siswa untuk dinilai...</option>';
@@ -785,7 +904,7 @@ function setupRubricHandlers() {
   });
 }
 
-// 11. Kalender Akademik Seni
+// 12. Kalender Akademik Seni
 async function loadCalendarEvents() {
   const container = document.getElementById('calendar-events-container');
   try {
@@ -877,7 +996,7 @@ function setupCalendarHandlers() {
   });
 }
 
-// 12. Tautan Siswa & QR Code
+// 13. Tautan Siswa & QR Code
 function updateShareLinkAndQR() {
   const host = window.location.origin.includes('localhost') ? 'https://artuniverse.my.id' : window.location.origin;
   const link = `${host}/?class=${encodeURIComponent(currentClass)}`;
