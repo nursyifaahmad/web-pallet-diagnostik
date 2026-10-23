@@ -2088,7 +2088,7 @@ function formatTimeAgo(dateStr) {
 }
 
 // ========================================================
-// 12. ROSTER TABLE MANAGEMENT (TAHAP 4)
+// 12. ROSTER TABLE MANAGEMENT (TAHAP 4 CRUD)
 // ========================================================
 function renderRosterTable(students) {
   const tbody = document.getElementById('roster-table-body');
@@ -2114,22 +2114,25 @@ function renderRosterTable(students) {
 
     tr.innerHTML = `
       <td class="py-3 px-4 font-mono font-bold text-center text-atelier-terracotta">${s.attendance_no || '-'}</td>
-      <td class="py-3 px-4 font-semibold text-atelier-ink">${s.name}</td>
+      <td class="py-3 px-4 font-semibold text-atelier-ink">${escapeHtml(s.name)}</td>
       <td class="py-3 px-4 font-mono text-center">${genderBadge}</td>
       <td class="py-3 px-4">
         <span class="px-2 py-0.5 rounded-md font-mono text-[11px] font-bold bg-atelier-terracottaLight text-atelier-terracotta">
-          ${s.style || 'Visual Tutorial'}
+          ${escapeHtml(s.style || 'Visual Tutorial')}
         </span>
       </td>
       <td class="py-3 px-4 font-medium text-atelier-ochre">
-        ${s.category || '2D'} (${s.sub_option || 'Kering'})
+        ${escapeHtml(s.category || '2D')} (${escapeHtml(s.sub_option || 'Kering')})
       </td>
       <td class="py-3 px-4 text-atelier-inkMuted">
-        ${s.challenge || 'Sketsa Proporsi'}
+        ${escapeHtml(s.challenge || 'Sketsa Proporsi')}
       </td>
-      <td class="py-3 px-4 text-center">
-        <button onclick="handleDeleteStudent(${s.id}, '${s.name}')" class="text-red-600 hover:text-red-800 font-mono text-[11px] font-semibold cursor-pointer">
-          Hapus
+      <td class="py-3 px-4 text-center whitespace-nowrap">
+        <button onclick="openEditStudentModal(${s.id})" class="text-[#6366F1] hover:text-[#4F46E5] font-mono text-[11px] font-bold mr-2 cursor-pointer inline-flex items-center gap-1" title="Ubah Data Siswa">
+          <span>✏️</span><span>Ubah</span>
+        </button>
+        <button onclick="handleDeleteStudent(${s.id})" class="text-rose-600 hover:text-rose-800 font-mono text-[11px] font-bold cursor-pointer inline-flex items-center gap-1" title="Hapus Siswa">
+          <span>🗑️</span><span>Hapus</span>
         </button>
       </td>
     `;
@@ -2151,7 +2154,7 @@ function setupRosterHandlers() {
       if (!name || !attNo || !gender) return;
 
       try {
-        const res = await API.submitStudentAssessment({
+        const res = await API.createStudent({
           attendance_no: attNo,
           name,
           gender,
@@ -2160,7 +2163,7 @@ function setupRosterHandlers() {
           sub_option: 'Kering',
           style,
           challenge: 'Pencarian Ide Awal',
-          feeling: 'Senang'
+          feeling: 'Senang & Percaya Diri'
         });
 
         if (res && res.status === 'success') {
@@ -2189,13 +2192,144 @@ function setupRosterHandlers() {
   }
 }
 
+function openAddStudentModal() {
+  const modal = document.getElementById('modal-student');
+  if (!modal) return;
+  document.getElementById('modal-student-title').textContent = `Tambah Siswa Lengkap ke Rombel ${currentClass}`;
+  document.getElementById('form-student-id').value = '';
+
+  const maxAtt = currentRoster.length > 0
+    ? Math.max(...currentRoster.map(s => Number(s.attendance_no) || 0))
+    : 0;
+  document.getElementById('form-s-attendance').value = maxAtt + 1;
+  document.getElementById('form-s-name').value = '';
+  document.getElementById('form-s-gender').value = 'L';
+  document.getElementById('form-s-category').value = '2D';
+  document.getElementById('form-s-suboption').value = 'Kering';
+  document.getElementById('form-s-style').value = 'Visual Tutorial';
+  document.getElementById('form-s-challenge').value = 'Sketsa Proporsi';
+  document.getElementById('form-s-feeling').value = 'Senang & Percaya Diri';
+
+  const btnDelete = document.getElementById('btn-delete-student-modal');
+  if (btnDelete) btnDelete.classList.add('hidden');
+
+  modal.classList.remove('hidden');
+}
+
+function openEditStudentModal(id) {
+  const modal = document.getElementById('modal-student');
+  if (!modal) return;
+  const s = currentRoster.find(item => item.id == id);
+  if (!s) {
+    alert('Data siswa tidak ditemukan.');
+    return;
+  }
+
+  document.getElementById('modal-student-title').textContent = `Ubah Data Siswa: ${s.name}`;
+  document.getElementById('form-student-id').value = s.id;
+  document.getElementById('form-s-attendance').value = s.attendance_no || '';
+  document.getElementById('form-s-name').value = s.name || '';
+  document.getElementById('form-s-gender').value = s.gender || 'L';
+  document.getElementById('form-s-category').value = s.category || '2D';
+  document.getElementById('form-s-suboption').value = s.sub_option || 'Kering';
+  document.getElementById('form-s-style').value = s.style || 'Visual Tutorial';
+  document.getElementById('form-s-challenge').value = s.challenge || 'Sketsa Proporsi';
+  document.getElementById('form-s-feeling').value = s.feeling || 'Senang & Percaya Diri';
+
+  const btnDelete = document.getElementById('btn-delete-student-modal');
+  if (btnDelete) btnDelete.classList.remove('hidden');
+
+  modal.classList.remove('hidden');
+}
+
+function closeStudentModal() {
+  const modal = document.getElementById('modal-student');
+  if (modal) modal.classList.add('hidden');
+  const form = document.getElementById('form-student');
+  if (form) form.reset();
+}
+
+async function submitStudentForm(event) {
+  event.preventDefault();
+  const id = document.getElementById('form-student-id').value;
+  const attendance_no = parseInt(document.getElementById('form-s-attendance').value, 10);
+  const name = document.getElementById('form-s-name').value.trim();
+  const gender = document.getElementById('form-s-gender').value;
+  const category = document.getElementById('form-s-category').value;
+  const sub_option = document.getElementById('form-s-suboption').value.trim() || 'Kering';
+  const style = document.getElementById('form-s-style').value;
+  const challenge = document.getElementById('form-s-challenge').value;
+  const feeling = document.getElementById('form-s-feeling').value;
+
+  if (!name || isNaN(attendance_no)) {
+    alert('Nama dan No. Absen wajib diisi!');
+    return;
+  }
+
+  const payload = {
+    attendance_no,
+    name,
+    gender,
+    class_id: currentClass,
+    category,
+    sub_option,
+    style,
+    challenge,
+    feeling
+  };
+
+  const btnSave = document.getElementById('btn-save-student');
+  if (btnSave) {
+    btnSave.disabled = true;
+    btnSave.textContent = 'Menyimpan...';
+  }
+
+  try {
+    let res;
+    if (id) {
+      res = await API.updateStudent(id, payload);
+    } else {
+      res = await API.createStudent(payload);
+    }
+
+    if (res && res.status === 'success') {
+      closeStudentModal();
+      await loadCurrentClassDetail();
+      await loadClassRubricGradebook(currentClass);
+    } else {
+      alert((res && res.message) || 'Gagal menyimpan data siswa.');
+    }
+  } catch (err) {
+    console.error('Error saving student:', err);
+    alert('Gagal menyimpan data siswa: ' + err.message);
+  } finally {
+    if (btnSave) {
+      btnSave.disabled = false;
+      btnSave.textContent = 'Simpan Data Siswa';
+    }
+  }
+}
+
+async function deleteCurrentStudentModal() {
+  const id = document.getElementById('form-student-id').value;
+  if (!id) return;
+  closeStudentModal();
+  await handleDeleteStudent(id);
+}
+
 async function handleDeleteStudent(id, name) {
+  if (!name) {
+    const s = currentRoster.find(item => item.id == id);
+    name = s ? s.name : 'Siswa';
+  }
   if (confirm(`Apakah Anda yakin ingin menghapus data siswa "${name}" dari rombel ${currentClass}?`)) {
     try {
       const res = await API.deleteStudent(id);
       if (res && res.status === 'success') {
         await loadCurrentClassDetail();
         await loadClassRubricGradebook(currentClass);
+      } else {
+        alert((res && res.message) || 'Gagal menghapus siswa.');
       }
     } catch (err) {
       alert('Gagal menghapus siswa: ' + err.message);

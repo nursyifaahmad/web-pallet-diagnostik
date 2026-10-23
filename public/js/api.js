@@ -88,6 +88,22 @@ const API = {
     });
     return await res.json();
   },
+  async updateStudent(id, data) {
+    const res = await fetch(`/api/students/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(data)
+    });
+    return await res.json();
+  },
+  async createStudent(data) {
+    const res = await fetch('/api/students', {
+      method: 'POST',
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(data)
+    });
+    return await res.json();
+  },
 
   // Live Progress & Real-time Monitoring
   async sendLiveProgress(data) {

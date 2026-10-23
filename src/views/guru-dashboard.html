@@ -862,61 +862,73 @@
       <!-- ======================================================== -->
       <div id="section-m4-roster" class="tab-content-section hidden space-y-6">
         <!-- Quick Add Student Form (With Attendance No & Gender) -->
-        <div class="atelier-card p-5 space-y-3 bg-white">
-          <h3 class="font-serif font-bold text-base text-atelier-ink">Input Cepat Siswa ke Rombel <span id="quick-add-class-label" class="font-mono text-atelier-terracotta">VII-A</span></h3>
-          <form id="quick-add-student-form" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-3">
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-mono font-semibold bg-[#EDE9FE] text-[#6D28D9] border border-[#DDD6FE]">
+                TAHAP 4: TEACHER DASHBOARD &amp; ROSTER KELAS
+              </span>
+              <h3 class="font-serif font-bold text-xl text-slate-900 mt-1">Input Cepat Siswa ke Rombel <span id="quick-add-class-label" class="font-mono text-[#6366F1]">VII-A</span></h3>
+            </div>
+            <button type="button" onclick="openAddStudentModal()" class="px-4 py-2 bg-[#6366F1] hover:bg-[#4F46E5] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition cursor-pointer shadow-xs">
+              <span>+</span>
+              <span>Tambah Siswa Lengkap</span>
+            </button>
+          </div>
+
+          <form id="quick-add-student-form" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-3 pt-1">
             <input type="number" id="quick-att" placeholder="No. Absen" min="1" max="60" required
-              class="px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none">
+              class="px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs bg-white text-slate-800 focus:border-purple-400 outline-none">
             <input type="text" id="quick-name" placeholder="Nama Lengkap Siswa..." required
-              class="px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none sm:col-span-2">
-            <select id="quick-gender" required class="px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white">
+              class="px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs bg-white text-slate-800 focus:border-purple-400 outline-none sm:col-span-2">
+            <select id="quick-gender" required class="px-3 py-2.5 rounded-xl border border-slate-200 text-xs bg-white text-slate-800 focus:border-purple-400 outline-none">
               <option value="" disabled selected>L/P</option>
               <option value="L">Laki-laki (L)</option>
               <option value="P">Perempuan (P)</option>
             </select>
-            <select id="quick-category" class="px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white">
+            <select id="quick-category" class="px-3 py-2.5 rounded-xl border border-slate-200 text-xs bg-white text-slate-800 focus:border-purple-400 outline-none">
               <option value="2D">2D</option>
               <option value="3D">3D</option>
             </select>
-            <select id="quick-style" class="px-3 py-2 rounded-xl border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white">
+            <select id="quick-style" class="px-3 py-2.5 rounded-xl border border-slate-200 text-xs bg-white text-slate-800 focus:border-purple-400 outline-none">
               <option value="Visual Tutorial">Visual Tutorial</option>
               <option value="Kinestetik Eksploratif">Kinestetik Eksploratif</option>
               <option value="Auditori / Demonstrasi">Auditori</option>
               <option value="Sosial Kolaboratif">Kolaboratif</option>
             </select>
-            <button type="submit" class="py-2 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white font-semibold rounded-xl text-xs transition cursor-pointer shadow-sm col-span-2 sm:col-span-1">
+            <button type="submit" class="py-2.5 bg-[#6366F1] hover:bg-[#4F46E5] text-white font-semibold rounded-xl text-xs transition cursor-pointer shadow-xs col-span-2 sm:col-span-1">
               + Tambah
             </button>
           </form>
         </div>
 
         <!-- Students Table -->
-        <div class="atelier-card overflow-hidden">
-          <div class="p-4 border-b border-atelier-border flex flex-wrap items-center justify-between gap-3 bg-atelier-warm/40">
+        <div class="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-xs">
+          <div class="p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4 bg-white">
             <div>
-              <h3 class="font-serif font-bold text-base text-atelier-ink">Daftar Siswa Kelas <span id="roster-class-title" class="font-mono text-atelier-terracotta">VII-A</span></h3>
-              <p class="text-xs text-atelier-inkMuted">Hasil pemetaan permanen tersimpan di database (diurutkan nomor absen)</p>
+              <h3 class="font-serif font-bold text-xl text-slate-900">Daftar Siswa Kelas <span id="roster-class-title" class="font-mono text-[#6366F1]">VII-A</span></h3>
+              <p class="text-xs text-slate-500 mt-0.5">Hasil pemetaan permanen tersimpan di database (diurutkan nomor absen)</p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-3">
               <input type="text" id="filter-roster-search" placeholder="Cari nama siswa..." 
-                class="px-3 py-1.5 rounded-lg border border-atelier-border text-xs focus:border-atelier-terracotta outline-none bg-white">
+                class="px-4 py-2 rounded-xl border border-slate-200 text-xs focus:border-purple-400 outline-none bg-white w-48 sm:w-64">
             </div>
           </div>
 
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
-              <thead class="bg-atelier-warm/80 font-mono text-[11px] text-atelier-inkMuted uppercase border-b border-atelier-border">
+              <thead class="bg-slate-50 font-mono text-[11px] text-slate-500 uppercase border-b border-slate-200/80">
                 <tr>
-                  <th class="py-3 px-4 text-center" style="width: 80px;">No. Absen</th>
-                  <th class="py-3 px-4">Nama Siswa</th>
-                  <th class="py-3 px-4 text-center" style="width: 60px;">L/P</th>
-                  <th class="py-3 px-4">Modalitas Belajar</th>
-                  <th class="py-3 px-4">Minat Media</th>
-                  <th class="py-3 px-4">Tantangan Utama</th>
-                  <th class="py-3 px-4 text-center">Aksi</th>
+                  <th class="py-3.5 px-4 text-center whitespace-nowrap" style="width: 80px;">No. Absen</th>
+                  <th class="py-3.5 px-4 whitespace-nowrap">Nama Siswa</th>
+                  <th class="py-3.5 px-4 text-center whitespace-nowrap" style="width: 60px;">L/P</th>
+                  <th class="py-3.5 px-4 whitespace-nowrap">Modalitas Belajar</th>
+                  <th class="py-3.5 px-4 whitespace-nowrap">Minat Media</th>
+                  <th class="py-3.5 px-4 whitespace-nowrap">Tantangan Utama</th>
+                  <th class="py-3.5 px-4 text-center whitespace-nowrap" style="min-width: 140px;">Aksi</th>
                 </tr>
               </thead>
-              <tbody id="roster-table-body" class="divide-y divide-atelier-border">
+              <tbody id="roster-table-body" class="divide-y divide-slate-100">
                 <!-- Rendered via JS -->
               </tbody>
             </table>
@@ -1538,6 +1550,104 @@
     </div>
   </div>
 
+  <!-- MODAL: ADD / EDIT STUDENT (TAHAP 4 CRUD) -->
+  <div id="modal-student" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto bg-white border border-slate-200/90 rounded-3xl shadow-xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#EDE9FE] text-[#6D28D9]">TAHAP 4: DATA SISWA</span>
+          <h3 id="modal-student-title" class="font-serif font-bold text-lg text-slate-900 mt-1">Ubah Data Siswa</h3>
+        </div>
+        <button onclick="closeStudentModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold cursor-pointer">×</button>
+      </div>
+
+      <form id="form-student" onsubmit="submitStudentForm(event)" class="space-y-3.5 text-xs">
+        <input type="hidden" id="form-student-id" value="">
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label for="form-s-attendance" class="block font-mono font-semibold text-slate-600 uppercase mb-1">No. Absen</label>
+            <input type="number" id="form-s-attendance" min="1" max="60" required
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-purple-400">
+          </div>
+          <div class="col-span-2">
+            <label for="form-s-gender" class="block font-mono font-semibold text-slate-600 uppercase mb-1">Jenis Kelamin</label>
+            <select id="form-s-gender" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-purple-400">
+              <option value="L">Laki-laki (L)</option>
+              <option value="P">Perempuan (P)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="form-s-name" class="block font-mono font-semibold text-slate-600 uppercase mb-1">Nama Lengkap Siswa</label>
+          <input type="text" id="form-s-name" placeholder="Nama lengkap siswa..." required
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-purple-400">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="form-s-category" class="block font-mono font-semibold text-slate-600 uppercase mb-1">Kategori Media</label>
+            <select id="form-s-category" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-purple-400">
+              <option value="2D">2D (Drawing / Lukis / Desain)</option>
+              <option value="3D">3D (Patung / Keramik / Kriya)</option>
+            </select>
+          </div>
+          <div>
+            <label for="form-s-suboption" class="block font-mono font-semibold text-slate-600 uppercase mb-1">Sub-Opsi Media</label>
+            <input type="text" id="form-s-suboption" placeholder="Media Kering / Basah / Clay..."
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-purple-400">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="form-s-style" class="block font-mono font-semibold text-slate-600 uppercase mb-1">Modalitas Belajar</label>
+            <select id="form-s-style" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-purple-400">
+              <option value="Visual Tutorial">Visual Tutorial</option>
+              <option value="Kinestetik Eksploratif">Kinestetik Eksploratif</option>
+              <option value="Auditori / Demonstrasi">Auditori / Demonstrasi</option>
+              <option value="Sosial Kolaboratif">Sosial Kolaboratif</option>
+            </select>
+          </div>
+          <div>
+            <label for="form-s-challenge" class="block font-mono font-semibold text-slate-600 uppercase mb-1">Tantangan Utama</label>
+            <select id="form-s-challenge" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-purple-400">
+              <option value="Sketsa Proporsi">Sketsa Proporsi</option>
+              <option value="Pencampuran Warna">Pencampuran Warna</option>
+              <option value="Pencarian Ide Awal">Pencarian Ide Awal</option>
+              <option value="Finishing &amp; Detail">Finishing &amp; Detail</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="form-s-feeling" class="block font-mono font-semibold text-slate-600 uppercase mb-1">Refleksi Kesiapan / Perasaan</label>
+          <select id="form-s-feeling" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-purple-400">
+            <option value="Senang &amp; Percaya Diri">Senang &amp; Percaya Diri</option>
+            <option value="Biasa Saja">Biasa Saja</option>
+            <option value="Ragu-ragu / Cemas">Ragu-ragu / Cemas</option>
+            <option value="Sangat Tertantang">Sangat Tertantang</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+          <button type="button" id="btn-delete-student-modal" onclick="deleteCurrentStudentModal()" class="hidden px-4 py-2 border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl font-medium transition cursor-pointer">
+            Hapus Siswa
+          </button>
+          <div class="flex items-center gap-2 ml-auto">
+            <button type="button" onclick="closeStudentModal()" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl font-medium cursor-pointer">
+              Batal
+            </button>
+            <button type="submit" id="btn-save-student" class="px-5 py-2 bg-[#6366F1] hover:bg-[#4F46E5] text-white font-semibold rounded-xl transition cursor-pointer shadow-sm">
+              Simpan Data Siswa
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL: TAMBAH / UBAH KARYA PORTOFOLIO (TAHAP 9 CRUD) -->
   <div id="modal-portfolio" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto bg-white border border-slate-200/90 rounded-3xl shadow-xl">
@@ -1625,7 +1735,7 @@
     </div>
   </div>
 
-  <script src="/js/api.js?v=3.2"></script>
-  <script src="/js/guru.js?v=3.2"></script>
+  <script src="/js/api.js?v=3.3"></script>
+  <script src="/js/guru.js?v=3.3"></script>
 </body>
 </html>

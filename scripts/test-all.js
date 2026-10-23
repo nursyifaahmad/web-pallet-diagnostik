@@ -1,7 +1,18 @@
 const http = require('http');
-const app = require('../src/server'); // server starts listening
+const app = require('../src/server');
 
-setTimeout(async () => {
+(async () => {
+  let srv = null;
+  try {
+    const check = await fetch('http://localhost:3090/health').catch(() => null);
+    if (!check || !check.ok) {
+      await new Promise(resolve => {
+        srv = app.listen(3090, '0.0.0.0', () => resolve());
+      });
+    }
+  } catch (e) {}
+
+  setTimeout(async () => {
   console.log('\n--- STARTING AUTOMATED INTEGRATION TESTS (WITH ATTENDANCE NO & GENDER) ---');
 
   const fetchJson = async (url, options = {}) => {
@@ -142,4 +153,6 @@ setTimeout(async () => {
     console.error('❌ Test failed:', err);
     process.exit(1);
   }
-}, 1200);
+  }, 1200);
+})();
+

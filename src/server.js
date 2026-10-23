@@ -117,13 +117,17 @@ app.use((err, req, res, next) => {
   res.status(500).json({ status: 'error', message: 'Terjadi kesalahan internal pada server.' });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`====================================================`);
-  console.log(` PALLET - Personalised Art Learning Profile`);
-  console.log(` Server aktif pada: http://localhost:${PORT}`);
-  console.log(` Portal Siswa:      http://localhost:${PORT}/`);
-  console.log(` Login Guru:        http://localhost:${PORT}/login/guru`);
-  console.log(` Dashboard Guru:    http://localhost:${PORT}/guru`);
-  console.log(` Cloudflare Domain: https://artuniverse.my.id`);
-  console.log(`====================================================`);
-});
+if (require.main === module) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`====================================================`);
+    console.log(` PALLET - Personalised Art Learning Profile`);
+    console.log(` Server aktif pada: http://localhost:${PORT}`);
+    console.log(` Portal Siswa:      http://localhost:${PORT}/`);
+    console.log(` Login Guru:        http://localhost:${PORT}/login/guru`);
+    console.log(` Dashboard Guru:    http://localhost:${PORT}/guru`);
+    console.log(` Cloudflare Domain: https://artuniverse.my.id`);
+    console.log(`====================================================`);
+  });
+}
+
+module.exports = app;

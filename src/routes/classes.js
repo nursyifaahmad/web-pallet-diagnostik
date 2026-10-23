@@ -81,10 +81,10 @@ router.get('/:id', (req, res) => {
     }
 
     const students = db.prepare(`
-      SELECT id, name, class_id, category, sub_option, style, challenge, feeling, answers_json, created_at
+      SELECT id, attendance_no, name, gender, class_id, category, sub_option, style, challenge, feeling, answers_json, created_at
       FROM students
       WHERE class_id = ?
-      ORDER BY name ASC
+      ORDER BY (CASE WHEN attendance_no IS NULL THEN 999 ELSE attendance_no END) ASC, name ASC
     `).all(id);
 
     const parsedStudents = students.map(s => ({
