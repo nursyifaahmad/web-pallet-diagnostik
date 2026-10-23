@@ -67,8 +67,27 @@ body {
 
 /* Subtle textured background */
 .paper-texture {
-  background-image: radial-gradient(rgba(120, 113, 108, 0.08) 1px, transparent 0);
+  background-image: radial-gradient(rgba(120, 113, 108, 0.05) 1px, transparent 0);
   background-size: 24px 24px;
+}
+
+/* Google Sites Modern Cards */
+.gs-card {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gs-card-hover {
+  transition: all 0.2s ease-in-out;
+}
+
+.gs-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.08);
+  border-color: #8B5CF6;
 }
 
 /* Custom Selection Pill */

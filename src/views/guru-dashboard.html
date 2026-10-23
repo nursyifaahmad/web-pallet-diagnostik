@@ -38,53 +38,84 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="/css/style.css?v=2.3">
+  <link rel="stylesheet" href="/css/style.css?v=2.4">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
 </head>
 <body class="bg-atelier-bg text-atelier-ink min-h-screen flex flex-col paper-texture">
 
-  <!-- TOP APP BAR -->
-  <header class="border-b border-atelier-border bg-white/95 backdrop-blur-md sticky top-0 z-30 no-print">
+  <!-- TOP APP BAR (Google Sites Style) -->
+  <header class="border-b border-slate-200/80 bg-white/95 backdrop-blur-md sticky top-0 z-30 no-print">
     <div class="max-w-[1440px] mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
       <!-- Left: Mobile Menu Toggle & Brand -->
       <div class="flex items-center gap-3">
-        <button id="btn-toggle-sidebar" class="lg:hidden p-2 rounded-xl border border-atelier-border hover:bg-atelier-warm transition text-atelier-ink">
+        <button id="btn-toggle-sidebar" class="lg:hidden p-2 rounded-xl border border-slate-200 hover:bg-slate-50 transition text-slate-700">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
         </button>
 
-        <div class="w-9 h-9 rounded-xl bg-atelier-terracotta text-white flex items-center justify-center font-serif font-black text-lg shadow-sm">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#8B5CF6] to-[#6D28D9] text-white flex items-center justify-center font-bold text-xl shadow-md">
           P
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="font-serif font-bold text-base md:text-lg text-atelier-ink leading-tight">PALLET Studio Guru</h1>
-            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-atelier-warm border border-atelier-border">Fase D SMP</span>
+            <span class="font-bold text-lg text-slate-900 tracking-tight">PALLET</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#EDE9FE] text-[#6D28D9] border border-[#DDD6FE]">MODE GURU</span>
           </div>
-          <p class="text-[11px] text-atelier-inkMuted hidden sm:block">Personalised Art Learning Profile & Asesmen Diagnostik Seni Rupa</p>
+          <p class="text-[11px] font-mono text-slate-500 hidden sm:block">Personalised Art Learning Profile · SMP Fase D</p>
         </div>
       </div>
 
       <!-- Right: Quick Actions -->
-      <div class="flex items-center gap-2">
-        <a href="/" target="_blank" class="px-3 py-1.5 rounded-lg border border-atelier-border hover:bg-atelier-warm transition text-xs font-medium flex items-center gap-1.5">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-          </svg>
-          <span class="hidden md:inline">Portal Siswa</span>
-        </a>
+      <div class="flex items-center gap-3">
+        <!-- Interactive Dropdown Pill: Kelas Aktif -->
+        <div class="relative">
+          <button id="navbar-class-picker-btn" onclick="toggleNavClassDropdown()" class="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium shadow-xs transition cursor-pointer">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-slate-500">Kelas Aktif:</span>
+            <span id="nav-active-class-text" class="font-mono font-bold text-indigo-600">VII-A</span>
+            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          
+          <!-- Dropdown Menu for 27 Classes -->
+          <div id="nav-class-dropdown-menu" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-3 z-50 text-xs">
+            <div class="space-y-2">
+              <p class="font-mono font-bold text-[10px] text-slate-400 uppercase tracking-wider">Pilih Rombel Aktif (27 Kelas)</p>
+              <div class="space-y-2" id="nav-class-dropdown-items">
+                <!-- Injected via guru.js -->
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <button id="btn-export-excel" class="px-3 py-1.5 rounded-lg bg-atelier-sage text-white hover:bg-green-800 transition text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-          </svg>
-          <span>Ekspor Excel (.xlsx)</span>
+        <!-- Button: Buat Asesmen Baru -->
+        <button onclick="switchMainTab('tab-m1-diagnostik')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm hover:opacity-95 transition cursor-pointer">
+          <span>✨</span>
+          <span>Buat Asesmen Baru</span>
         </button>
 
-        <button id="btn-logout" class="px-3 py-1.5 rounded-lg border border-red-200 text-red-700 hover:bg-red-50 transition text-xs font-medium cursor-pointer">
-          Keluar
-        </button>
+        <!-- User Role Label -->
+        <span class="text-xs text-slate-600 font-medium hidden md:inline">Guru Seni Rupa</span>
+
+        <!-- Akses / Mode (Logout & Switch) Button -->
+        <div class="relative">
+          <button id="btn-mode-dropdown" onclick="toggleModeDropdown()" class="px-3.5 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs text-slate-700 font-medium flex items-center gap-1.5 transition cursor-pointer">
+            <span>🔒</span>
+            <span>Akses / Mode</span>
+          </button>
+          <div id="mode-dropdown-menu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 text-xs space-y-1">
+            <a href="/" target="_blank" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 flex items-center gap-2 text-slate-700">
+              <span>🎨</span><span>Buka Portal Siswa</span>
+            </a>
+            <button id="btn-export-excel" class="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 flex items-center gap-2 text-emerald-700 font-semibold cursor-pointer">
+              <span>📥</span><span>Unduh Rekap Excel</span>
+            </button>
+            <div class="border-t border-slate-100 my-1"></div>
+            <button id="btn-logout" class="w-full text-left px-3 py-2 rounded-xl hover:bg-red-50 text-red-600 font-semibold flex items-center gap-2 cursor-pointer">
+              <span>🚪</span><span>Keluar / Logout</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -97,71 +128,71 @@
     <!-- Sesuai Persis dengan Prototipe Google Sites PALLET      -->
     <!-- ======================================================== -->
     <aside id="sidebar-container" class="hidden lg:block w-full lg:w-72 flex-shrink-0 no-print">
-      <div class="atelier-card p-4 bg-white/95 border border-atelier-border rounded-2xl shadow-sm sticky top-16 space-y-4">
+      <div class="bg-white border border-slate-200/90 rounded-3xl p-5 shadow-xs sticky top-20 space-y-4">
         
         <!-- SECTION 1: NAVIGASI PLATFORM -->
         <div>
-          <p class="text-[11px] font-mono font-bold text-atelier-inkMuted uppercase tracking-wider px-3 mb-2">NAVIGASI PLATFORM</p>
+          <p class="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">NAVIGASI PLATFORM</p>
           <nav class="space-y-1">
-            <button onclick="switchMainTab('tab-home')" id="nav-tab-home" class="platform-nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition text-atelier-ink hover:bg-atelier-warm">
-              <span class="text-sm">🏠</span>
+            <button onclick="switchMainTab('tab-home')" id="nav-tab-home" class="platform-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-bold transition bg-[#F3E8FF] text-[#1E1B4B]">
+              <span class="text-base">🏠</span>
               <span>Beranda Utama</span>
             </button>
-            <button onclick="switchMainTab('tab-class-dash')" id="nav-tab-class-dash" class="platform-nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition text-atelier-ink hover:bg-atelier-warm">
-              <span class="text-sm">📊</span>
+            <button onclick="switchMainTab('tab-class-dash')" id="nav-tab-class-dash" class="platform-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition text-slate-700 hover:bg-slate-50">
+              <span class="text-base">📊</span>
               <span>Dashboard Kelas Aktif</span>
             </button>
-            <button onclick="switchMainTab('tab-jenjang')" id="nav-tab-jenjang" class="platform-nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition text-atelier-ink hover:bg-atelier-warm">
-              <span class="text-sm">🗺️</span>
+            <button onclick="switchMainTab('tab-jenjang')" id="nav-tab-jenjang" class="platform-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition text-slate-700 hover:bg-slate-50">
+              <span class="text-base">🗺️</span>
               <span>Pemetaan Jenjang (VII–IX A–I)</span>
             </button>
           </nav>
         </div>
 
-        <div class="border-t border-atelier-border"></div>
+        <div class="border-t border-slate-100"></div>
 
         <!-- SECTION 2: 9 TAHAP MODUL PALLET -->
         <div>
-          <p class="text-[11px] font-mono font-bold text-atelier-inkMuted uppercase tracking-wider px-3 mb-2">9 TAHAP MODUL PALLET</p>
+          <p class="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">9 TAHAP MODUL PALLET</p>
           <nav class="space-y-1">
-            <button onclick="switchMainTab('tab-m1-diagnostik')" id="nav-tab-m1-diagnostik" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+            <button onclick="switchMainTab('tab-m1-diagnostik')" id="nav-tab-m1-diagnostik" class="platform-nav-btn w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold transition text-slate-700 hover:bg-slate-50">
               <span>1. Digital Diagnostik</span>
-              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+              <span class="nav-arrow text-slate-400 text-xs">→</span>
             </button>
-            <button onclick="switchMainTab('tab-m2-profile')" id="nav-tab-m2-profile" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+            <button onclick="switchMainTab('tab-m2-profile')" id="nav-tab-m2-profile" class="platform-nav-btn w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold transition text-slate-700 hover:bg-slate-50">
               <span>2. Student Art Profile</span>
-              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+              <span class="nav-arrow text-slate-400 text-xs">→</span>
             </button>
-            <button onclick="switchMainTab('tab-m3-analysis')" id="nav-tab-m3-analysis" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+            <button onclick="switchMainTab('tab-m3-analysis')" id="nav-tab-m3-analysis" class="platform-nav-btn w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold transition text-slate-700 hover:bg-slate-50">
               <span>3. Class Analysis</span>
-              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+              <span class="nav-arrow text-slate-400 text-xs">→</span>
             </button>
-            <button onclick="switchMainTab('tab-m4-roster')" id="nav-tab-m4-roster" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+            <button onclick="switchMainTab('tab-m4-roster')" id="nav-tab-m4-roster" class="platform-nav-btn w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold transition text-slate-700 hover:bg-slate-50">
               <span>4. Teacher Dashboard</span>
-              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+              <span class="nav-arrow text-slate-400 text-xs">→</span>
             </button>
-            <button onclick="switchMainTab('tab-m5-recommendation')" id="nav-tab-m5-recommendation" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+            <button onclick="switchMainTab('tab-m5-recommendation')" id="nav-tab-m5-recommendation" class="platform-nav-btn w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold transition text-slate-700 hover:bg-slate-50">
               <span>5. Learning Recommendation</span>
-              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+              <span class="nav-arrow text-slate-400 text-xs">→</span>
             </button>
-            <button onclick="switchMainTab('tab-m6-rpp')" id="nav-tab-m6-rpp" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+            <button onclick="switchMainTab('tab-m6-rpp')" id="nav-tab-m6-rpp" class="platform-nav-btn w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold transition text-slate-700 hover:bg-slate-50">
               <span>6. Learning Plan (RPP)</span>
-              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+              <span class="nav-arrow text-slate-400 text-xs">→</span>
             </button>
-            <button onclick="switchMainTab('tab-m7-studio')" id="nav-tab-m7-studio" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+            <button onclick="switchMainTab('tab-m7-studio')" id="nav-tab-m7-studio" class="platform-nav-btn w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold transition text-slate-700 hover:bg-slate-50">
               <span>7. Implementation Studio</span>
-              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+              <span class="nav-arrow text-slate-400 text-xs">→</span>
             </button>
-            <button onclick="switchMainTab('tab-m8-rubric')" id="nav-tab-m8-rubric" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+            <button onclick="switchMainTab('tab-m8-rubric')" id="nav-tab-m8-rubric" class="platform-nav-btn w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold transition text-slate-700 hover:bg-slate-50">
               <span>8. Assessment & Reflection</span>
-              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+              <span class="nav-arrow text-slate-400 text-xs">→</span>
             </button>
-            <button onclick="switchMainTab('tab-m9-tracking')" id="nav-tab-m9-tracking" class="platform-nav-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-atelier-ink hover:bg-atelier-warm">
+            <button onclick="switchMainTab('tab-m9-tracking')" id="nav-tab-m9-tracking" class="platform-nav-btn w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold transition text-slate-700 hover:bg-slate-50">
               <div class="flex items-center gap-2">
                 <span>9. Student Tracking</span>
                 <span id="sidebar-live-badge" class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-emerald-100 text-emerald-800 font-bold">0</span>
               </div>
-              <span class="nav-arrow text-atelier-inkMuted text-[10px]">→</span>
+              <span class="nav-arrow text-slate-400 text-xs">→</span>
             </button>
           </nav>
         </div>
@@ -172,147 +203,251 @@
     <!-- ======================================================== -->
     <!-- MAIN CONTENT AREA -->
     <!-- ======================================================== -->
-    <main class="flex-1 min-w-0 space-y-4">
+    <main class="flex-1 min-w-0 space-y-5">
 
-      <!-- 27-CLASS MULTI-GRADE SWITCHER BAR (Always on Top of Content) -->
-      <div class="atelier-card p-3 bg-white border border-atelier-border rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sm no-print">
+      <!-- 27-CLASS MULTI-GRADE SWITCHER BAR (Appears on module views, hidden on Beranda) -->
+      <div id="class-switcher-bar" class="hidden bg-white border border-slate-200/80 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-xs no-print">
         <!-- Grade Tabs: VII, VIII, IX -->
         <div class="flex items-center gap-1 font-mono text-xs">
-          <span class="text-atelier-inkMuted text-[11px] mr-2 uppercase tracking-wider font-bold">Jenjang:</span>
-          <button onclick="switchGradeTab(7)" id="tab-grade-7" class="grade-tab-btn px-3 py-1 rounded-lg font-bold transition bg-atelier-terracotta text-white">Kelas VII</button>
-          <button onclick="switchGradeTab(8)" id="tab-grade-8" class="grade-tab-btn px-3 py-1 rounded-lg font-bold transition bg-atelier-warm text-atelier-ink hover:bg-atelier-border">Kelas VIII</button>
-          <button onclick="switchGradeTab(9)" id="tab-grade-9" class="grade-tab-btn px-3 py-1 rounded-lg font-bold transition bg-atelier-warm text-atelier-ink hover:bg-atelier-border">Kelas IX</button>
+          <span class="text-slate-400 text-[11px] mr-2 uppercase tracking-wider font-bold">Jenjang:</span>
+          <button onclick="switchGradeTab(7)" id="tab-grade-7" class="grade-tab-btn px-3 py-1 rounded-lg font-bold transition bg-[#6366F1] text-white">Kelas VII</button>
+          <button onclick="switchGradeTab(8)" id="tab-grade-8" class="grade-tab-btn px-3 py-1 rounded-lg font-bold transition bg-slate-100 text-slate-700 hover:bg-slate-200">Kelas VIII</button>
+          <button onclick="switchGradeTab(9)" id="tab-grade-9" class="grade-tab-btn px-3 py-1 rounded-lg font-bold transition bg-slate-100 text-slate-700 hover:bg-slate-200">Kelas IX</button>
         </div>
 
         <!-- Section Buttons: A s.d I -->
         <div class="flex items-center gap-1 font-mono text-xs overflow-x-auto py-1" id="section-buttons-container">
-          <span class="text-atelier-inkMuted text-[11px] mr-2 uppercase tracking-wider font-bold">Rombel:</span>
+          <span class="text-slate-400 text-[11px] mr-2 uppercase tracking-wider font-bold">Rombel:</span>
           <!-- Rendered via guru.js (A, B, C, D, E, F, G, H, I) -->
         </div>
 
         <!-- Active Class Indicator -->
         <div class="flex items-center gap-2">
-          <span class="text-xs text-atelier-inkMuted">Kelas Aktif:</span>
-          <span id="active-class-badge" class="px-2.5 py-0.5 rounded-full font-mono font-bold text-xs bg-atelier-terracottaLight text-atelier-terracotta border border-atelier-terracotta/30">
+          <span class="text-xs text-slate-500">Kelas Aktif:</span>
+          <span id="active-class-badge" class="px-2.5 py-0.5 rounded-full font-mono font-bold text-xs bg-indigo-50 text-indigo-700 border border-indigo-200">
             VII-A
           </span>
         </div>
       </div>
 
       <!-- ======================================================== -->
-      <!-- VIEW: BERANDA UTAMA (🏠) -->
+      <!-- VIEW: BERANDA UTAMA (🏠) 100% SAMA PERSIS GOOGLE SITES -->
       <!-- ======================================================== -->
       <div id="section-home" class="tab-content-section space-y-6">
-        <!-- Hero Welcome Card -->
-        <div class="atelier-card p-6 md:p-8 bg-gradient-to-br from-white via-atelier-warm/40 to-atelier-terracottaLight/30 border border-atelier-border space-y-4">
-          <div class="flex items-start justify-between">
-            <div class="space-y-2">
-              <span class="inline-block px-3 py-1 bg-atelier-terracottaLight text-atelier-terracotta text-xs font-mono font-bold rounded-lg border border-atelier-terracotta/20">
-                Ekosistem Pembelajaran Berdiferensiasi Seni Rupa
-              </span>
-              <h2 class="font-serif font-black text-2xl md:text-3xl text-atelier-ink leading-tight">
-                Selamat Datang di Studio Guru PALLET
-              </h2>
-              <p class="text-xs md:text-sm text-atelier-inkMuted max-w-2xl leading-relaxed">
-                Platform kurasi profil artistik siswa, perancangan pembelajaran berdiferensiasi Kurikulum Merdeka (Fase D SMP), dan manajemen asesmen diagnostik terintegrasi untuk 27 rombel kelas.
+        
+        <!-- HERO WELCOME CARD -->
+        <div class="bg-white border border-slate-200/80 rounded-3xl p-6 md:p-8 shadow-xs space-y-6">
+          <!-- Top Tag Badge -->
+          <div>
+            <span class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#F0FDF4] text-[#15803D] border border-[#DCFCE7] rounded-full text-xs font-mono font-semibold">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              Platform Profiling &amp; Diferensiasi Seni Rupa SMP (Fase D)
+            </span>
+          </div>
+
+          <!-- Hero Main Content: Left Copy + Right Live Preview Card -->
+          <div class="flex flex-col lg:flex-row items-start justify-between gap-8">
+            <!-- Left Column: Title & Description -->
+            <div class="space-y-4 flex-1">
+              <h1 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold leading-[1.15] tracking-tight text-slate-900">
+                Kenali <span class="italic text-[#8B5CF6] font-normal">gaya belajar,</span><br>
+                <span class="italic text-[#EC4899] font-normal">media 2D vs 3D &amp;</span><br>
+                <span class="italic text-[#0D9488] font-normal">hambatan berkarya</span><br>
+                setiap siswamu.
+              </h1>
+
+              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-xl">
+                PALLET memetakan modalitas belajar, preferensi eksplorasi visual 2D (Drawing, Lukis, Grafis, Desain) &amp; 3D (Patung, Keramik, Kriya), serta kesiapan berkarya siswa SMP jenjang VII, VIII, dan IX secara interaktif dalam Kurikulum Merdeka.
               </p>
+
+              <!-- CTA Action Buttons -->
+              <div class="flex flex-wrap items-center gap-3 pt-2">
+                <button onclick="switchMainTab('tab-m4-roster')" class="px-5 py-2.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-bold flex items-center gap-2 shadow-sm transition cursor-pointer">
+                  <span>🔒</span>
+                  <span>Masuk sebagai Guru</span>
+                </button>
+                <a href="/" target="_blank" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#EC4899] to-[#F43F5E] hover:opacity-95 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition cursor-pointer">
+                  <span>🎨</span>
+                  <span>Mulai Diagnostik Siswa</span>
+                </a>
+              </div>
             </div>
-            <div class="hidden md:block w-16 h-16 rounded-2xl bg-atelier-terracotta/10 text-atelier-terracotta flex items-center justify-center font-serif font-black text-3xl">
-              🎨
+
+            <!-- Right Column: LIVE PREVIEW CARD -->
+            <div class="w-full lg:w-84 p-5 rounded-2xl border border-slate-200/90 bg-white shadow-xs space-y-3.5 self-start">
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="px-2.5 py-0.5 rounded-full font-mono font-bold bg-[#EDE9FE] text-[#6D28D9]">LIVE PREVIEW CARD</span>
+                <span id="hero-preview-id" class="font-mono text-slate-400">ID: VII-A-01</span>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <div id="hero-preview-avatar" class="w-10 h-10 rounded-xl bg-[#A855F7] text-white font-bold flex items-center justify-center text-sm shadow-xs">
+                  BE
+                </div>
+                <div>
+                  <h4 id="hero-preview-name" class="font-bold text-slate-900 text-sm">Belum Ada Data</h4>
+                  <p id="hero-preview-sub" class="text-[11px] text-slate-500">Kelas VII-A · Seni Rupa</p>
+                </div>
+              </div>
+
+              <div class="space-y-1.5 text-xs border-t border-slate-100 pt-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500">Modalitas:</span>
+                  <span id="hero-preview-style" class="font-semibold text-[#6366F1]">Visual Tutorial</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500">Minat Utama:</span>
+                  <span id="hero-preview-media" class="font-semibold text-[#EC4899]">2D (Drawing)</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500">Kesiapan Ide:</span>
+                  <span id="hero-preview-idea" class="font-semibold text-[#10B981]">Sketsa Proporsi</span>
+                </div>
+              </div>
+
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-[11px] text-slate-600 italic">
+                <span id="hero-preview-quote">“Rekomendasi Guru: Berikan contoh sketsa proporsi awal &amp; tutorial gambar digital.”</span>
+              </div>
             </div>
           </div>
 
-          <!-- 3 Quick Pillars -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-            <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-1">
-              <span class="text-lg">🎯</span>
-              <h4 class="font-serif font-bold text-sm text-atelier-ink">Diagnostik Non-Kognitif</h4>
-              <p class="text-[11px] text-atelier-inkMuted">Memetakan gaya belajar (Visual, Kinestetik, Auditori, Kolaboratif) dan preferensi media (2D vs 3D).</p>
+          <!-- Bottom 4 Metrics Bar inside Hero Card -->
+          <div class="border-t border-slate-100 pt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <p id="hero-stat-students" class="font-serif font-black text-3xl sm:text-4xl text-[#6366F1]">0</p>
+              <p class="text-xs text-slate-600 font-medium">Siswa Terprofiling</p>
             </div>
-            <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-1">
-              <span class="text-lg">📝</span>
-              <h4 class="font-serif font-bold text-sm text-atelier-ink">Modul Ajar & RPP Dinamis</h4>
-              <p class="text-[11px] text-atelier-inkMuted">Rekomendasi strategi ajar yang otomatis menyesuaikan jawaban riil murid di rombel aktif.</p>
+            <div>
+              <p class="font-serif font-black text-3xl sm:text-4xl text-[#EC4899]">27 Kelas</p>
+              <p class="text-xs text-slate-600 font-medium">Pemetaan VII–IX (A–I)</p>
             </div>
-            <div class="p-4 bg-white rounded-xl border border-atelier-border space-y-1">
-              <span class="text-lg">⚖️</span>
-              <h4 class="font-serif font-bold text-sm text-atelier-ink">Rubrik Autentik & Rekap Nilai</h4>
-              <p class="text-[11px] text-atelier-inkMuted">Penilaian 4 dimensi autentik dengan tabel rekapitulasi nilai dan fitur unduh file Excel.</p>
+            <div>
+              <p class="font-serif font-black text-3xl sm:text-4xl text-[#0D9488]">2D &amp; 3D</p>
+              <p class="text-xs text-slate-600 font-medium">Spesifikasi Rinci Sub-Media</p>
+            </div>
+            <div>
+              <p class="font-serif font-black text-3xl sm:text-4xl text-[#F59E0B]">10 Aspek</p>
+              <p class="text-xs text-slate-600 font-medium">Matriks Catatan Guru</p>
             </div>
           </div>
         </div>
 
-        <!-- 9 Tahap Visual Map -->
-        <div class="atelier-card p-6 space-y-4">
-          <div class="border-b border-atelier-border pb-3 flex items-center justify-between">
-            <h3 class="font-serif font-bold text-base text-atelier-ink">Alur 9 Tahap Modul PALLET</h3>
-            <span class="text-xs font-mono text-atelier-inkMuted">Klik untuk membuka tahap</span>
+        <!-- 3 MIDDLE FEATURE CARDS -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div class="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-3 hover:shadow-md transition">
+            <div class="w-10 h-10 rounded-2xl bg-pink-50 text-pink-600 flex items-center justify-center text-lg">🎯</div>
+            <h3 class="font-bold text-slate-900 text-sm">Asesmen Diagnostik Presisi</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">10 Soal diagnostik terstruktur membedakan peminat 2D dan 3D.</p>
+          </div>
+          <div class="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-3 hover:shadow-md transition">
+            <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">🗺️</div>
+            <h3 class="font-bold text-slate-900 text-sm">Multi–Grade Mapping (27 Kelas)</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">Kelola dan input siswa langsung untuk Kelas VII-A s.d IX-I secara real-time.</p>
+          </div>
+          <div class="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-3 hover:shadow-md transition">
+            <div class="w-10 h-10 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-lg">🛠️</div>
+            <h3 class="font-bold text-slate-900 text-sm">Studio Support &amp; RPP Generator</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">Generator kelompok heterogen, Modul Ajar berdiferensiasi, dan Rubrik Autentik.</p>
+          </div>
+        </div>
+
+        <!-- INTEGRATED WORKFLOW: 9 TAHAP MODUL PEMBELAJARAN PALLET -->
+        <div class="bg-white border border-slate-200/80 rounded-3xl p-6 md:p-8 shadow-xs space-y-6">
+          <div class="text-center space-y-1">
+            <p class="font-mono text-xs font-bold text-[#6366F1] uppercase tracking-widest">INTEGRATED WORKFLOW</p>
+            <h2 class="font-serif font-black text-2xl md:text-3xl text-slate-900">9 Tahap Modul Pembelajaran PALLET</h2>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
-            <button onclick="switchMainTab('tab-m1-diagnostik')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
-              <div>
-                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 1</span>
-                <span class="font-semibold text-atelier-ink">Digital Diagnostik</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Tahap 1 -->
+            <div onclick="switchMainTab('tab-m1-diagnostik')" class="p-5 rounded-2xl border border-slate-200/90 bg-white hover:border-[#8B5CF6] hover:shadow-md transition cursor-pointer group space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold bg-[#EDE9FE] text-[#6D28D9]">TAHAP 1</span>
+                <span class="text-slate-400 group-hover:text-[#8B5CF6] group-hover:translate-x-1 transition-all text-xs">→</span>
               </div>
-              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
-            </button>
-            <button onclick="switchMainTab('tab-m2-profile')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
-              <div>
-                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 2</span>
-                <span class="font-semibold text-atelier-ink">Student Art Profile</span>
+              <h4 class="font-bold text-slate-900 text-sm group-hover:text-[#6D28D9] transition">Digital Diagnostik</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">10 Soal diagnostik + spesifikasi pilihan media 2D dan 3D.</p>
+            </div>
+
+            <!-- Tahap 2 -->
+            <div onclick="switchMainTab('tab-m2-profile')" class="p-5 rounded-2xl border border-slate-200/90 bg-white hover:border-[#8B5CF6] hover:shadow-md transition cursor-pointer group space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold bg-[#EDE9FE] text-[#6D28D9]">TAHAP 2</span>
+                <span class="text-slate-400 group-hover:text-[#8B5CF6] group-hover:translate-x-1 transition-all text-xs">→</span>
               </div>
-              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
-            </button>
-            <button onclick="switchMainTab('tab-m3-analysis')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
-              <div>
-                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 3</span>
-                <span class="font-semibold text-atelier-ink">Class Analysis</span>
+              <h4 class="font-bold text-slate-900 text-sm group-hover:text-[#6D28D9] transition">Student Art Profile</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">Kartu profil visual + matriks catatan guru 10 aspek.</p>
+            </div>
+
+            <!-- Tahap 3 -->
+            <div onclick="switchMainTab('tab-m3-analysis')" class="p-5 rounded-2xl border border-slate-200/90 bg-white hover:border-[#8B5CF6] hover:shadow-md transition cursor-pointer group space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold bg-[#EDE9FE] text-[#6D28D9]">TAHAP 3</span>
+                <span class="text-slate-400 group-hover:text-[#8B5CF6] group-hover:translate-x-1 transition-all text-xs">→</span>
               </div>
-              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
-            </button>
-            <button onclick="switchMainTab('tab-m4-roster')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
-              <div>
-                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 4</span>
-                <span class="font-semibold text-atelier-ink">Teacher Dashboard</span>
+              <h4 class="font-bold text-slate-900 text-sm group-hover:text-[#6D28D9] transition">Class Analysis</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">Heatmap, grafik distribusi gaya belajar, dan rasio 2D vs 3D.</p>
+            </div>
+
+            <!-- Tahap 4 -->
+            <div onclick="switchMainTab('tab-m4-roster')" class="p-5 rounded-2xl border border-slate-200/90 bg-white hover:border-[#8B5CF6] hover:shadow-md transition cursor-pointer group space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold bg-[#EDE9FE] text-[#6D28D9]">TAHAP 4</span>
+                <span class="text-slate-400 group-hover:text-[#8B5CF6] group-hover:translate-x-1 transition-all text-xs">→</span>
               </div>
-              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
-            </button>
-            <button onclick="switchMainTab('tab-m5-recommendation')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
-              <div>
-                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 5</span>
-                <span class="font-semibold text-atelier-ink">Learning Recommendation</span>
+              <h4 class="font-bold text-slate-900 text-sm group-hover:text-[#6D28D9] transition">Teacher Dashboard</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">Akses cepat rombel aktif, cetak QR, dan statistik kelas.</p>
+            </div>
+
+            <!-- Tahap 5 -->
+            <div onclick="switchMainTab('tab-m5-recommendation')" class="p-5 rounded-2xl border border-slate-200/90 bg-white hover:border-[#8B5CF6] hover:shadow-md transition cursor-pointer group space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold bg-[#EDE9FE] text-[#6D28D9]">TAHAP 5</span>
+                <span class="text-slate-400 group-hover:text-[#8B5CF6] group-hover:translate-x-1 transition-all text-xs">→</span>
               </div>
-              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
-            </button>
-            <button onclick="switchMainTab('tab-m6-rpp')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
-              <div>
-                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 6</span>
-                <span class="font-semibold text-atelier-ink">Learning Plan (RPP)</span>
+              <h4 class="font-bold text-slate-900 text-sm group-hover:text-[#6D28D9] transition">Learning Recommendation</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">Rekomendasi diferensiasi konten, proses, dan produk.</p>
+            </div>
+
+            <!-- Tahap 6 -->
+            <div onclick="switchMainTab('tab-m6-rpp')" class="p-5 rounded-2xl border border-slate-200/90 bg-white hover:border-[#8B5CF6] hover:shadow-md transition cursor-pointer group space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold bg-[#EDE9FE] text-[#6D28D9]">TAHAP 6</span>
+                <span class="text-slate-400 group-hover:text-[#8B5CF6] group-hover:translate-x-1 transition-all text-xs">→</span>
               </div>
-              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
-            </button>
-            <button onclick="switchMainTab('tab-m7-studio')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
-              <div>
-                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 7</span>
-                <span class="font-semibold text-atelier-ink">Implementation Studio</span>
+              <h4 class="font-bold text-slate-900 text-sm group-hover:text-[#6D28D9] transition">Learning Plan (RPP)</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">Generator Modul Ajar Kurikulum Merdeka berdiferensiasi.</p>
+            </div>
+
+            <!-- Tahap 7 -->
+            <div onclick="switchMainTab('tab-m7-studio')" class="p-5 rounded-2xl border border-slate-200/90 bg-white hover:border-[#8B5CF6] hover:shadow-md transition cursor-pointer group space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold bg-[#EDE9FE] text-[#6D28D9]">TAHAP 7</span>
+                <span class="text-slate-400 group-hover:text-[#8B5CF6] group-hover:translate-x-1 transition-all text-xs">→</span>
               </div>
-              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
-            </button>
-            <button onclick="switchMainTab('tab-m8-rubric')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
-              <div>
-                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 8</span>
-                <span class="font-semibold text-atelier-ink">Assessment & Reflection</span>
+              <h4 class="font-bold text-slate-900 text-sm group-hover:text-[#6D28D9] transition">Implementation Studio</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">Generator kelompok heterogen, timer studio &amp; asistensi.</p>
+            </div>
+
+            <!-- Tahap 8 -->
+            <div onclick="switchMainTab('tab-m8-rubric')" class="p-5 rounded-2xl border border-slate-200/90 bg-white hover:border-[#8B5CF6] hover:shadow-md transition cursor-pointer group space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold bg-[#EDE9FE] text-[#6D28D9]">TAHAP 8</span>
+                <span class="text-slate-400 group-hover:text-[#8B5CF6] group-hover:translate-x-1 transition-all text-xs">→</span>
               </div>
-              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
-            </button>
-            <button onclick="switchMainTab('tab-m9-tracking')" class="p-3.5 rounded-xl border border-atelier-border bg-atelier-warm/40 hover:bg-white hover:border-atelier-terracotta text-left transition flex items-center justify-between group cursor-pointer">
-              <div>
-                <span class="block font-mono text-[10px] text-atelier-terracotta font-bold">TAHAP 9</span>
-                <span class="font-semibold text-atelier-ink">Student Tracking</span>
+              <h4 class="font-bold text-slate-900 text-sm group-hover:text-[#6D28D9] transition">Assessment &amp; Reflection</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">Kalkulator rubrik penilaian autentik proses &amp; produk.</p>
+            </div>
+
+            <!-- Tahap 9 -->
+            <div onclick="switchMainTab('tab-m9-tracking')" class="p-5 rounded-2xl border border-slate-200/90 bg-white hover:border-[#8B5CF6] hover:shadow-md transition cursor-pointer group space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold bg-[#EDE9FE] text-[#6D28D9]">TAHAP 9</span>
+                <span class="text-slate-400 group-hover:text-[#8B5CF6] group-hover:translate-x-1 transition-all text-xs">→</span>
               </div>
-              <span class="text-atelier-inkMuted group-hover:text-atelier-terracotta transition">→</span>
-            </button>
+              <h4 class="font-bold text-slate-900 text-sm group-hover:text-[#6D28D9] transition">Student Tracking</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">Log rekam jejak portofolio karya seni sepanjang semester.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -1080,7 +1215,7 @@
     </div>
   </div>
 
-  <script src="/js/api.js?v=2.3"></script>
-  <script src="/js/guru.js?v=2.3"></script>
+  <script src="/js/api.js?v=2.4"></script>
+  <script src="/js/guru.js?v=2.4"></script>
 </body>
 </html>

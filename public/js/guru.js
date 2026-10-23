@@ -76,21 +76,37 @@ function switchMainTab(tabId) {
     targetSec.classList.remove('hidden');
   }
 
+  // Manage switcher bar: hide on home, show on other tabs
+  const switcherBar = document.getElementById('class-switcher-bar');
+  if (switcherBar) {
+    if (cleanTabId === 'tab-home') {
+      switcherBar.classList.add('hidden');
+    } else {
+      switcherBar.classList.remove('hidden');
+    }
+  }
+
   // Reset all platform nav buttons styling
   document.querySelectorAll('.platform-nav-btn').forEach(btn => {
-    btn.classList.remove('bg-atelier-terracottaLight', 'text-atelier-terracotta', 'font-bold', 'border-atelier-terracotta/30');
-    btn.classList.add('text-atelier-ink', 'font-medium');
+    btn.classList.remove('bg-[#F3E8FF]', 'text-[#1E1B4B]', 'font-bold', 'shadow-xs', 'bg-atelier-terracottaLight', 'text-atelier-terracotta', 'border', 'border-atelier-terracotta/30');
+    btn.classList.add('text-slate-700', 'font-semibold');
     const arrow = btn.querySelector('.nav-arrow');
-    if (arrow) arrow.classList.replace('text-atelier-terracotta', 'text-atelier-inkMuted');
+    if (arrow) {
+      arrow.classList.remove('text-[#8B5CF6]', 'text-atelier-terracotta');
+      arrow.classList.add('text-slate-400');
+    }
   });
 
   // Highlight active button
   const activeBtn = document.getElementById(`nav-${cleanTabId}`);
   if (activeBtn) {
-    activeBtn.classList.remove('text-atelier-ink', 'font-medium');
-    activeBtn.classList.add('bg-atelier-terracottaLight', 'text-atelier-terracotta', 'font-bold', 'border', 'border-atelier-terracotta/30');
+    activeBtn.classList.remove('text-slate-700', 'font-semibold', 'text-atelier-ink', 'font-medium');
+    activeBtn.classList.add('bg-[#F3E8FF]', 'text-[#1E1B4B]', 'font-bold', 'shadow-xs');
     const arrow = activeBtn.querySelector('.nav-arrow');
-    if (arrow) arrow.classList.replace('text-atelier-inkMuted', 'text-atelier-terracotta');
+    if (arrow) {
+      arrow.classList.remove('text-slate-400', 'text-atelier-inkMuted');
+      arrow.classList.add('text-[#8B5CF6]');
+    }
   }
 
   // Close sidebar on mobile after clicking
@@ -102,7 +118,9 @@ function switchMainTab(tabId) {
   isLiveTabActive = (cleanTabId === 'tab-m9-tracking');
 
   // Tab-specific refreshes
-  if (cleanTabId === 'tab-jenjang') {
+  if (cleanTabId === 'tab-home') {
+    updateHeroLivePreview(currentRoster);
+  } else if (cleanTabId === 'tab-jenjang') {
     renderJenjangMatrix(allClassSummaries);
   } else if (cleanTabId === 'tab-m1-diagnostik') {
     loadQuestionsList();
@@ -127,6 +145,125 @@ function switchMainTab(tabId) {
     fetchLiveMonitorData();
   } else if (cleanTabId === 'tab-class-dash') {
     updateClassStats(currentRoster);
+  }
+}
+
+// Dropdown toggle for Kelas Aktif in Navbar
+function toggleNavClassDropdown(event) {
+  if (event) event.stopPropagation();
+  const menu = document.getElementById('nav-class-dropdown-menu');
+  if (!menu) return;
+  const isHidden = menu.classList.contains('hidden');
+  if (isHidden) {
+    renderNavClassDropdownItems();
+    menu.classList.remove('hidden');
+  } else {
+    menu.classList.add('hidden');
+  }
+}
+
+// Dropdown toggle for Akses / Mode in Navbar
+function toggleModeDropdown(event) {
+  if (event) event.stopPropagation();
+  const menu = document.getElementById('mode-dropdown-menu');
+  if (!menu) return;
+  menu.classList.toggle('hidden');
+}
+
+// Close dropdowns when clicking outside
+window.addEventListener('click', (e) => {
+  const classMenu = document.getElementById('nav-class-dropdown-menu');
+  const classBtn = document.getElementById('navbar-class-picker-btn');
+  if (classMenu && !classMenu.classList.contains('hidden')) {
+    if (!classMenu.contains(e.target) && (!classBtn || !classBtn.contains(e.target))) {
+      classMenu.classList.add('hidden');
+    }
+  }
+
+  const modeMenu = document.getElementById('mode-dropdown-menu');
+  const modeBtn = document.getElementById('btn-mode-dropdown');
+  if (modeMenu && !modeMenu.classList.contains('hidden')) {
+    if (!modeMenu.contains(e.target) && (!modeBtn || !modeBtn.contains(e.target))) {
+      modeMenu.classList.add('hidden');
+    }
+  }
+});
+
+function renderNavClassDropdownItems() {
+  const container = document.getElementById('nav-class-dropdown-items');
+  if (!container) return;
+
+  const grades = [
+    { grade: 7, roman: 'VII' },
+    { grade: 8, roman: 'VIII' },
+    { grade: 9, roman: 'IX' }
+  ];
+  const sections = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
+
+  let html = '';
+  grades.forEach(g => {
+    html += `
+      <div>
+        <span class="block text-[10px] font-mono font-bold text-slate-400 mb-1">Kelas ${g.roman}</span>
+        <div class="grid grid-cols-5 gap-1 font-mono text-[11px]">
+          ${sections.map(s => {
+            const classId = `${g.roman}-${s}`;
+            const isSelected = classId === currentClass;
+            return `
+              <button onclick="selectClass('${classId}'); toggleNavClassDropdown();" 
+                class="px-2 py-1 rounded-lg text-center transition font-semibold cursor-pointer ${
+                  isSelected 
+                    ? 'bg-[#6366F1] text-white shadow-xs' 
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }">
+                ${s}
+              </button>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+}
+
+function updateHeroLivePreview(roster) {
+  const studentsCountEl = document.getElementById('hero-stat-students');
+  if (studentsCountEl) {
+    studentsCountEl.textContent = roster ? roster.length : 0;
+  }
+
+  const avatarEl = document.getElementById('hero-preview-avatar');
+  const nameEl = document.getElementById('hero-preview-name');
+  const subEl = document.getElementById('hero-preview-sub');
+  const idEl = document.getElementById('hero-preview-id');
+  const styleEl = document.getElementById('hero-preview-style');
+  const mediaEl = document.getElementById('hero-preview-media');
+  const ideaEl = document.getElementById('hero-preview-idea');
+  const quoteEl = document.getElementById('hero-preview-quote');
+
+  if (!avatarEl) return;
+
+  if (roster && roster.length > 0) {
+    const student = roster[0];
+    const initials = student.name ? student.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() : 'ST';
+    avatarEl.textContent = initials;
+    nameEl.textContent = student.name;
+    subEl.textContent = `Kelas ${currentClass} · Seni Rupa`;
+    idEl.textContent = `ID: ${currentClass}-${String(student.attendance_no || 1).padStart(2, '0')}`;
+    styleEl.textContent = student.style || 'Visual Tutorial';
+    mediaEl.textContent = `${student.category || '2D'} (${student.sub_option || 'Kering'})`;
+    ideaEl.textContent = student.challenge || 'Sketsa Proporsi';
+    quoteEl.textContent = `“Rekomendasi Guru: Berikan contoh sketsa proporsi awal & tutorial gambar digital.”`;
+  } else {
+    avatarEl.textContent = 'BE';
+    nameEl.textContent = 'Belum Ada Data';
+    subEl.textContent = `Kelas ${currentClass} · Seni Rupa`;
+    idEl.textContent = `ID: ${currentClass}-01`;
+    styleEl.textContent = 'Visual Tutorial';
+    mediaEl.textContent = '2D (Drawing)';
+    ideaEl.textContent = 'Sketsa Proporsi';
+    quoteEl.textContent = '“Rekomendasi Guru: Berikan contoh sketsa proporsi awal & tutorial gambar digital.”';
   }
 }
 
@@ -236,6 +373,7 @@ async function selectClass(classId) {
   };
 
   updateLabel('active-class-badge', currentClass);
+  updateLabel('nav-active-class-text', currentClass);
   updateLabel('dash-class-title', currentClass);
   updateLabel('quick-add-class-label', currentClass);
   updateLabel('roster-class-title', currentClass);
@@ -285,6 +423,7 @@ async function loadCurrentClassDetail() {
       renderLearningRecommendations(currentRoster);
       generateModulAjarText();
       populateRubricStudentSelect(currentRoster);
+      updateHeroLivePreview(currentRoster);
     }
   } catch (err) {
     console.error('Failed to load class detail', err);
