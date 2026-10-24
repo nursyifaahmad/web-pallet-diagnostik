@@ -14,6 +14,7 @@ RUN npm ci --omit=dev
 
 COPY src/ ./src/
 COPY public/ ./public/
+COPY scripts/ ./scripts/
 
 # Run database seeder on build/start if needed
 EXPOSE 3090

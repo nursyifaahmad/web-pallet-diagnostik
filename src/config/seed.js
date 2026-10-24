@@ -190,7 +190,7 @@ function runSeed() {
   // 4. Seed Diagnostic Students for 27 Rombel if empty
   const studentCount = db.prepare('SELECT COUNT(*) as count FROM students').get();
   if (studentCount.count < 27) {
-    const seed27 = require('../../scripts/seed-27-classes');
+    const seed27 = require('./seed-classes');
     seed27();
   }
 
