@@ -88,6 +88,14 @@ const API = {
     });
     return await res.json();
   },
+  async bulkDeleteStudents(ids) {
+    const res = await fetch('/api/students/bulk-delete', {
+      method: 'POST',
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ ids })
+    });
+    return await res.json();
+  },
   async updateStudent(id, data) {
     const res = await fetch(`/api/students/${id}`, {
       method: 'PUT',

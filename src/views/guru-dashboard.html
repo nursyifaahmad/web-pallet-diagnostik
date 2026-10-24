@@ -915,10 +915,27 @@
             </div>
           </div>
 
+          <!-- Bulk Actions Bar -->
+          <div id="roster-bulk-actions" class="hidden px-6 py-3 bg-rose-50 border-b border-rose-100 flex items-center justify-between text-xs transition">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-rose-200 text-rose-800 font-mono font-bold text-[10px]">✓</span>
+              <span class="font-bold text-rose-900 font-mono" id="roster-selected-count">0 siswa terpilih</span>
+              <span class="text-rose-500 text-[11px] hidden sm:inline">(centang kotak baris untuk memilih beberapa siswa)</span>
+            </div>
+            <button type="button" onclick="handleBulkDeleteStudents()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition cursor-pointer shadow-xs flex items-center gap-1.5 text-xs">
+              <span>🗑️</span>
+              <span>Hapus Siswa Terpilih</span>
+            </button>
+          </div>
+
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
               <thead class="bg-slate-50 font-mono text-[11px] text-slate-500 uppercase border-b border-slate-200/80">
                 <tr>
+                  <th class="py-3.5 px-3 text-center whitespace-nowrap" style="width: 44px;">
+                    <input type="checkbox" id="roster-select-all" onchange="toggleSelectAllRoster(this.checked)" title="Pilih Semua Siswa"
+                      class="rounded border-slate-300 text-[#6366F1] focus:ring-[#6366F1] cursor-pointer w-4 h-4">
+                  </th>
                   <th class="py-3.5 px-4 text-center whitespace-nowrap" style="width: 80px;">No. Absen</th>
                   <th class="py-3.5 px-4 whitespace-nowrap">Nama Siswa</th>
                   <th class="py-3.5 px-4 text-center whitespace-nowrap" style="width: 60px;">L/P</th>
@@ -1735,7 +1752,7 @@
     </div>
   </div>
 
-  <script src="/js/api.js?v=3.4"></script>
-  <script src="/js/guru.js?v=3.4"></script>
+  <script src="/js/api.js?v=3.5"></script>
+  <script src="/js/guru.js?v=3.5"></script>
 </body>
 </html>

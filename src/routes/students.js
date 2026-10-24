@@ -369,6 +369,29 @@ router.put('/:id', requireAuth, (req, res) => {
   }
 });
 
+// POST /api/students/bulk-delete - Hapus banyak siswa sekaligus (khusus guru)
+router.post('/bulk-delete', requireAuth, (req, res) => {
+  const { ids } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ status: 'error', message: 'Daftar ID siswa tidak valid.' });
+  }
+
+  try {
+    const placeholders = ids.map(() => '?').join(',');
+    db.prepare(`DELETE FROM rubric_assessments WHERE student_id IN (${placeholders})`).run(...ids);
+    const result = db.prepare(`DELETE FROM students WHERE id IN (${placeholders})`).run(...ids);
+
+    res.json({
+      status: 'success',
+      message: `${result.changes} data siswa berhasil dihapus.`,
+      deletedCount: result.changes
+    });
+  } catch (err) {
+    console.error('[Students Bulk Delete API]', err);
+    res.status(500).json({ status: 'error', message: 'Gagal menghapus data siswa massal.' });
+  }
+});
+
 // DELETE /api/students/:id - Hapus data siswa (khusus guru)
 router.delete('/:id', requireAuth, (req, res) => {
   const { id } = req.params;

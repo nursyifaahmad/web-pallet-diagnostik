@@ -2092,17 +2092,24 @@ function formatTimeAgo(dateStr) {
 }
 
 // ========================================================
-// 12. ROSTER TABLE MANAGEMENT (TAHAP 4 CRUD)
+// 12. ROSTER TABLE MANAGEMENT (TAHAP 4 CRUD & BULK ACTIONS)
 // ========================================================
 function renderRosterTable(students) {
   const tbody = document.getElementById('roster-table-body');
   if (!tbody) return;
   tbody.innerHTML = '';
 
+  const selectAll = document.getElementById('roster-select-all');
+  if (selectAll) {
+    selectAll.checked = false;
+    selectAll.indeterminate = false;
+  }
+  updateRosterSelection();
+
   if (students.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="py-8 text-center text-atelier-inkMuted italic">
+        <td colspan="8" class="py-8 text-center text-atelier-inkMuted italic">
           Belum ada data siswa di kelas ${currentClass}. Bagikan tautan kelas atau gunakan form input kilat di atas.
         </td>
       </tr>
@@ -2112,11 +2119,14 @@ function renderRosterTable(students) {
 
   students.forEach((s) => {
     const tr = document.createElement('tr');
-    tr.className = 'hover:bg-atelier-warm/40 transition';
+    tr.className = 'hover:bg-slate-50/70 transition';
 
     const genderBadge = s.gender === 'L' ? '<span class="text-blue-600 font-bold">L</span>' : s.gender === 'P' ? '<span class="text-pink-600 font-bold">P</span>' : '-';
 
     tr.innerHTML = `
+      <td class="py-3 px-3 text-center">
+        <input type="checkbox" class="roster-item-checkbox rounded border-slate-300 text-[#6366F1] focus:ring-[#6366F1] cursor-pointer w-4 h-4" value="${s.id}" onchange="updateRosterSelection()">
+      </td>
       <td class="py-3 px-4 font-mono font-bold text-center text-atelier-terracotta">${s.attendance_no || '-'}</td>
       <td class="py-3 px-4 font-semibold text-atelier-ink">${escapeHtml(s.name)}</td>
       <td class="py-3 px-4 font-mono text-center">${genderBadge}</td>
@@ -2142,6 +2152,78 @@ function renderRosterTable(students) {
     `;
     tbody.appendChild(tr);
   });
+}
+
+function toggleSelectAllRoster(checked) {
+  const checkboxes = document.querySelectorAll('.roster-item-checkbox');
+  checkboxes.forEach(cb => {
+    cb.checked = checked;
+  });
+  updateRosterSelection();
+}
+
+function updateRosterSelection() {
+  const checkboxes = Array.from(document.querySelectorAll('.roster-item-checkbox'));
+  const selectedCount = checkboxes.filter(cb => cb.checked).length;
+  const totalCount = checkboxes.length;
+
+  const bar = document.getElementById('roster-bulk-actions');
+  const countEl = document.getElementById('roster-selected-count');
+  const selectAll = document.getElementById('roster-select-all');
+
+  if (countEl) {
+    countEl.textContent = `${selectedCount} siswa terpilih`;
+  }
+
+  if (bar) {
+    if (selectedCount > 0) {
+      bar.classList.remove('hidden');
+    } else {
+      bar.classList.add('hidden');
+    }
+  }
+
+  if (selectAll) {
+    if (totalCount === 0) {
+      selectAll.checked = false;
+      selectAll.indeterminate = false;
+    } else if (selectedCount === totalCount) {
+      selectAll.checked = true;
+      selectAll.indeterminate = false;
+    } else if (selectedCount > 0) {
+      selectAll.checked = false;
+      selectAll.indeterminate = true;
+    } else {
+      selectAll.checked = false;
+      selectAll.indeterminate = false;
+    }
+  }
+}
+
+async function handleBulkDeleteStudents() {
+  const checkboxes = Array.from(document.querySelectorAll('.roster-item-checkbox:checked'));
+  const selectedIds = checkboxes.map(cb => parseInt(cb.value, 10)).filter(id => !isNaN(id));
+
+  if (selectedIds.length === 0) {
+    alert('Pilih setidaknya satu siswa untuk dihapus.');
+    return;
+  }
+
+  const confirmMsg = `Apakah Anda yakin ingin menghapus ${selectedIds.length} data siswa terpilih dari rombel ${currentClass}?\n\nTindakan ini permanen dan akan menghapus data asesmen siswa terkait.`;
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    const res = await API.bulkDeleteStudents(selectedIds);
+    if (res && res.status === 'success') {
+      await loadClassData();
+      await loadClassRubricGradebook(currentClass);
+    } else {
+      alert((res && res.message) || 'Gagal menghapus data siswa massal.');
+    }
+  } catch (err) {
+    console.error('Bulk delete error:', err);
+    alert('Gagal menghapus data siswa massal: ' + err.message);
+  }
 }
 
 function setupRosterHandlers() {
