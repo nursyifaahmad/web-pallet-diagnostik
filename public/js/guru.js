@@ -1914,8 +1914,10 @@ function handlePortfolioUpload(event) {
 }
 
 // ========================================================
-// 11. LIVE MONITOR ENGINE (TAHAP 9)
+// 11. LIVE MONITOR ENGINE (TAHAP 9 & BULK SELECTION)
 // ========================================================
+let selectedLiveSessions = new Set();
+
 function startLiveMonitorPolling() {
   fetchLiveMonitorData();
   clearInterval(liveMonitorInterval);
@@ -1960,9 +1962,11 @@ function renderLiveMonitorTable(sessions) {
   tbody.innerHTML = '';
 
   if (sessions.length === 0) {
+    selectedLiveSessions.clear();
+    updateLiveSelection(0);
     tbody.innerHTML = `
       <tr>
-        <td colspan="9" class="py-8 text-center text-atelier-inkMuted italic">
+        <td colspan="11" class="py-8 text-center text-atelier-inkMuted italic">
           Belum ada siswa yang sedang membuka asesmen di kelas ${currentClass} saat ini. Bagikan tautan kelas kepada siswa.
         </td>
       </tr>
@@ -1970,11 +1974,20 @@ function renderLiveMonitorTable(sessions) {
     return;
   }
 
+  // Prune any IDs from selectedLiveSessions that are no longer in sessions
+  const currentIds = new Set(sessions.map(s => s.sessionId));
+  for (const id of selectedLiveSessions) {
+    if (!currentIds.has(id)) {
+      selectedLiveSessions.delete(id);
+    }
+  }
+
   sessions.forEach(s => {
     const isCompleted = s.status === 'completed';
     const isLastQuestion = !isCompleted && s.currentStep >= s.totalSteps;
+    const isSelected = selectedLiveSessions.has(s.sessionId);
     const tr = document.createElement('tr');
-    tr.className = 'hover:bg-atelier-warm/40 transition';
+    tr.className = `hover:bg-slate-50/70 transition ${isSelected ? 'bg-indigo-50/40' : ''}`;
 
     const genderBadge = s.gender === 'L' ? '<span class="text-blue-600 font-bold">L</span>' : s.gender === 'P' ? '<span class="text-pink-600 font-bold">P</span>' : '-';
 
@@ -2013,15 +2026,18 @@ function renderLiveMonitorTable(sessions) {
     }
 
     tr.innerHTML = `
+      <td class="py-3 px-3 text-center">
+        <input type="checkbox" class="live-item-checkbox rounded border-slate-300 text-[#6366F1] focus:ring-[#6366F1] cursor-pointer w-4 h-4" value="${s.sessionId}" onchange="toggleLiveSessionSelect('${s.sessionId}', this.checked)" ${isSelected ? 'checked' : ''}>
+      </td>
       <td class="py-3 px-3 font-mono font-bold text-center text-atelier-terracotta">${s.attendanceNo || '-'}</td>
       <td class="py-3 px-3 font-semibold text-atelier-ink flex items-center gap-2">
         <span class="w-2 h-2 rounded-full ${isCompleted ? 'bg-blue-500' : isLastQuestion ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}"></span>
-        <span>${s.name}</span>
+        <span>${escapeHtml(s.name)}</span>
       </td>
       <td class="py-3 px-3 font-mono text-center">${genderBadge}</td>
       <td class="py-3 px-3">
         <span class="font-mono text-[11px] font-bold text-atelier-terracotta">Soal ${s.currentStep}/${s.totalSteps}</span>
-        <span class="block text-[10px] text-atelier-inkMuted truncate max-w-[130px]" title="${s.currentCategory}">${s.currentCategory}</span>
+        <span class="block text-[10px] text-atelier-inkMuted truncate max-w-[130px]" title="${escapeHtml(s.currentCategory)}">${escapeHtml(s.currentCategory)}</span>
       </td>
       <td class="py-3 px-3">
         <div class="flex items-center gap-2">
@@ -2032,7 +2048,7 @@ function renderLiveMonitorTable(sessions) {
         </div>
       </td>
       <td class="py-3 px-3 font-mono text-[11px] text-atelier-ochre font-medium">
-        ${s.chosenMedia}
+        ${escapeHtml(s.chosenMedia)}
       </td>
       <td class="py-3 px-3 text-center">
         <span class="font-mono text-xs font-semibold text-atelier-ink block">${startClock} WIB</span>
@@ -2048,9 +2064,121 @@ function renderLiveMonitorTable(sessions) {
       <td class="py-3 px-3 text-center whitespace-nowrap">
         ${statusBadgeHtml}
       </td>
+      <td class="py-3 px-3 text-center whitespace-nowrap">
+        <button onclick="handleDeleteSingleLiveSession('${s.sessionId}', '${escapeHtml(s.name)}')" class="text-rose-600 hover:text-rose-800 font-mono text-[11px] font-bold cursor-pointer inline-flex items-center gap-1" title="Hapus Riwayat Sesi Siswa Ini">
+          <span>🗑️</span><span>Hapus</span>
+        </button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
+
+  updateLiveSelection(sessions.length);
+}
+
+function toggleLiveSessionSelect(sessionId, checked) {
+  if (checked) {
+    selectedLiveSessions.add(sessionId);
+  } else {
+    selectedLiveSessions.delete(sessionId);
+  }
+  const totalCount = document.querySelectorAll('.live-item-checkbox').length;
+  updateLiveSelection(totalCount);
+}
+
+function toggleSelectAllLive(checked) {
+  const checkboxes = document.querySelectorAll('.live-item-checkbox');
+  checkboxes.forEach(cb => {
+    cb.checked = checked;
+    if (checked) {
+      selectedLiveSessions.add(cb.value);
+    } else {
+      selectedLiveSessions.delete(cb.value);
+    }
+  });
+  updateLiveSelection(checkboxes.length);
+}
+
+function updateLiveSelection(totalCount) {
+  if (totalCount === undefined) {
+    totalCount = document.querySelectorAll('.live-item-checkbox').length;
+  }
+  const selectedCount = selectedLiveSessions.size;
+
+  const bar = document.getElementById('live-bulk-actions');
+  const countEl = document.getElementById('live-selected-count');
+  const selectAll = document.getElementById('live-select-all');
+
+  if (countEl) {
+    countEl.textContent = `${selectedCount} sesi terpilih`;
+  }
+
+  if (bar) {
+    if (selectedCount > 0) {
+      bar.classList.remove('hidden');
+    } else {
+      bar.classList.add('hidden');
+    }
+  }
+
+  if (selectAll) {
+    if (totalCount === 0) {
+      selectAll.checked = false;
+      selectAll.indeterminate = false;
+    } else if (selectedCount === totalCount) {
+      selectAll.checked = true;
+      selectAll.indeterminate = false;
+    } else if (selectedCount > 0) {
+      selectAll.checked = false;
+      selectAll.indeterminate = true;
+    } else {
+      selectAll.checked = false;
+      selectAll.indeterminate = false;
+    }
+  }
+}
+
+async function handleBulkDeleteLiveSessions() {
+  const sessionIds = Array.from(selectedLiveSessions);
+  if (sessionIds.length === 0) {
+    alert('Pilih setidaknya satu sesi pemantauan untuk dihapus.');
+    return;
+  }
+
+  const confirmMsg = `Apakah Anda yakin ingin menghapus ${sessionIds.length} riwayat sesi pemantauan terpilih di kelas ${currentClass}?\n\nTindakan ini akan mereset status live monitoring untuk siswa yang dipilih.`;
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    const res = await API.bulkDeleteLiveSessions(sessionIds);
+    if (res && res.status === 'success') {
+      selectedLiveSessions.clear();
+      updateLiveSelection(0);
+      await fetchLiveMonitorData();
+    } else {
+      alert((res && res.message) || 'Gagal menghapus riwayat sesi pemantauan.');
+    }
+  } catch (err) {
+    console.error('Bulk delete live sessions error:', err);
+    alert('Gagal menghapus riwayat sesi pemantauan: ' + err.message);
+  }
+}
+
+async function handleDeleteSingleLiveSession(sessionId, studentName) {
+  const confirmMsg = `Apakah Anda yakin ingin menghapus riwayat sesi pemantauan siswa "${studentName}" dari rombel ${currentClass}?`;
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    const res = await API.deleteLiveSession(sessionId);
+    if (res && res.status === 'success') {
+      selectedLiveSessions.delete(sessionId);
+      await fetchLiveMonitorData();
+    } else {
+      alert((res && res.message) || 'Gagal menghapus riwayat sesi pemantauan.');
+    }
+  } catch (err) {
+    console.error('Delete live session error:', err);
+    alert('Gagal menghapus riwayat sesi pemantauan: ' + err.message);
+  }
 }
 
 // Robust date parser that handles ISO strings, SQLite CURRENT_TIMESTAMP, and UTC vs local time

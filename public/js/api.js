@@ -134,6 +134,21 @@ const API = {
     });
     return await res.json();
   },
+  async bulkDeleteLiveSessions(sessionIds) {
+    const res = await fetch('/api/students/live-monitor/bulk-delete', {
+      method: 'POST',
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ sessionIds })
+    });
+    return await res.json();
+  },
+  async deleteLiveSession(sessionId) {
+    const res = await fetch(`/api/students/live-monitor/${encodeURIComponent(sessionId)}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    return await res.json();
+  },
 
   // Auth
   async login(username, password) {

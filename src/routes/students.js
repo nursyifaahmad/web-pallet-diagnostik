@@ -150,6 +150,43 @@ router.get('/live-monitor', requireAuth, (req, res) => {
   }
 });
 
+// POST /api/students/live-monitor/bulk-delete - Hapus banyak sesi pemantauan sekaligus (khusus guru)
+router.post('/live-monitor/bulk-delete', requireAuth, (req, res) => {
+  const { sessionIds } = req.body;
+  if (!Array.isArray(sessionIds) || sessionIds.length === 0) {
+    return res.status(400).json({ status: 'error', message: 'Daftar ID sesi tidak valid.' });
+  }
+
+  try {
+    const placeholders = sessionIds.map(() => '?').join(',');
+    const result = db.prepare(`DELETE FROM student_live_sessions WHERE session_id IN (${placeholders})`).run(...sessionIds);
+
+    res.json({
+      status: 'success',
+      message: `${result.changes} riwayat sesi pemantauan berhasil dihapus.`,
+      deletedCount: result.changes
+    });
+  } catch (err) {
+    console.error('[Live Monitor Bulk Delete API]', err);
+    res.status(500).json({ status: 'error', message: 'Gagal menghapus riwayat sesi pemantauan.' });
+  }
+});
+
+// DELETE /api/students/live-monitor/:sessionId - Hapus satu sesi pemantauan (khusus guru)
+router.delete('/live-monitor/:sessionId', requireAuth, (req, res) => {
+  const { sessionId } = req.params;
+  try {
+    const result = db.prepare('DELETE FROM student_live_sessions WHERE session_id = ?').run(sessionId);
+    if (result.changes === 0) {
+      return res.status(404).json({ status: 'error', message: 'Sesi pemantauan tidak ditemukan.' });
+    }
+    res.json({ status: 'success', message: 'Sesi pemantauan berhasil dihapus.' });
+  } catch (err) {
+    console.error('[Live Monitor Delete API]', err);
+    res.status(500).json({ status: 'error', message: 'Gagal menghapus sesi pemantauan.' });
+  }
+});
+
 // POST /api/students/live-progress - Menerima heartbeat progres pengerjaan siswa
 router.post('/live-progress', (req, res) => {
   const { sessionId, attendance_no, attendanceNo, studentName, gender, classId, currentStep, totalSteps, currentCategory, answers } = req.body;
