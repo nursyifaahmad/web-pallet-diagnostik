@@ -52,10 +52,12 @@ router.get('/', (req, res) => {
 
       return {
         id: c.id,
+        class_id: c.id,
         grade: c.grade,
         section: c.section,
         description: c.description,
         totalStudents,
+        student_count: totalStudents,
         dominantStyle,
         topCategory,
         styleCounts,

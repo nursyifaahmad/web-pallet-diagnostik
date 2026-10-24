@@ -238,7 +238,10 @@ function renderNavClassDropdownItems() {
 function updateHeroLivePreview(roster) {
   const studentsCountEl = document.getElementById('hero-stat-students');
   if (studentsCountEl) {
-    studentsCountEl.textContent = roster ? roster.length : 0;
+    const totalAll = allClassSummaries && allClassSummaries.length > 0
+      ? allClassSummaries.reduce((sum, c) => sum + (c.totalStudents || c.student_count || 0), 0)
+      : (roster ? roster.length : 0);
+    studentsCountEl.textContent = totalAll;
   }
 
   const avatarEl = document.getElementById('hero-preview-avatar');
@@ -685,27 +688,28 @@ function renderJenjangMatrix(summaries) {
     { num: 9, roman: 'IX', label: 'Jenjang Kelas IX (Fase D Mahir)' }
   ];
 
-  // Map summaries by class_id
+  // Map summaries by id or class_id
   const summaryMap = {};
   if (Array.isArray(summaries)) {
     summaries.forEach(c => {
-      summaryMap[c.class_id] = c;
+      const key = c.id || c.class_id;
+      if (key) summaryMap[key] = c;
     });
   }
 
   grades.forEach(g => {
     const block = document.createElement('div');
-    block.className = 'p-5 bg-white rounded-2xl border border-atelier-border space-y-3';
+    block.className = 'p-5 bg-white rounded-2xl border border-slate-200/90 space-y-3 shadow-xs';
 
     block.innerHTML = `
-      <div class="flex items-center justify-between border-b border-atelier-border pb-2.5">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
         <div class="flex items-center gap-2">
-          <span class="w-7 h-7 rounded-lg bg-atelier-terracotta text-white font-serif font-black flex items-center justify-center text-xs">
+          <span class="w-7 h-7 rounded-lg bg-[#6366F1] text-white font-serif font-black flex items-center justify-center text-xs">
             ${g.roman}
           </span>
-          <h4 class="font-serif font-bold text-base text-atelier-ink">${g.label}</h4>
+          <h4 class="font-serif font-bold text-base text-slate-800">${g.label}</h4>
         </div>
-        <span class="font-mono text-xs text-atelier-inkMuted">9 Rombel (A s.d I)</span>
+        <span class="font-mono text-xs text-slate-400">9 Rombel (A s.d I)</span>
       </div>
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2.5 pt-1" id="jenjang-grid-${g.num}">
       </div>
@@ -716,23 +720,23 @@ function renderJenjangMatrix(summaries) {
     const grid = block.querySelector(`#jenjang-grid-${g.num}`);
     SECTIONS.forEach(sec => {
       const classId = `${g.roman}-${sec}`;
-      const data = summaryMap[classId] || { student_count: 0 };
-      const count = data.student_count || 0;
+      const data = summaryMap[classId] || { student_count: 0, totalStudents: 0 };
+      const count = data.totalStudents !== undefined ? data.totalStudents : (data.student_count || 0);
       const isCurrent = currentClass === classId;
 
-      let badgeColor = 'bg-gray-100 text-gray-600 border-gray-200';
+      let badgeColor = 'bg-slate-100 text-slate-500 border-slate-200';
       let statusText = 'Kosong';
       if (count >= 20) {
-        badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+        badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
         statusText = 'Lengkap';
       } else if (count > 0) {
-        badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+        badgeColor = 'bg-amber-50 text-amber-700 border-amber-200';
         statusText = 'Sebagian';
       }
 
       const card = document.createElement('div');
       card.className = `p-3 rounded-xl border transition cursor-pointer text-center space-y-1 hover:shadow-md ${
-        isCurrent ? 'border-atelier-terracotta bg-atelier-terracottaLight ring-2 ring-atelier-terracotta/40' : 'border-atelier-border bg-atelier-warm/30 hover:bg-white'
+        isCurrent ? 'border-[#6366F1] bg-[#EDE9FE]/40 ring-2 ring-[#6366F1]/30' : 'border-slate-200/80 bg-slate-50/50 hover:bg-white'
       }`;
       card.onclick = () => {
         selectClass(classId);
@@ -740,9 +744,9 @@ function renderJenjangMatrix(summaries) {
       };
 
       card.innerHTML = `
-        <span class="font-mono font-bold text-sm block ${isCurrent ? 'text-atelier-terracotta' : 'text-atelier-ink'}">${classId}</span>
-        <span class="font-serif font-black text-lg block text-atelier-ink">${count}</span>
-        <span class="text-[10px] block font-mono text-atelier-inkMuted">Siswa</span>
+        <span class="font-mono font-bold text-sm block ${isCurrent ? 'text-[#6366F1]' : 'text-slate-800'}">${classId}</span>
+        <span class="font-serif font-black text-lg block text-slate-900">${count}</span>
+        <span class="text-[10px] block font-mono text-slate-400">Siswa</span>
         <span class="inline-block px-1.5 py-0.2 text-[9px] font-mono font-bold rounded border ${badgeColor}">
           ${statusText}
         </span>
@@ -2170,7 +2174,7 @@ function setupRosterHandlers() {
           document.getElementById('quick-name').value = '';
           document.getElementById('quick-att').value = '';
           document.getElementById('quick-gender').value = '';
-          await loadCurrentClassDetail();
+          await loadClassData();
           await loadClassRubricGradebook(currentClass);
         }
       } catch (err) {
@@ -2294,7 +2298,7 @@ async function submitStudentForm(event) {
 
     if (res && res.status === 'success') {
       closeStudentModal();
-      await loadCurrentClassDetail();
+      await loadClassData();
       await loadClassRubricGradebook(currentClass);
     } else {
       alert((res && res.message) || 'Gagal menyimpan data siswa.');
@@ -2326,7 +2330,7 @@ async function handleDeleteStudent(id, name) {
     try {
       const res = await API.deleteStudent(id);
       if (res && res.status === 'success') {
-        await loadCurrentClassDetail();
+        await loadClassData();
         await loadClassRubricGradebook(currentClass);
       } else {
         alert((res && res.message) || 'Gagal menghapus siswa.');

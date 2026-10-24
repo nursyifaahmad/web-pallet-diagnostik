@@ -187,6 +187,13 @@ function runSeed() {
     console.log(`[Seed] Diagnostic questions already seeded (${questionCount.count} questions).`);
   }
 
+  // 4. Seed Diagnostic Students for 27 Rombel if empty
+  const studentCount = db.prepare('SELECT COUNT(*) as count FROM students').get();
+  if (studentCount.count < 27) {
+    const seed27 = require('../../scripts/seed-27-classes');
+    seed27();
+  }
+
   console.log('[Seed] Seeding completed successfully!');
 }
 
