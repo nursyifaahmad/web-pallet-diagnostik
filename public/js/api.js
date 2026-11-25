@@ -9,15 +9,52 @@ function getAuthHeaders(customHeaders = {}) {
 }
 
 const API = {
-  // Questions
+  // Questions & Question Sets (Bank Materi Diagnostik)
+  async getQuestionSets() {
+    const res = await fetch('/api/questions/sets', {
+      headers: getAuthHeaders()
+    });
+    return await res.json();
+  },
+  async createQuestionSet(data) {
+    const res = await fetch('/api/questions/sets', {
+      method: 'POST',
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(data)
+    });
+    return await res.json();
+  },
+  async updateQuestionSet(setId, data) {
+    const res = await fetch(`/api/questions/sets/${setId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(data)
+    });
+    return await res.json();
+  },
+  async activateQuestionSet(setId) {
+    const res = await fetch(`/api/questions/sets/${setId}/activate`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+    return await res.json();
+  },
+  async deleteQuestionSet(setId) {
+    const res = await fetch(`/api/questions/sets/${setId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    return await res.json();
+  },
   async getActiveQuestions() {
     const res = await fetch('/api/questions', {
       headers: getAuthHeaders()
     });
     return await res.json();
   },
-  async getAllQuestions() {
-    const res = await fetch('/api/questions/all', {
+  async getAllQuestions(setId = null) {
+    const url = setId ? `/api/questions/all?setId=${encodeURIComponent(setId)}` : '/api/questions/all';
+    const res = await fetch(url, {
       headers: getAuthHeaders()
     });
     return await res.json();
@@ -45,10 +82,11 @@ const API = {
     });
     return await res.json();
   },
-  async resetQuestions() {
+  async resetQuestions(setId = null) {
     const res = await fetch('/api/questions/reset', {
       method: 'POST',
-      headers: getAuthHeaders()
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(setId ? { setId } : {})
     });
     return await res.json();
   },

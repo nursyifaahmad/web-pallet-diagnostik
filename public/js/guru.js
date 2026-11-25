@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupNavigation();
   setupClassSwitcher();
   await loadClassData();
-  await loadQuestionsList();
+  await loadQuestionSets();
   await loadCalendarEvents();
   setupRosterHandlers();
   setupQuestionModalHandlers();
@@ -123,7 +123,7 @@ function switchMainTab(tabId) {
   } else if (cleanTabId === 'tab-jenjang') {
     renderJenjangMatrix(allClassSummaries);
   } else if (cleanTabId === 'tab-m1-diagnostik') {
-    loadQuestionsList();
+    loadQuestionSets();
     updateShareLinkAndQR();
   } else if (cleanTabId === 'tab-m2-profile') {
     populateProfileStudentSelect();
@@ -2607,9 +2607,320 @@ function renderHeatmap(roster) {
 }
 
 // ========================================================
-// 14. CRUD SOAL DIAGNOSTIK & TAUTAN (TAHAP 1)
+// 14. BANK PAKET MATERI & CRUD SOAL DIAGNOSTIK (TAHAP 1)
 // ========================================================
+let questionSets = [];
+let activeQuestionSetId = null;
+let viewingQuestionSetId = null;
 let loadedQuestions = [];
+
+async function loadQuestionSets() {
+  const setsContainer = document.getElementById('question-sets-container');
+  try {
+    const res = await API.getQuestionSets();
+    if (res && res.status === 'success') {
+      questionSets = res.data || [];
+      const activeSet = questionSets.find(s => s.isActive);
+      activeQuestionSetId = activeSet ? activeSet.id : (questionSets[0] ? questionSets[0].id : null);
+
+      if (!viewingQuestionSetId || !questionSets.some(s => s.id === viewingQuestionSetId)) {
+        viewingQuestionSetId = activeQuestionSetId;
+      }
+
+      renderQuestionSetsBar();
+      await loadQuestionsList();
+    }
+  } catch (err) {
+    console.error('Failed to load question sets', err);
+    if (setsContainer) {
+      setsContainer.innerHTML = '<p class="text-xs text-red-500 col-span-full">Gagal memuat daftar paket materi diagnostik.</p>';
+    }
+  }
+}
+
+function renderQuestionSetsBar() {
+  const container = document.getElementById('question-sets-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (questionSets.length === 0) {
+    container.innerHTML = '<p class="text-xs text-slate-400 italic col-span-full">Belum ada paket materi diagnostik tersimpan.</p>';
+    return;
+  }
+
+  questionSets.forEach(setItem => {
+    const isViewing = setItem.id === viewingQuestionSetId;
+    const isActive = setItem.isActive;
+
+    const card = document.createElement('div');
+    card.className = `p-4 rounded-2xl border transition flex flex-col justify-between gap-3 cursor-pointer ${
+      isViewing
+        ? 'border-[#6366F1] bg-[#EEF2FF]/60 ring-2 ring-[#6366F1]/25 shadow-xs'
+        : 'border-slate-200 bg-slate-50/50 hover:bg-white hover:border-slate-300'
+    }`;
+    card.onclick = () => selectViewingQuestionSet(setItem.id);
+
+    const statusBadge = isActive
+      ? '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Aktif (Siswa)</span>'
+      : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-100 text-slate-600 border border-slate-200">Arsip Tersimpan</span>';
+
+    const viewingPill = isViewing
+      ? '<span class="text-[10px] font-mono font-bold text-[#6366F1]">● Sedang Dibuka</span>'
+      : '';
+
+    card.innerHTML = `
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          ${statusBadge}
+          <span class="font-mono text-[10px] font-bold text-slate-500">${setItem.questionCount} Soal</span>
+        </div>
+        <h4 class="font-serif font-bold text-base text-slate-900 leading-snug">${escapeHtml(setItem.title)}</h4>
+        ${setItem.description ? `<p class="text-[11px] text-slate-500 line-clamp-2">${escapeHtml(setItem.description)}</p>` : ''}
+      </div>
+
+      <div class="pt-2 border-t border-slate-200/70 flex items-center justify-between gap-2 flex-wrap" onclick="event.stopPropagation()">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          ${!isActive ? `
+            <button type="button" onclick="activateQuestionSet(${setItem.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-mono text-[10px] font-bold transition cursor-pointer">
+              Aktifkan
+            </button>
+          ` : viewingPill}
+          <button type="button" onclick="selectViewingQuestionSet(${setItem.id})" class="px-2.5 py-1 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg font-mono text-[10px] font-semibold transition cursor-pointer">
+            ${isViewing ? 'Dikelola' : 'Lihat Soal'}
+          </button>
+        </div>
+
+        <div class="flex items-center gap-1">
+          <button type="button" onclick="openQuestionSetModal(${setItem.id})" class="p-1.5 text-slate-500 hover:text-[#6366F1] hover:bg-white rounded-lg transition cursor-pointer" title="Ubah Info Materi">
+            ✏️
+          </button>
+          <button type="button" onclick="openQuestionSetModal(null, ${setItem.id})" class="p-1.5 text-slate-500 hover:text-[#6366F1] hover:bg-white rounded-lg transition cursor-pointer" title="Duplikat Paket Materi">
+            📋
+          </button>
+          ${(!isActive && questionSets.length > 1) ? `
+            <button type="button" onclick="deleteQuestionSet(${setItem.id}, '${escapeHtml(setItem.title)}')" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition cursor-pointer" title="Hapus Paket Arsip">
+              🗑️
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+
+  updateViewingSetHeader();
+}
+
+function updateViewingSetHeader() {
+  const viewingSet = questionSets.find(s => s.id === viewingQuestionSetId);
+  const titleEl = document.getElementById('viewing-set-title');
+  const descEl = document.getElementById('viewing-set-desc');
+  const statusPill = document.getElementById('viewing-set-status-pill');
+  const countPill = document.getElementById('viewing-set-count-pill');
+  const btnActivate = document.getElementById('btn-activate-viewing-set');
+  const btnReset = document.getElementById('btn-reset-default-questions');
+
+  if (!viewingSet) return;
+
+  if (titleEl) titleEl.textContent = viewingSet.title;
+  if (descEl) descEl.textContent = viewingSet.description || 'Tambah, ubah, atau sesuaikan butir pertanyaan pada paket materi ini.';
+  if (countPill) countPill.textContent = `${loadedQuestions.length || viewingSet.questionCount} Soal`;
+
+  if (statusPill) {
+    if (viewingSet.isActive) {
+      statusPill.textContent = '● Aktif di Portal Siswa';
+      statusPill.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200';
+    } else {
+      statusPill.textContent = 'Arsip Tersimpan (Pratinjau / Edit)';
+      statusPill.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200';
+    }
+  }
+
+  if (btnActivate) {
+    if (viewingSet.isActive) {
+      btnActivate.classList.add('hidden');
+    } else {
+      btnActivate.classList.remove('hidden');
+    }
+  }
+
+  if (btnReset) {
+    if (viewingSet.isDefault) {
+      btnReset.classList.remove('hidden');
+    } else {
+      btnReset.classList.add('hidden');
+    }
+  }
+}
+
+async function selectViewingQuestionSet(setId) {
+  viewingQuestionSetId = setId;
+  renderQuestionSetsBar();
+  await loadQuestionsList();
+}
+
+async function activateViewingQuestionSet() {
+  if (!viewingQuestionSetId) return;
+  await activateQuestionSet(viewingQuestionSetId);
+}
+
+async function activateQuestionSet(setId) {
+  const target = questionSets.find(s => s.id === setId);
+  if (!target) return;
+  if (target.questionCount === 0) {
+    alert(`Paket "${target.title}" belum memiliki butir soal. Tambahkan minimal 1 soal terlebih dahulu sebelum mengaktifkannya untuk siswa.`);
+    await selectViewingQuestionSet(setId);
+    return;
+  }
+
+  try {
+    const res = await API.activateQuestionSet(setId);
+    if (res && res.status === 'success') {
+      viewingQuestionSetId = setId;
+      await loadQuestionSets();
+      alert(res.message);
+    } else {
+      alert((res && res.message) || 'Gagal mengaktifkan paket materi.');
+    }
+  } catch (err) {
+    alert('Gagal mengaktifkan paket materi: ' + err.message);
+  }
+}
+
+function openQuestionSetModal(editSetId = null, copyFromSetId = null) {
+  const modal = document.getElementById('modal-question-set');
+  if (!modal) return;
+
+  const titleElem = document.getElementById('modal-question-set-title');
+  const idInput = document.getElementById('form-qs-id');
+  const titleInput = document.getElementById('form-qs-title');
+  const descInput = document.getElementById('form-qs-description');
+  const copyWrapper = document.getElementById('form-qs-copy-wrapper');
+  const copySelect = document.getElementById('form-qs-copy-from');
+  const activateWrapper = document.getElementById('form-qs-activate-wrapper');
+  const activateCheckbox = document.getElementById('form-qs-activate-now');
+
+  // Populate copy source options
+  if (copySelect) {
+    copySelect.innerHTML = '<option value="">Mulai Kosong (Saya akan tambah soal sendiri)</option>';
+    questionSets.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = `Salin dari: ${s.title} (${s.questionCount} soal)`;
+      copySelect.appendChild(opt);
+    });
+  }
+
+  if (editSetId) {
+    const existing = questionSets.find(s => s.id === editSetId);
+    if (!existing) return;
+    titleElem.textContent = 'Ubah Info Paket Materi';
+    idInput.value = existing.id;
+    titleInput.value = existing.title;
+    descInput.value = existing.description || '';
+    if (copyWrapper) copyWrapper.classList.add('hidden');
+    if (activateWrapper) activateWrapper.classList.add('hidden');
+  } else {
+    idInput.value = '';
+    if (copyWrapper) copyWrapper.classList.remove('hidden');
+    if (activateWrapper) activateWrapper.classList.remove('hidden');
+    if (activateCheckbox) activateCheckbox.checked = false;
+
+    if (copyFromSetId) {
+      const src = questionSets.find(s => s.id === copyFromSetId);
+      titleElem.textContent = 'Duplikat Paket Materi Diagnostik';
+      titleInput.value = src ? `${src.title} (Salinan)` : '';
+      descInput.value = src ? (src.description || '') : '';
+      if (copySelect) copySelect.value = String(copyFromSetId);
+    } else {
+      titleElem.textContent = 'Buat Paket Materi Diagnostik Baru';
+      titleInput.value = '';
+      descInput.value = '';
+      if (copySelect) copySelect.value = '';
+    }
+  }
+
+  modal.classList.remove('hidden');
+}
+
+function closeQuestionSetModal() {
+  const modal = document.getElementById('modal-question-set');
+  if (modal) modal.classList.add('hidden');
+  const form = document.getElementById('form-question-set');
+  if (form) form.reset();
+}
+
+async function submitQuestionSetForm(event) {
+  event.preventDefault();
+  const id = document.getElementById('form-qs-id').value;
+  const title = document.getElementById('form-qs-title').value.trim();
+  const description = document.getElementById('form-qs-description').value.trim();
+  const copyFromSetId = document.getElementById('form-qs-copy-from')?.value || '';
+  const activateNow = Boolean(document.getElementById('form-qs-activate-now')?.checked && copyFromSetId);
+
+  if (!title) {
+    alert('Nama materi wajib diisi.');
+    return;
+  }
+
+  const btnSave = document.getElementById('btn-save-qs');
+  if (btnSave) {
+    btnSave.disabled = true;
+    btnSave.textContent = 'Menyimpan...';
+  }
+
+  try {
+    let res;
+    if (id) {
+      res = await API.updateQuestionSet(id, { title, description });
+    } else {
+      res = await API.createQuestionSet({
+        title,
+        description,
+        copyFromSetId: copyFromSetId ? parseInt(copyFromSetId, 10) : null,
+        activateNow
+      });
+      if (res && res.status === 'success' && res.data && res.data.id) {
+        viewingQuestionSetId = res.data.id;
+      }
+    }
+
+    if (res && res.status === 'success') {
+      closeQuestionSetModal();
+      await loadQuestionSets();
+    } else {
+      alert((res && res.message) || 'Gagal menyimpan paket materi.');
+    }
+  } catch (err) {
+    alert('Gagal menyimpan paket materi: ' + err.message);
+  } finally {
+    if (btnSave) {
+      btnSave.disabled = false;
+      btnSave.textContent = 'Simpan Paket Materi';
+    }
+  }
+}
+
+async function deleteQuestionSet(setId, title) {
+  if (!confirm(`Apakah Anda yakin ingin menghapus paket materi "${title}" beserta seluruh butir soal di dalamnya?`)) {
+    return;
+  }
+
+  try {
+    const res = await API.deleteQuestionSet(setId);
+    if (res && res.status === 'success') {
+      if (viewingQuestionSetId === setId) {
+        viewingQuestionSetId = activeQuestionSetId;
+      }
+      await loadQuestionSets();
+    } else {
+      alert((res && res.message) || 'Gagal menghapus paket materi.');
+    }
+  } catch (err) {
+    alert('Gagal menghapus paket materi: ' + err.message);
+  }
+}
 
 async function loadQuestionsList() {
   const container = document.getElementById('questions-list-container');
@@ -2617,10 +2928,11 @@ async function loadQuestionsList() {
   container.innerHTML = '<p class="text-xs text-atelier-inkMuted italic">Memuat daftar soal...</p>';
 
   try {
-    const res = await API.getAllQuestions();
+    const res = await API.getAllQuestions(viewingQuestionSetId);
     if (res && res.status === 'success') {
       loadedQuestions = res.data;
       renderQuestionsList(loadedQuestions);
+      updateViewingSetHeader();
     }
   } catch (err) {
     console.error('Failed to load questions', err);
@@ -2634,7 +2946,14 @@ function renderQuestionsList(questions) {
   container.innerHTML = '';
 
   if (questions.length === 0) {
-    container.innerHTML = '<p class="text-xs text-atelier-inkMuted italic">Belum ada butir soal asesmen diagnostik.</p>';
+    container.innerHTML = `
+      <div class="p-6 text-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 space-y-2">
+        <p class="text-xs text-slate-600 font-medium">Paket materi ini belum memiliki butir soal asesmen.</p>
+        <button type="button" onclick="openQuestionModal()" class="px-4 py-2 bg-[#6366F1] hover:bg-[#4F46E5] text-white text-xs font-bold rounded-xl transition cursor-pointer">
+          + Tambah Soal Pertama ke Materi Ini
+        </button>
+      </div>
+    `;
     return;
   }
 
@@ -2648,7 +2967,7 @@ function renderQuestionsList(questions) {
     } else if (Array.isArray(q.options)) {
       optionsPillHtml = q.options.map(opt => `
         <span class="px-2 py-0.5 bg-atelier-warm text-atelier-ink text-[11px] rounded-md border border-atelier-border">
-          ${opt}
+          ${escapeHtml(opt)}
         </span>
       `).join(' ');
     }
@@ -2660,10 +2979,10 @@ function renderQuestionsList(questions) {
             <span class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-atelier-terracottaLight text-atelier-terracotta">
               Soal #${idx + 1}
             </span>
-            <span class="font-mono text-xs font-semibold text-atelier-inkMuted">${q.category}</span>
+            <span class="font-mono text-xs font-semibold text-atelier-inkMuted">${escapeHtml(q.category)}</span>
           </div>
-          <h4 class="font-serif font-bold text-base text-atelier-ink">${q.title}</h4>
-          ${q.subtitle ? `<p class="text-xs text-atelier-inkMuted">${q.subtitle}</p>` : ''}
+          <h4 class="font-serif font-bold text-base text-atelier-ink">${escapeHtml(q.title)}</h4>
+          ${q.subtitle ? `<p class="text-xs text-atelier-inkMuted">${escapeHtml(q.subtitle)}</p>` : ''}
         </div>
         <div class="flex items-center gap-1.5 flex-shrink-0">
           <button onclick="editQuestion(${q.id})" class="px-2.5 py-1 bg-atelier-warm hover:bg-atelier-border text-atelier-ink rounded-lg text-xs font-medium cursor-pointer transition">
@@ -2684,9 +3003,13 @@ function renderQuestionsList(questions) {
 
       ${q.reason_label ? `
         <div class="text-[11px] text-atelier-inkMuted italic">
-          <span class="font-semibold text-atelier-ink not-italic">Pertanyaan Alasan:</span> "${q.reason_label}"
+          <span class="font-semibold text-atelier-ink not-italic">Pertanyaan Alasan (Wajib):</span> "${escapeHtml(q.reason_label)}"
         </div>
-      ` : ''}
+      ` : `
+        <div class="text-[11px] text-slate-400 italic">
+          Tanpa isian esai alasan wajib (cukup pilihan ganda).
+        </div>
+      `}
     `;
     container.appendChild(card);
   });
@@ -2705,8 +3028,11 @@ function openQuestionModal(q = null) {
   if (!modal) return;
   optionsContainer.innerHTML = '';
 
+  const viewingSet = questionSets.find(s => s.id === viewingQuestionSetId);
+  const setLabel = viewingSet ? ` (${viewingSet.title})` : '';
+
   if (q) {
-    titleElem.textContent = 'Edit Soal Diagnostik';
+    titleElem.textContent = `Edit Soal Diagnostik${setLabel}`;
     formId.value = q.id;
     catInput.value = q.category;
     titleInput.value = q.title;
@@ -2720,16 +3046,16 @@ function openQuestionModal(q = null) {
       addQuestionOptionRow('Pilihan 2');
     }
   } else {
-    titleElem.textContent = 'Tambah Soal Diagnostik Baru';
+    titleElem.textContent = `Tambah Soal Diagnostik Baru${setLabel}`;
     formId.value = '';
-    catInput.value = `Aspek ${loadedQuestions.length + 1}: Kategori Baru`;
+    catInput.value = `Aspek ${loadedQuestions.length + 1}: Pemahaman Materi`;
     titleInput.value = '';
     subtitleInput.value = 'Pilih salah satu opsi yang paling sesuai.';
-    reasonInput.value = 'Mengapa kamu memilih hal tersebut?';
+    reasonInput.value = '';
 
-    addQuestionOptionRow('Sangat Sesuai');
-    addQuestionOptionRow('Cukup Sesuai');
-    addQuestionOptionRow('Kurang Sesuai');
+    addQuestionOptionRow('Sangat Paham / Tertarik');
+    addQuestionOptionRow('Cukup Paham');
+    addQuestionOptionRow('Perlu Bimbingan Awal');
   }
 
   modal.classList.remove('hidden');
@@ -2746,12 +3072,13 @@ function addQuestionOptionRow(val = '') {
   const row = document.createElement('div');
   row.className = 'flex items-center gap-2';
   row.innerHTML = `
-    <input type="text" value="${val}" required placeholder="Teks opsi pilihan..."
+    <input type="text" required placeholder="Teks opsi pilihan..."
       class="q-opt-input flex-1 px-3 py-1.5 rounded-lg border border-atelier-border text-xs outline-none focus:border-atelier-terracotta">
     <button type="button" onclick="this.parentElement.remove()" class="text-red-500 hover:text-red-700 text-sm font-bold px-2 py-1 cursor-pointer">
       ✕
     </button>
   `;
+  row.querySelector('.q-opt-input').value = val;
   container.appendChild(row);
 }
 
@@ -2765,7 +3092,7 @@ async function deleteQuestion(id) {
     try {
       const res = await API.deleteQuestion(id);
       if (res && res.status === 'success') {
-        await loadQuestionsList();
+        await loadQuestionSets();
       }
     } catch (err) {
       alert('Gagal menghapus soal: ' + err.message);
@@ -2774,12 +3101,12 @@ async function deleteQuestion(id) {
 }
 
 async function confirmResetQuestions() {
-  if (confirm('PERINGATAN: Seluruh soal diagnostik akan di-reset kembali ke 10 butir soal standar bawaan asal. Lanjutkan?')) {
+  if (confirm('PERINGATAN: Paket standar awal akan di-reset kembali ke 10 butir soal bawaan asal. Paket materi kustom lain Anda TIDAK akan terhapus. Lanjutkan?')) {
     try {
-      const res = await API.resetQuestions();
+      const res = await API.resetQuestions(viewingQuestionSetId);
       if (res && res.status === 'success') {
         alert(res.message);
-        await loadQuestionsList();
+        await loadQuestionSets();
       }
     } catch (err) {
       alert('Gagal me-reset soal: ' + err.message);
@@ -2808,13 +3135,16 @@ function setupQuestionModalHandlers() {
       return;
     }
 
+    const existingQ = id ? loadedQuestions.find(item => String(item.id) === String(id)) : null;
+
     const payload = {
+      set_id: viewingQuestionSetId,
       category,
       title,
       subtitle,
       options,
       reason_label,
-      is_media_selector: 0
+      is_media_selector: existingQ && existingQ.isMediaSelector ? 1 : 0
     };
 
     try {
@@ -2824,7 +3154,7 @@ function setupQuestionModalHandlers() {
         await API.createQuestion(payload);
       }
       closeQuestionModal();
-      await loadQuestionsList();
+      await loadQuestionSets();
     } catch (err) {
       alert('Gagal menyimpan soal: ' + err.message);
     }

@@ -739,28 +739,67 @@
           </button>
         </div>
 
-        <!-- M1 Content A: CRUD Questions -->
-        <div id="m1-content-crud" class="atelier-card p-6 space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-atelier-border pb-4">
-            <div>
-              <h3 class="font-serif font-bold text-xl text-atelier-ink">Manajemen Bank Soal Asesmen Diagnostik</h3>
-              <p class="text-xs text-atelier-inkMuted">Tambah, ubah, atau sesuaikan butir pertanyaan asesmen diagnostik non-kognitif.</p>
+        <!-- M1 Content A: Bank Paket Materi & CRUD Questions -->
+        <div id="m1-content-crud" class="space-y-5">
+          <!-- Panel Arsip & Pemilih Paket Materi Diagnostik -->
+          <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+              <div>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-[#EDE9FE] text-[#6D28D9] border border-[#DDD6FE]">
+                  TAHAP 1: ARSIP &amp; PILIHAN MATERI DIAGNOSTIK
+                </span>
+                <h3 class="font-serif font-bold text-xl text-slate-900 mt-1">Bank Paket Materi Soal Diagnostik</h3>
+                <p class="text-xs text-slate-500 mt-0.5">
+                  Buat paket materi baru (misal: <em>Gambar Ornamen</em>) tanpa menghapus materi sebelumnya. Pilih paket mana saja untuk melihat/mengubah soalnya atau mengaktifkannya bagi siswa.
+                </p>
+              </div>
+              <button type="button" onclick="openQuestionSetModal()" class="px-4 py-2 bg-[#6366F1] hover:bg-[#4F46E5] text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-xs">
+                <span>+</span>
+                <span>Buat Materi / Paket Baru</span>
+              </button>
             </div>
-            <div class="flex items-center gap-2">
-              <button onclick="openQuestionModal()" class="px-3.5 py-2 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                <span>Tambah Soal Baru</span>
-              </button>
-              <button onclick="confirmResetQuestions()" class="px-3 py-2 border border-atelier-border hover:bg-atelier-warm text-atelier-ink text-xs font-medium rounded-xl transition cursor-pointer">
-                Reset ke 10 Soal Default
-              </button>
+
+            <div id="question-sets-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <!-- Rendered dynamically by guru.js -->
             </div>
           </div>
 
-          <div id="questions-list-container" class="space-y-3">
-            <!-- Rendered via guru.js -->
+          <!-- Panel Daftar Butir Soal dalam Paket Terpilih -->
+          <div class="atelier-card p-6 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-atelier-border pb-4">
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                  <span id="viewing-set-status-pill" class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    ● Aktif di Portal Siswa
+                  </span>
+                  <span id="viewing-set-count-pill" class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-100 text-slate-600">
+                    0 Soal
+                  </span>
+                </div>
+                <h3 class="font-serif font-bold text-xl text-atelier-ink">
+                  Butir Soal: <span id="viewing-set-title" class="text-[#6366F1]">Seni Rupa 2D &amp; 3D (Standar Awal)</span>
+                </h3>
+                <p id="viewing-set-desc" class="text-xs text-atelier-inkMuted">Tambah, ubah, atau sesuaikan butir pertanyaan pada paket materi ini.</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <button type="button" id="btn-activate-viewing-set" onclick="activateViewingQuestionSet()" class="hidden px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-sm">
+                  ✅ Aktifkan Materi Ini untuk Siswa
+                </button>
+                <button onclick="openQuestionModal()" class="px-3.5 py-2 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                  </svg>
+                  <span>Tambah Soal Baru</span>
+                </button>
+                <button onclick="confirmResetQuestions()" id="btn-reset-default-questions" class="px-3 py-2 border border-atelier-border hover:bg-atelier-warm text-atelier-ink text-xs font-medium rounded-xl transition cursor-pointer">
+                  Reset ke 10 Soal Standar
+                </button>
+              </div>
+            </div>
+
+            <div id="questions-list-container" class="space-y-3">
+              <!-- Rendered via guru.js -->
+            </div>
           </div>
         </div>
 
@@ -1570,9 +1609,10 @@
         </div>
 
         <div>
-          <label class="block font-mono font-semibold uppercase mb-1">Label Esai Alasan / Refleksi</label>
-          <input type="text" id="form-q-reason" placeholder="Contoh: Mengapa kamu memilih opsi tersebut?"
+          <label class="block font-mono font-semibold uppercase mb-1">Label Esai Alasan / Refleksi <span class="text-slate-400 font-normal normal-case">(Opsional)</span></label>
+          <input type="text" id="form-q-reason" placeholder="Contoh: Mengapa kamu memilih opsi tersebut? (Kosongkan jika tidak perlu esai)"
             class="w-full px-3 py-2 rounded-xl border border-atelier-border outline-none focus:border-atelier-terracotta">
+          <p class="text-[11px] text-slate-400 mt-1">Jika dikosongkan, siswa cukup memilih opsi pilihan ganda tanpa wajib mengetik alasan.</p>
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-atelier-border">
@@ -1581,6 +1621,57 @@
           </button>
           <button type="submit" class="px-5 py-2 bg-atelier-terracotta hover:bg-atelier-terracottaDark text-white font-semibold rounded-xl transition cursor-pointer shadow-sm">
             Simpan Soal
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CREATE / EDIT / DUPLICATE QUESTION SET (PAKET MATERI DIAGNOSTIK) -->
+  <div id="modal-question-set" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto bg-white border border-slate-200/90 rounded-3xl shadow-xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#EDE9FE] text-[#6D28D9]">PAKET MATERI DIAGNOSTIK</span>
+          <h3 id="modal-question-set-title" class="font-serif font-bold text-lg text-slate-900 mt-1">Buat Paket Materi Diagnostik Baru</h3>
+        </div>
+        <button type="button" onclick="closeQuestionSetModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold cursor-pointer">×</button>
+      </div>
+
+      <form id="form-question-set" onsubmit="submitQuestionSetForm(event)" class="space-y-3.5 text-xs">
+        <input type="hidden" id="form-qs-id" value="">
+
+        <div>
+          <label for="form-qs-title" class="block font-mono font-semibold text-slate-600 uppercase mb-1">Nama Materi / Judul Paket Soal</label>
+          <input type="text" id="form-qs-title" placeholder="Contoh: Gambar Ornamen Nusantara" required
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-purple-400">
+        </div>
+
+        <div>
+          <label for="form-qs-description" class="block font-mono font-semibold text-slate-600 uppercase mb-1">Deskripsi Singkat Materi</label>
+          <textarea id="form-qs-description" rows="2" placeholder="Tujuan atau cakupan materi asesmen ini..."
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-purple-400"></textarea>
+        </div>
+
+        <div id="form-qs-copy-wrapper">
+          <label for="form-qs-copy-from" class="block font-mono font-semibold text-slate-600 uppercase mb-1">Sumber Awal Butir Soal</label>
+          <select id="form-qs-copy-from" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 outline-none focus:border-purple-400">
+            <option value="">Mulai Kosong (Saya akan tambah soal sendiri)</option>
+          </select>
+          <p class="text-[11px] text-slate-400 mt-1">Pilih paket yang ada jika ingin menyalin butir soalnya sebagai template.</p>
+        </div>
+
+        <div id="form-qs-activate-wrapper" class="flex items-center gap-2 pt-1">
+          <input type="checkbox" id="form-qs-activate-now" class="rounded border-slate-300 text-[#6366F1] focus:ring-[#6366F1] w-4 h-4 cursor-pointer">
+          <label for="form-qs-activate-now" class="text-slate-700 font-medium cursor-pointer">Langsung aktifkan paket ini di Portal Siswa (jika sudah memiliki soal)</label>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeQuestionSetModal()" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl font-medium cursor-pointer">
+            Batal
+          </button>
+          <button type="submit" id="btn-save-qs" class="px-5 py-2 bg-[#6366F1] hover:bg-[#4F46E5] text-white font-semibold rounded-xl transition cursor-pointer shadow-sm">
+            Simpan Paket Materi
           </button>
         </div>
       </form>
@@ -1772,7 +1863,7 @@
     </div>
   </div>
 
-  <script src="/js/api.js?v=3.6"></script>
-  <script src="/js/guru.js?v=3.6"></script>
+  <script src="/js/api.js?v=3.7"></script>
+  <script src="/js/guru.js?v=3.7"></script>
 </body>
 </html>

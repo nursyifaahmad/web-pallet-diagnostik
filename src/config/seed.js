@@ -1,6 +1,149 @@
 const db = require('./database');
 const bcrypt = require('bcryptjs');
 
+const DEFAULT_QUESTIONS = [
+  {
+    order_num: 1,
+    category: 'Aspek 1: Perasaan & Sikap Belajar',
+    title: '1. Perasaanmu saat mengikuti pelajaran Seni Rupa di sekolah?',
+    subtitle: 'Pilih salah satu tingkat perasaanmu.',
+    options_json: JSON.stringify(['Sangat senang', 'Senang', 'Biasa saja', 'Kurang senang', 'Tidak senang']),
+    is_media_selector: 0,
+    reason_label: 'Mengapa kamu merasakan hal tersebut?'
+  },
+  {
+    order_num: 2,
+    category: 'Aspek 2: Minat Utama Media (2D vs 3D)',
+    title: '2. Pilih Kategori Utama dan Sub-Pilihan Media Seni Rupa yang paling kamu sukai:',
+    subtitle: 'Tentukan minat utamamu secara spesifik.',
+    options_json: JSON.stringify(['2D', '3D']),
+    is_media_selector: 1,
+    reason_label: 'Mengapa kamu lebih tertarik pada kategori media tersebut?'
+  },
+  {
+    order_num: 3,
+    category: 'Aspek 3: Kebiasaan Berkarya',
+    title: '3. Seberapa sering kamu membuat karya seni / menggambar di luar sekolah?',
+    subtitle: 'Pilih frekuensi kebiasaanmu.',
+    options_json: JSON.stringify(['Hampir setiap hari', '2-3 kali seminggu', 'Sekitar 1 kali seminggu', 'Sesekali saja', 'Hampir tidak pernah']),
+    is_media_selector: 0,
+    reason_label: 'Karya apa yang biasanya kamu buat di rumah?'
+  },
+  {
+    order_num: 4,
+    category: 'Aspek 4: Kesulitan Berkarya',
+    title: '4. Bagian mana yang paling menantang bagimu saat berkarya?',
+    subtitle: 'Pilih bagian yang paling sering kamu hadapi.',
+    options_json: JSON.stringify([
+      'Menentukan / mencari ide berkarya',
+      'Membuat sketsa awal & proporsi bentuk',
+      'Memilih dan memadukan kombinasi warna',
+      'Menggunakan alat dan bahan media',
+      'Menyelesaikan finishing karya sampai tuntas',
+      'Tidak mengalami kesulitan berarti'
+    ]),
+    is_media_selector: 0,
+    reason_label: 'Jelaskan lebih detail kesulitan tersebut:'
+  },
+  {
+    order_num: 5,
+    category: 'Aspek 5: Cara Belajar Efektif',
+    title: '5. Cara belajar mana yang paling membantumu memahami Seni Rupa?',
+    subtitle: 'Pilih gaya belajar favoritmu.',
+    options_json: JSON.stringify([
+      'Melihat contoh gambar / infografis panduan (Visual)',
+      'Menonton video tutorial berkarya (Visual/Video)',
+      'Melihat guru melakukan demonstrasi langsung (Auditori/Dem)',
+      'Langsung mencoba praktik sendiri (Kinestetik)',
+      'Berdiskusi dan bertukar ide dengan teman'
+    ]),
+    is_media_selector: 0,
+    reason_label: 'Mengapa cara tersebut paling membantu?'
+  },
+  {
+    order_num: 6,
+    category: 'Aspek 6: Kenyamanan Bekerja',
+    title: '6. Kamu lebih nyaman mengerjakan tugas Seni Rupa secara:',
+    subtitle: 'Pilih kondisi kerja idealmu.',
+    options_json: JSON.stringify([
+      'Sendiri (Individu)',
+      'Berpasangan (2 orang)',
+      'Kelompok kecil (3-4 orang)',
+      'Kelompok besar (> 4 orang)'
+    ]),
+    is_media_selector: 0,
+    reason_label: 'Alasan kenyamananmu:'
+  },
+  {
+    order_num: 7,
+    category: 'Aspek 7: Respons Menghadapi Kesulitan',
+    title: '7. Apa yang kamu lakukan jika hasil karya belum sesuai harapan?',
+    subtitle: 'Pilih tindakan utamamu.',
+    options_json: JSON.stringify([
+      'Mencoba memperbaikinya sendiri',
+      'Bertanya dan meminta masukan guru',
+      'Bertanya dan minta bantuan teman',
+      'Mencari contoh referensi karya lain'
+    ]),
+    is_media_selector: 0,
+    reason_label: 'Pengalaman saat membetulkan karya:'
+  },
+  {
+    order_num: 8,
+    category: 'Aspek 8: Preferensi Metode Guru',
+    title: '8. Cara mengajar guru seperti apa yang membuatmu paling semangat?',
+    subtitle: 'Pilih metode favoritmu.',
+    options_json: JSON.stringify([
+      'Memberikan banyak contoh gambar & contoh karya',
+      'Menggunakan video / media digital interaktif',
+      'Demonstrasi / praktik langsung di depan kelas',
+      'Kebebasan penuh mengekspresikan ide'
+    ]),
+    is_media_selector: 0,
+    reason_label: 'Saran cara mengajar:'
+  },
+  {
+    order_num: 9,
+    category: 'Aspek 9: Hambatan Kepercayaan Diri',
+    title: '9. Hal apa yang kadang membuatmu ragu atau kurang percaya diri?',
+    subtitle: 'Pilih hal yang paling kamu rasakan.',
+    options_json: JSON.stringify([
+      'Merasa kurang pandai menggambar/membuat karya',
+      'Takut hasil karya dinilai kurang bagus',
+      'Takut dibandingkan dengan karya teman',
+      'Kesulitan menemukan ide kreatif',
+      'Saya selalu percaya diri'
+    ]),
+    is_media_selector: 0,
+    reason_label: 'Kekhawatiran utama:'
+  },
+  {
+    order_num: 10,
+    category: 'Aspek 10: Harapan Pembelajaran',
+    title: '10. Apa harapanmu agar pembelajaran Seni Rupa lebih seru?',
+    subtitle: 'Tuliskan harapan dan sarankan ide kreatifmu.',
+    options_json: JSON.stringify([
+      'Lebih banyak porsi praktik daripada teori',
+      'Eksplorasi variasi media 2D & 3D lebih luas',
+      'Pemanfaatan media digital / aplikasi HP',
+      'Sesi pameran karya sederhana di kelas'
+    ]),
+    is_media_selector: 0,
+    reason_label: 'Saran konkret untuk Guru Seni Rupa:'
+  }
+];
+
+function seedDefaultQuestionsForSet(setId) {
+  const insertQ = db.prepare(`
+    INSERT INTO diagnostic_questions (set_id, order_num, category, title, subtitle, options_json, is_media_selector, reason_label, is_active)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+  `);
+
+  for (const q of DEFAULT_QUESTIONS) {
+    insertQ.run(setId, q.order_num, q.category, q.title, q.subtitle, q.options_json, q.is_media_selector, q.reason_label);
+  }
+}
+
 function runSeed() {
   console.log('[Seed] Starting database seeding...');
 
@@ -39,151 +182,25 @@ function runSeed() {
   }
   console.log('[Seed] Verified 27 classes (VII A-I, VIII A-I, IX A-I).');
 
-  // 3. Seed 10 Default Diagnostic Questions
+  // 3. Seed Default Question Set & 10 Default Diagnostic Questions
+  let defaultSet = db.prepare('SELECT id FROM diagnostic_question_sets ORDER BY is_default DESC, id ASC LIMIT 1').get();
+  if (!defaultSet) {
+    const insSet = db.prepare(`
+      INSERT INTO diagnostic_question_sets (title, description, is_active, is_default)
+      VALUES (?, ?, 1, 1)
+    `).run(
+      'Seni Rupa 2D & 3D (Standar Awal)',
+      'Paket instrumen diagnostik non-kognitif awal untuk pemetaan gaya belajar, minat media 2D vs 3D, dan hambatan berkarya.'
+    );
+    defaultSet = { id: insSet.lastInsertRowid };
+  }
+
   const questionCount = db.prepare('SELECT COUNT(*) as count FROM diagnostic_questions').get();
   if (questionCount.count === 0) {
-    const defaultQuestions = [
-      {
-        order_num: 1,
-        category: 'Aspek 1: Perasaan & Sikap Belajar',
-        title: '1. Perasaanmu saat mengikuti pelajaran Seni Rupa di sekolah?',
-        subtitle: 'Pilih salah satu tingkat perasaanmu.',
-        options_json: JSON.stringify(['Sangat senang', 'Senang', 'Biasa saja', 'Kurang senang', 'Tidak senang']),
-        is_media_selector: 0,
-        reason_label: 'Mengapa kamu merasakan hal tersebut?'
-      },
-      {
-        order_num: 2,
-        category: 'Aspek 2: Minat Utama Media (2D vs 3D)',
-        title: '2. Pilih Kategori Utama dan Sub-Pilihan Media Seni Rupa yang paling kamu sukai:',
-        subtitle: 'Tentukan minat utamamu secara spesifik.',
-        options_json: JSON.stringify(['2D', '3D']),
-        is_media_selector: 1,
-        reason_label: 'Mengapa kamu lebih tertarik pada kategori media tersebut?'
-      },
-      {
-        order_num: 3,
-        category: 'Aspek 3: Kebiasaan Berkarya',
-        title: '3. Seberapa sering kamu membuat karya seni / menggambar di luar sekolah?',
-        subtitle: 'Pilih frekuensi kebiasaanmu.',
-        options_json: JSON.stringify(['Hampir setiap hari', '2-3 kali seminggu', 'Sekitar 1 kali seminggu', 'Sesekali saja', 'Hampir tidak pernah']),
-        is_media_selector: 0,
-        reason_label: 'Karya apa yang biasanya kamu buat di rumah?'
-      },
-      {
-        order_num: 4,
-        category: 'Aspek 4: Kesulitan Berkarya',
-        title: '4. Bagian mana yang paling menantang bagimu saat berkarya?',
-        subtitle: 'Pilih bagian yang paling sering kamu hadapi.',
-        options_json: JSON.stringify([
-          'Menentukan / mencari ide berkarya',
-          'Membuat sketsa awal & proporsi bentuk',
-          'Memilih dan memadukan kombinasi warna',
-          'Menggunakan alat dan bahan media',
-          'Menyelesaikan finishing karya sampai tuntas',
-          'Tidak mengalami kesulitan berarti'
-        ]),
-        is_media_selector: 0,
-        reason_label: 'Jelaskan lebih detail kesulitan tersebut:'
-      },
-      {
-        order_num: 5,
-        category: 'Aspek 5: Cara Belajar Efektif',
-        title: '5. Cara belajar mana yang paling membantumu memahami Seni Rupa?',
-        subtitle: 'Pilih gaya belajar favoritmu.',
-        options_json: JSON.stringify([
-          'Melihat contoh gambar / infografis panduan (Visual)',
-          'Menonton video tutorial berkarya (Visual/Video)',
-          'Melihat guru melakukan demonstrasi langsung (Auditori/Dem)',
-          'Langsung mencoba praktik sendiri (Kinestetik)',
-          'Berdiskusi dan bertukar ide dengan teman'
-        ]),
-        is_media_selector: 0,
-        reason_label: 'Mengapa cara tersebut paling membantu?'
-      },
-      {
-        order_num: 6,
-        category: 'Aspek 6: Kenyamanan Bekerja',
-        title: '6. Kamu lebih nyaman mengerjakan tugas Seni Rupa secara:',
-        subtitle: 'Pilih kondisi kerja idealmu.',
-        options_json: JSON.stringify([
-          'Sendiri (Individu)',
-          'Berpasangan (2 orang)',
-          'Kelompok kecil (3-4 orang)',
-          'Kelompok besar (> 4 orang)'
-        ]),
-        is_media_selector: 0,
-        reason_label: 'Alasan kenyamananmu:'
-      },
-      {
-        order_num: 7,
-        category: 'Aspek 7: Respons Menghadapi Kesulitan',
-        title: '7. Apa yang kamu lakukan jika hasil karya belum sesuai harapan?',
-        subtitle: 'Pilih tindakan utamamu.',
-        options_json: JSON.stringify([
-          'Mencoba memperbaikinya sendiri',
-          'Bertanya dan meminta masukan guru',
-          'Bertanya dan minta bantuan teman',
-          'Mencari contoh referensi karya lain'
-        ]),
-        is_media_selector: 0,
-        reason_label: 'Pengalaman saat membetulkan karya:'
-      },
-      {
-        order_num: 8,
-        category: 'Aspek 8: Preferensi Metode Guru',
-        title: '8. Cara mengajar guru seperti apa yang membuatmu paling semangat?',
-        subtitle: 'Pilih metode favoritmu.',
-        options_json: JSON.stringify([
-          'Memberikan banyak contoh gambar & contoh karya',
-          'Menggunakan video / media digital interaktif',
-          'Demonstrasi / praktik langsung di depan kelas',
-          'Kebebasan penuh mengekspresikan ide'
-        ]),
-        is_media_selector: 0,
-        reason_label: 'Saran cara mengajar:'
-      },
-      {
-        order_num: 9,
-        category: 'Aspek 9: Hambatan Kepercayaan Diri',
-        title: '9. Hal apa yang kadang membuatmu ragu atau kurang percaya diri?',
-        subtitle: 'Pilih hal yang paling kamu rasakan.',
-        options_json: JSON.stringify([
-          'Merasa kurang pandai menggambar/membuat karya',
-          'Takut hasil karya dinilai kurang bagus',
-          'Takut dibandingkan dengan karya teman',
-          'Kesulitan menemukan ide kreatif',
-          'Saya selalu percaya diri'
-        ]),
-        is_media_selector: 0,
-        reason_label: 'Kekhawatiran utama:'
-      },
-      {
-        order_num: 10,
-        category: 'Aspek 10: Harapan Pembelajaran',
-        title: '10. Apa harapanmu agar pembelajaran Seni Rupa lebih seru?',
-        subtitle: 'Tuliskan harapan dan sarankan ide kreatifmu.',
-        options_json: JSON.stringify([
-          'Lebih banyak porsi praktik daripada teori',
-          'Eksplorasi variasi media 2D & 3D lebih luas',
-          'Pemanfaatan media digital / aplikasi HP',
-          'Sesi pameran karya sederhana di kelas'
-        ]),
-        is_media_selector: 0,
-        reason_label: 'Saran konkret untuk Guru Seni Rupa:'
-      }
-    ];
-
-    const insertQ = db.prepare(`
-      INSERT INTO diagnostic_questions (order_num, category, title, subtitle, options_json, is_media_selector, reason_label, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 1)
-    `);
-
-    for (const q of defaultQuestions) {
-      insertQ.run(q.order_num, q.category, q.title, q.subtitle, q.options_json, q.is_media_selector, q.reason_label);
-    }
+    seedDefaultQuestionsForSet(defaultSet.id);
     console.log('[Seed] Inserted 10 default diagnostic questions.');
   } else {
+    db.prepare('UPDATE diagnostic_questions SET set_id = ? WHERE set_id IS NULL').run(defaultSet.id);
     console.log(`[Seed] Diagnostic questions already seeded (${questionCount.count} questions).`);
   }
 
@@ -196,6 +213,9 @@ function runSeed() {
 
   console.log('[Seed] Seeding completed successfully!');
 }
+
+runSeed.seedDefaultQuestionsForSet = seedDefaultQuestionsForSet;
+runSeed.DEFAULT_QUESTIONS = DEFAULT_QUESTIONS;
 
 if (require.main === module) {
   runSeed();

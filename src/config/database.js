@@ -63,9 +63,21 @@ function initSchema() {
       description TEXT
     );
 
-    -- Tabel Soal Diagnostik (Bisa di-CRUD oleh Guru)
+    -- Tabel Paket / Materi Soal Diagnostik (Bank Materi)
+    CREATE TABLE IF NOT EXISTS diagnostic_question_sets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT,
+      is_active INTEGER DEFAULT 0,
+      is_default INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Tabel Soal Diagnostik (Bisa di-CRUD oleh Guru per Paket Materi)
     CREATE TABLE IF NOT EXISTS diagnostic_questions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      set_id INTEGER,
       order_num INTEGER NOT NULL,
       category TEXT NOT NULL,
       title TEXT NOT NULL,
@@ -75,7 +87,8 @@ function initSchema() {
       reason_label TEXT,
       is_active INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(set_id) REFERENCES diagnostic_question_sets(id)
     );
 
     -- Tabel Siswa & Data Asesmen Permanen
@@ -185,6 +198,46 @@ function initSchema() {
       db.exec('ALTER TABLE students ADD COLUMN updated_at DATETIME;');
       db.exec('UPDATE students SET updated_at = created_at WHERE updated_at IS NULL;');
       console.log('[DB Migration] Added column updated_at to students');
+    }
+    if (!studentCols.includes('question_set_id')) {
+      db.exec('ALTER TABLE students ADD COLUMN question_set_id INTEGER;');
+      console.log('[DB Migration] Added column question_set_id to students');
+    }
+    if (!studentCols.includes('question_set_title')) {
+      db.exec('ALTER TABLE students ADD COLUMN question_set_title TEXT;');
+      console.log('[DB Migration] Added column question_set_title to students');
+    }
+
+    const questionCols = db.prepare('PRAGMA table_info(diagnostic_questions)').all().map(c => c.name);
+    if (!questionCols.includes('set_id')) {
+      db.exec('ALTER TABLE diagnostic_questions ADD COLUMN set_id INTEGER;');
+      console.log('[DB Migration] Added column set_id to diagnostic_questions');
+    }
+
+    // Ensure at least one default Question Set exists and link orphan questions
+    const setCountRow = db.prepare('SELECT COUNT(*) as count FROM diagnostic_question_sets').get();
+    let defaultSetId = null;
+    if (setCountRow.count === 0) {
+      const insSet = db.prepare(`
+        INSERT INTO diagnostic_question_sets (title, description, is_active, is_default)
+        VALUES (?, ?, 1, 1)
+      `).run(
+        'Seni Rupa 2D & 3D (Standar Awal)',
+        'Paket instrumen diagnostik non-kognitif awal untuk pemetaan gaya belajar, minat media 2D vs 3D, dan hambatan berkarya.'
+      );
+      defaultSetId = insSet.lastInsertRowid;
+      console.log('[DB Seed] Created default question set: Seni Rupa 2D & 3D (Standar Awal)');
+    } else {
+      const defSet = db.prepare('SELECT id FROM diagnostic_question_sets ORDER BY is_default DESC, id ASC LIMIT 1').get();
+      defaultSetId = defSet ? defSet.id : null;
+      const activeSet = db.prepare('SELECT id FROM diagnostic_question_sets WHERE is_active = 1 LIMIT 1').get();
+      if (!activeSet && defaultSetId) {
+        db.prepare('UPDATE diagnostic_question_sets SET is_active = 1 WHERE id = ?').run(defaultSetId);
+      }
+    }
+
+    if (defaultSetId) {
+      db.prepare('UPDATE diagnostic_questions SET set_id = ? WHERE set_id IS NULL').run(defaultSetId);
     }
 
     const sessionCols = db.prepare('PRAGMA table_info(student_live_sessions)').all().map(c => c.name);

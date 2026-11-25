@@ -1,5 +1,6 @@
 // Student Portal Quiz Controller for PALLET with Attendance No, Gender, Persistent Storage & Live Heartbeat
 let questions = [];
+let activeQuestionSet = null;
 let currentStepIndex = 0;
 let studentName = '';
 let studentAttendanceNo = '';
@@ -65,6 +66,7 @@ function saveDraft() {
   try {
     const draftData = {
       sessionId,
+      questionSetId: activeQuestionSet ? activeQuestionSet.id : null,
       studentName,
       studentAttendanceNo,
       studentGender,
@@ -102,9 +104,15 @@ function clearDraftAndRestart() {
   location.reload();
 }
 
-// Check if draft exists and prompt user
+// Check if draft exists and matches the current active question set
 function checkAndPromptDraft() {
   const draft = getDraft();
+  const activeSetId = activeQuestionSet ? activeQuestionSet.id : null;
+  if (draft && activeSetId && draft.questionSetId && draft.questionSetId !== activeSetId) {
+    // Active material set has changed on server; discard stale draft cleanly
+    clearDraft();
+    return;
+  }
   if (draft && draft.studentName && draft.studentClass && Object.keys(draft.answers || {}).length > 0) {
     const banner = document.getElementById('draft-resume-banner');
     document.getElementById('draft-student-name').textContent = draft.studentName;
@@ -180,12 +188,18 @@ async function initClasses() {
   }
 }
 
-// 4. Load Questions Dynamically from API
+// 4. Load Questions Dynamically from API (Active Question Set)
 async function loadQuestions() {
   try {
     const res = await API.getActiveQuestions();
     if (res && res.status === 'success') {
-      questions = res.data;
+      questions = res.data || [];
+      activeQuestionSet = res.activeSet || null;
+      const setBadge = document.getElementById('header-set-badge');
+      if (setBadge && activeQuestionSet && activeQuestionSet.title) {
+        setBadge.textContent = `Materi: ${activeQuestionSet.title}`;
+        setBadge.classList.remove('hidden');
+      }
     }
   } catch (err) {
     console.error('Failed to load questions', err);
@@ -393,18 +407,30 @@ function renderCurrentQuestion() {
   document.getElementById('question-title').textContent = q.title;
   document.getElementById('question-subtitle').textContent = q.subtitle || '';
 
-  const reasonText = q.reason_label || 'Tuliskan alasan atau keterangan tambahan:';
+  const reasonSection = document.getElementById('reason-section');
+  const hasReasonPrompt = Boolean(q.reason_label && q.reason_label.trim() !== '');
   const reasonLabelEl = document.getElementById('reason-label');
-  if (reasonLabelEl) {
-    reasonLabelEl.innerHTML = `${reasonText} <span class="text-atelier-terracotta font-bold text-sm">*</span> <span class="text-[11px] font-sans text-atelier-inkMuted font-normal">(Wajib diisi)</span>`;
-  }
-
   const existingAns = answers[q.id] || {};
   const reasonEl = document.getElementById('question-reason');
-  if (reasonEl) {
-    reasonEl.value = existingAns.reason || '';
-    reasonEl.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
-    reasonEl.placeholder = 'Tuliskan alasan atau penjelasanmu di sini (wajib diisi)...';
+
+  if (reasonSection) {
+    if (hasReasonPrompt) {
+      reasonSection.classList.remove('hidden');
+      if (reasonLabelEl) {
+        reasonLabelEl.innerHTML = `${q.reason_label} <span class="text-atelier-terracotta font-bold text-sm">*</span> <span class="text-[11px] font-sans text-atelier-inkMuted font-normal">(Wajib diisi)</span>`;
+      }
+      if (reasonEl) {
+        reasonEl.value = existingAns.reason || '';
+        reasonEl.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+        reasonEl.placeholder = 'Tuliskan alasan atau penjelasanmu di sini (wajib diisi)...';
+      }
+    } else {
+      reasonSection.classList.add('hidden');
+      if (reasonEl) {
+        reasonEl.value = '';
+        reasonEl.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+      }
+    }
   }
 
   const container = document.getElementById('question-options-container');
@@ -566,16 +592,18 @@ function validateCurrentAnswer() {
     }
   }
 
-  // 2. Validasi Pertanyaan Esai / Isian Singkat (Wajib Diisi)
-  const reasonEl = document.getElementById('question-reason');
-  const reasonVal = reasonEl?.value?.trim() || '';
-  if (!reasonVal) {
-    showValidationAlert('Kolom isian/alasan di atas wajib diisi sebelum kamu dapat melanjutkan ke soal berikutnya.');
-    if (reasonEl) {
-      reasonEl.focus();
-      reasonEl.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+  // 2. Validasi Pertanyaan Esai / Isian Singkat (Wajib diisi hanya jika soal memiliki reason_label)
+  if (q.reason_label && q.reason_label.trim() !== '') {
+    const reasonEl = document.getElementById('question-reason');
+    const reasonVal = reasonEl?.value?.trim() || '';
+    if (!reasonVal) {
+      showValidationAlert('Kolom isian/alasan di atas wajib diisi sebelum kamu dapat melanjutkan ke soal berikutnya.');
+      if (reasonEl) {
+        reasonEl.focus();
+        reasonEl.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+      }
+      return false;
     }
-    return false;
   }
 
   hideValidationAlert();
@@ -640,29 +668,33 @@ async function submitQuiz() {
       return;
     }
 
-    const hasReason = Boolean(aItem && aItem.reason && typeof aItem.reason === 'string' && aItem.reason.trim() !== '');
-    if (!hasReason) {
-      currentStepIndex = i;
-      saveDraft();
-      renderCurrentQuestion();
-      showValidationAlert(`Pertanyaan esai/alasan pada Soal #${i + 1} belum diisi! Pertanyaan esai wajib diisi sebelum mengirim hasil asesmen.`);
-      document.getElementById('question-reason')?.focus();
-      btnNext.disabled = false;
-      btnNext.innerHTML = '<span>Kirim Jawaban Asesmen</span>';
-      return;
+    if (qItem.reason_label && qItem.reason_label.trim() !== '') {
+      const hasReason = Boolean(aItem && aItem.reason && typeof aItem.reason === 'string' && aItem.reason.trim() !== '');
+      if (!hasReason) {
+        currentStepIndex = i;
+        saveDraft();
+        renderCurrentQuestion();
+        showValidationAlert(`Pertanyaan esai/alasan pada Soal #${i + 1} belum diisi! Pertanyaan esai wajib diisi sebelum mengirim hasil asesmen.`);
+        document.getElementById('question-reason')?.focus();
+        btnNext.disabled = false;
+        btnNext.innerHTML = '<span>Kirim Jawaban Asesmen</span>';
+        return;
+      }
     }
   }
 
   btnNext.innerHTML = '<span>Menyimpan Hasil Asesmen...</span>';
 
+  const mediaQuestion = questions.find(q => q.isMediaSelector);
+  const mediaAns = mediaQuestion ? (answers[mediaQuestion.id] || {}) : {};
   const q1Ans = (answers[questions[0]?.id]?.selected) || 'Sangat senang';
-  const q2Ans = answers[questions[1]?.id] || {};
-  const category = q2Ans.category || '2D';
-  const subOption = q2Ans.subOption || 'Media Kering';
-  const q4Ans = (answers[questions[3]?.id]?.selected) || 'Pencarian Ide Awal';
+  const category = mediaAns.category || (activeQuestionSet ? '2D' : '2D');
+  const subOption = mediaAns.subOption || (activeQuestionSet && !mediaQuestion ? activeQuestionSet.title : 'Media Kering');
+  const q4Ans = (answers[questions[3]?.id]?.selected) || (answers[questions[questions.length - 1]?.id]?.selected) || 'Pencarian Ide Awal';
 
   let style = 'Visual Tutorial';
-  const q5Text = answers[questions[4]?.id]?.selected || '';
+  const styleQuestion = questions.find(q => (q.category || '').toLowerCase().includes('cara belajar')) || questions[4];
+  const q5Text = styleQuestion ? (answers[styleQuestion.id]?.selected || '') : '';
   if (q5Text.includes('Visual') || q5Text.includes('gambar')) {
     style = 'Visual Tutorial';
   } else if (q5Text.includes('Kinestetik') || q5Text.includes('praktik')) {

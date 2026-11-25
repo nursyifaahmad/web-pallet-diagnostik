@@ -254,15 +254,29 @@ router.post('/', (req, res) => {
     return res.status(400).json({ status: 'error', message: 'Nama siswa dan kelas wajib diisi.' });
   }
 
-  // Validasi: Jika submit berasal dari pengerjaan murid (ada sessionId atau answers), semua pertanyaan aktif harus dijawab (required)
+  // Ambil paket materi diagnostik yang sedang aktif
+  const activeSet = db.prepare(`
+    SELECT id, title FROM diagnostic_question_sets WHERE is_active = 1 LIMIT 1
+  `).get() || db.prepare(`
+    SELECT id, title FROM diagnostic_question_sets ORDER BY is_default DESC, id ASC LIMIT 1
+  `).get();
+
+  // Validasi: Jika submit berasal dari pengerjaan murid (ada sessionId atau answers), semua pertanyaan aktif pada paket aktif harus dijawab (required)
   const hasAnswers = answers && typeof answers === 'object' && Object.keys(answers).length > 0;
   if (sessionId || hasAnswers) {
-    const activeQuestions = db.prepare(`
-      SELECT id, order_num, title, is_media_selector 
-      FROM diagnostic_questions 
-      WHERE is_active = 1 
-      ORDER BY order_num ASC
-    `).all();
+    const activeQuestions = activeSet
+      ? db.prepare(`
+          SELECT id, order_num, title, is_media_selector, reason_label
+          FROM diagnostic_questions
+          WHERE is_active = 1 AND set_id = ?
+          ORDER BY order_num ASC, id ASC
+        `).all(activeSet.id)
+      : db.prepare(`
+          SELECT id, order_num, title, is_media_selector, reason_label
+          FROM diagnostic_questions
+          WHERE is_active = 1
+          ORDER BY order_num ASC, id ASC
+        `).all();
 
     if (activeQuestions.length > 0) {
       const studentAnswers = answers || {};
@@ -290,12 +304,14 @@ router.post('/', (req, res) => {
           }
         }
 
-        // Validasi pertanyaan esai / isian singkat (reason) wajib diisi
-        if (!ans.reason || typeof ans.reason !== 'string' || ans.reason.trim() === '') {
-          return res.status(400).json({
-            status: 'error',
-            message: `Pertanyaan esai/alasan pada Soal #${q.order_num} (${q.title}) wajib diisi oleh murid.`
-          });
+        // Validasi pertanyaan esai / isian singkat (reason) wajib diisi HANYA jika reason_label diisi oleh guru
+        if (q.reason_label && q.reason_label.trim() !== '') {
+          if (!ans.reason || typeof ans.reason !== 'string' || ans.reason.trim() === '') {
+            return res.status(400).json({
+              status: 'error',
+              message: `Pertanyaan esai/alasan pada Soal #${q.order_num} (${q.title}) wajib diisi oleh murid.`
+            });
+          }
         }
       }
     }
@@ -313,8 +329,8 @@ router.post('/', (req, res) => {
 
     const nowIso = new Date().toISOString();
     const result = db.prepare(`
-      INSERT INTO students (attendance_no, name, gender, class_id, category, sub_option, style, challenge, feeling, answers_json, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO students (attendance_no, name, gender, class_id, category, sub_option, style, challenge, feeling, answers_json, question_set_id, question_set_title, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       parsedAttNo,
       name.trim(),
@@ -326,6 +342,8 @@ router.post('/', (req, res) => {
       challenge || 'Pencarian Ide Awal',
       feeling || 'Sangat senang',
       answersJson,
+      activeSet ? activeSet.id : null,
+      activeSet ? activeSet.title : null,
       nowIso,
       nowIso
     );
